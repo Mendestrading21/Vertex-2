@@ -1,10 +1,35 @@
 # État courant
 
 ```yaml
-phase: preparation_session_ibkr_reelle
-lot: "Démarrage live — les trois pièges du runbook"
-branch: claude/vertex-connection-kgkntr
-status: pr_ouverte_ci_en_cours
+phase: alimentation_reelle_et_refonte_ui
+lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
+branch: agent/vertex-total-audit-ultimate-polish
+status: branche_locale_non_poussee_aucun_merge_rapport_final_ecrit
+nuit_agent_2026_09_05_06:
+  - "base main = 0b82eb2 ; 22 commits bornés sur la branche, aucun merge, aucun
+     force-push, aucun secret. Rapport : docs/VERTEX_FINAL_REPORT.md ; suivi UI :
+     docs/ui-refonte-vertex.md §7 ; journal : docs/VERTEX_NIGHT_RUN.md"
+  - "UI : douze pages sur douze colonnes nommées (signal → dominante → chiffres →
+     absences), ModuleCell partagé, instrument actif dans le bandeau, 75 règles
+     CSS mortes retirées, rangées ≤ 28 % de vide aux trois viewports, zéro
+     débordement horizontal hors régions défilantes ; tsc 0, Biome 0, Vitest 122
+     fichiers / 1 168 verts ; Playwright non exécutable sur ce poste"
+  - "Données : base réelle mesurée (14 364 cotations, 57 instruments, 5 760
+     dépêches ; 14 360 versions de markets_overview pour 14 364 cotations) ;
+     inventaire par page dans docs/VERTEX_DATA_COVERAGE.md, registre dans
+     docs/VERTEX_SOURCE_REGISTRY.md, runbook dans docs/VERTEX_RUNBOOK.md"
+  - "Coalescence de l'outbox : enqueue_outbox_coalesced, au plus un message en
+     attente par (sujet, clé) ; SEC non coalescé ; tests d'intégration sur base
+     jetable vertex_test"
+  - "Collecteur réel de chaînes d'options : vertex_edge_ibkr.options +
+     tools/run_edge_options.py (client 75), schéma ibkr.option-chain-slice/1,
+     définition renommée ibkr.option-chain-definition/1 ; INACTIF tant que
+     VERTEX_OPTIONS_UNDERLYINGS / RATE / DIVIDEND_YIELD ne sont pas déclarés
+     dans ~/.vertex/vertex.env (décision utilisateur : hypothèses de taux et
+     de dividende) ; non lancé contre TWS (samedi)"
+  - "prochaine commande : déclarer les trois variables, relancer
+     ~/.vertex/ingest-loop.ps1 un jour de séance, puis ouvrir une PR de la
+     branche vers main après relecture humaine"
 demarrage_live_2026_09_05:
   - "main = 282a75f. #70, #72 et #73 fusionnées ce jour. Il ne reste ouverte
      que #69, rouge sur les e2e SEULEMENT (6 checks sur 7 verts), base deux
