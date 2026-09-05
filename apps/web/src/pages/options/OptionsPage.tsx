@@ -40,6 +40,7 @@ import {
 } from './optionsView.ts';
 import { pageAccentAttrs } from '../../components/widgets/pageAccent.ts';
 import { Widget } from '../../components/widgets/Widget.tsx';
+import { ModuleCell as SharedModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { MethodNote } from '../../components/widgets/MethodNote.tsx';
 import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { TableSkeleton } from '../../components/widgets/Skeleton.tsx';
@@ -137,12 +138,7 @@ function UnderlyingPicker({ current }: { readonly current: string | null }) {
   );
 }
 
-/**
- * La cellule d'un module sur la planche : `data-module` pour l'aire nommée,
- * `data-size` pour le socle (`.vx-board > [data-module][data-size]`), et
- * `data-density` quand la page décide qu'une carte de valeur unique n'a pas
- * besoin du chrome d'une carte de figure.
- */
+/** La cellule d'un module de CETTE planche : la taille vient du catalogue. */
 function ModuleCell({
   id,
   density,
@@ -152,11 +148,10 @@ function ModuleCell({
   readonly density?: 'compact';
   readonly children: ReactNode;
 }) {
-  const module = optionsModule(id);
   return (
-    <div data-module={id} data-size={module.size} {...(density === undefined ? {} : { 'data-density': density })}>
+    <SharedModuleCell id={id} size={optionsModule(id).size} {...(density === undefined ? {} : { density })}>
       {children}
-    </div>
+    </SharedModuleCell>
   );
 }
 

@@ -6039,47 +6039,38 @@ label {
 
 /* ---- Grille d'Aujourd'hui (planche §1) ------------------------------ */
 
-/* L'inspecteur est TOUJOURS monté sur cette page : la zone de travail fait
-   ~730 px à 1440 et ~800 px à 1280. Quatre colonnes ; cinq seulement à 1600,
-   où elles font 200 px — mesuré, pas supposé (cinq colonnes à 1440 donnaient
-   des cellules de 135 px où plus rien ne tenait). Le régime tient la colonne
-   gauche à côté de la file, comme sur la planche. */
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+
+   L'inspecteur est TOUJOURS monté sur cette page. Une seule composition sur
+   douze colonnes, quel que soit le viewport desktop de phase 1 : la variante
+   à cinq colonnes (≥ 1600) ne faisait que réordonner la même planche et
+   doublait ce qu'il fallait mesurer.
+
+   L'ORDRE EST CELUI DE LA QUESTION. La page demande « qu'est-ce qui mérite
+   mon attention maintenant ? » ; la planche répond dans cet ordre :
+     1. SIGNAL — quatre cartes courtes d'une valeur (santé des sources,
+        catalyseur suivant, portefeuille déclaré, opportunités), en densité
+        compacte : trois colonnes chacune ;
+     2. FILE — la dominante `attention` prend la bande entière, en deuxième
+        rangée et non plus en sixième ;
+     3. PREUVE — le marché global (six colonnes : ses figures de breadth se
+        posent côte à côte, `auto-fit minmax(190px)`) et la carte sectorielle
+        (six colonnes, `L` au catalogue) ;
+     4. SUIVIS — les instruments suivis sur la bande ;
+     5. ABSENCES — le calendrier (six colonnes) puis, regroupées sur la même
+        rangée, les trois absences (régime, volatilité, risques actifs), deux
+        colonnes chacune, en densité compacte.
+   La taille du catalogue reste le span déclaré (`data-size`, ADR-017) ; les
+   aires nommées la composent, elles ne la redéfinissent pas. */
 .vx-today-grid {
   display: grid;
-  /* LA DOMINANTE EST LARGE, PAS HAUTE.
-     Mesuré sur capture à 1440 px : « Marché global » déclarait une colonne et
-     rendait six blocs — arc de breadth, jauge de couverture, trois barres de
-     dénombrement, conclusion, provenance. La carte montait à ~1 000 px face à
-     des voisines de ~300, et CSS Grid dimensionnant la rangée sur son élément
-     le plus haut, un tiers d'écran restait vide à droite. La cause n'était pas
-     un manque de colonnes : c'était un DÉSACCORD entre la taille déclarée et
-     le contenu réel.
-     Sur deux colonnes, les figures de la breadth se posent côte à côte
-     (`auto-fit minmax(190px)`) au lieu de s'empiler, et la carte retombe à
-     hauteur de rangée. L'ordre visuel reste celui du DOM — global, volatilité,
-     catalyseur, santé — pour ne pas séparer la lecture à l'écran de la lecture
-     au clavier. */
-  /*
-    COMPOSITION PAR HAUTEURS VOISINES. Deux rangées creusaient un trou,
-    mesurées à 1440 : `global-market` (735 px) partageait sa ligne avec
-    `volatility` (173) et `next-catalyst` (372) — 42 % de vide ; et `regime`
-    (173) avec `attention` (855) — 40 %.
-
-    La dominante et la file d'attention prennent chacune leur bande. Les
-    cartes qui les accompagnaient descendent en colonne : chacune ouvre sa
-    propre ligne, et une ligne d'une seule carte n'a pas de voisine à laisser
-    vide. `regime` et `risks`, de hauteurs voisines, s'apparient.
-  */
   grid-template-areas:
-    'global global global catalyst'
-    'global global global vol'
-    'global global global health'
-    'focus focus focus focus'
-    'regime regime risks risks'
-    'attention attention attention attention'
-    'opp sectors sectors calendar'
-    'portfolio sectors sectors calendar';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'health health health catalyst catalyst catalyst portfolio portfolio portfolio opp opp opp'
+    'attention attention attention attention attention attention attention attention attention attention attention attention'
+    'global global global global global global sectors sectors sectors sectors sectors sectors'
+    'focus focus focus focus focus focus focus focus focus focus focus focus'
+    'calendar calendar calendar calendar calendar calendar regime regime vol vol risks risks';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
   margin-top: var(--vx-space-12);
@@ -6107,26 +6098,6 @@ label {
 .vx-today-grid [data-module='sectors'] { grid-area: sectors; }
 .vx-today-grid [data-module='manual-portfolio'] { grid-area: portfolio; }
 .vx-today-grid [data-module='calendar'] { grid-area: calendar; }
-
-@media (min-width: 1600px) {
-  .vx-today-grid {
-    /* Même règle qu'à 1280/1440 : la dominante et la file d'attention prennent
-       chacune leur bande ; leurs voisines descendent en colonne, une par
-       ligne. Sans cela, `global-market` (739 px) partageait sa ligne avec
-       `volatility` (193) et `next-catalyst` (411) — 39 % de vide — et
-       `regime` (193) avec `attention` (838) — 38 %. */
-    grid-template-areas:
-      'global global global global catalyst'
-      'global global global global vol'
-      'global global global global health'
-      'focus focus focus focus focus'
-      'regime regime regime risks risks'
-      'attention attention attention attention attention'
-      'opp sectors sectors sectors calendar'
-      'portfolio sectors sectors sectors calendar';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* Le module absent, dans une grille : même respiration qu'une carte quiet. */
 .vx-today-grid .vx-absent,
@@ -6171,7 +6142,8 @@ label {
 }
 
 .vx-main button.vx-markets-pick {
-  min-height: 0;
+  /* Cible ≥ 28 px : la ligne de table la réserve déjà, le bouton la remplit. */
+  min-height: 28px;
   padding: 0 var(--vx-space-4);
   border-color: transparent;
   background: transparent;

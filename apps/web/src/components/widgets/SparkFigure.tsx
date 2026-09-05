@@ -80,6 +80,17 @@ export function SparkFigure({
   }
 
   const points = sparklinePoints(closes);
+  // `sparklinePoints` refuse la série ENTIÈRE dès qu'une clôture est illisible
+  // (jamais un point à zéro). Sans cette garde, `points[0]` était `undefined`
+  // et la figure jetait une exception au rendu — mesuré par l'audit du
+  // 2026-09-05 ; `Sparkline` avait la garde, sa copie en aire ne l'avait pas.
+  if (points.length === 0) {
+    return (
+      <p className="vx-w2-absent" role="status">
+        Refus : une clôture servie est illisible — la série n’est pas tracée plutôt que déformée.
+      </p>
+    );
+  }
   const path = points.map(([x, y]) => `${x},${y}`).join(' ');
   const first = points[0] as readonly [number, number];
   const last = points[points.length - 1] as readonly [number, number];
