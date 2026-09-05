@@ -2000,6 +2000,14 @@ body {
   white-space: nowrap;
 }
 
+/* REFONTE UI 2026-09-05 — les colonnes numériques de la table des marchés
+   s'alignaient à gauche comme du texte : les unités ne se lisaient pas en
+   colonne. Un nombre se compare à droite. */
+.vx-markets-table td:has(> .vx-num),
+.vx-markets-table th:has(> .vx-num) {
+  text-align: right;
+}
+
 /* Couleur + signe textuel : la couleur n'est jamais seule porteuse. */
 .vx-markets-table td[data-sign='up'] {
   color: var(--vx-positive);
@@ -2177,6 +2185,10 @@ body {
 }
 
 .vx-underlying-link {
+  display: inline-flex;
+  align-items: center;
+  /* Cible de 32 px (plancher `ACCESSIBILITY.md`), sans changer la pilule. */
+  min-height: var(--vx-space-32);
   padding: var(--vx-space-4) var(--vx-space-12);
   border: 1px solid var(--vx-border);
   border-radius: var(--vx-radius-pill);
@@ -2190,9 +2202,73 @@ body {
   background: var(--vx-hover);
 }
 
+/* La sélection est dite par la bordure, la graisse ET un repère « ▸ » : une
+   bordure argent seule tombe sous 3:1 sur cette surface. */
 .vx-underlying-link[aria-current='page'] {
   border-color: var(--vx-silver);
   font-weight: 600;
+}
+
+.vx-underlying-link[aria-current='page']::before {
+  content: '▸ ';
+  color: var(--vx-signal);
+}
+
+/* REFONTE UI 2026-09-05 — LE SÉLECTEUR SE PLIE. Mesuré : ~24 pilules sur
+   quatre lignes (cinq à 1280 px) AVANT la dominante, la plupart menant à une
+   chaîne vide. Quand un sous-jacent est ouvert, la liste passe derrière un
+   `<details>` natif dont le résumé nomme le courant et le nombre d'autres ;
+   sans sous-jacent, la liste reste dépliée — c'est alors la seule chose à
+   faire sur la page. Rien n'est retiré : tout reste dans le document. */
+.vx-underlying-fold {
+  margin: 0 0 var(--vx-space-16);
+}
+
+.vx-underlying-fold > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--vx-space-8);
+  min-height: var(--vx-space-32);
+  padding: var(--vx-space-4) var(--vx-space-12) var(--vx-space-4) var(--vx-space-8);
+  border: 1px solid var(--vx-border-soft);
+  border-radius: var(--vx-radius-pill);
+  color: var(--vx-text-secondary);
+  font-size: var(--vx-font-size-meta);
+  cursor: pointer;
+  list-style: none;
+}
+
+.vx-underlying-fold > summary::-webkit-details-marker {
+  display: none;
+}
+
+.vx-underlying-fold > summary::before {
+  color: var(--vx-text-muted);
+  content: '▸';
+  transition: transform var(--vx-motion-140) var(--vx-ease-standard);
+}
+
+.vx-underlying-fold[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.vx-underlying-fold > summary:hover {
+  background: var(--vx-hover);
+  color: var(--vx-text);
+}
+
+.vx-underlying-fold > summary code {
+  color: var(--vx-text);
+  font-family: var(--vx-font-mono);
+  font-weight: 600;
+}
+
+.vx-underlying-fold > .vx-underlying-picker {
+  margin: var(--vx-space-12) 0 0;
+}
+
+.vx-underlying-fold-count {
+  color: var(--vx-text-muted);
 }
 
 /* ------------------------------------------------------------------ */
@@ -2342,6 +2418,9 @@ body {
 }
 
 .vx-chain-inspect {
+  /* Cible ≥ 28 px dans une ligne réservée à 33 px : aucune hauteur de ligne
+     ne bouge, mais le bouton se clique sans viser (WCAG 2.5.8). */
+  min-height: 28px;
   padding: var(--vx-space-4) var(--vx-space-8);
   background: transparent;
   border: 1px solid var(--vx-border);
@@ -2375,6 +2454,20 @@ body {
 .vx-quote-status[data-status='OK'] {
   border-color: var(--vx-positive);
   color: var(--vx-positive);
+}
+
+/* REFONTE UI 2026-09-05 — DEUX CAUSES, DEUX FORMES. `CROSSED` (quote refusée
+   à l'entrée) et `STALE` (quote trop vieille) partageaient exactement la même
+   bordure ambre ; seul le mot les séparait. Le refus passe au corail avec un
+   filet plein, la péremption garde l'ambre avec un filet pointillé : le code
+   reste en texte, la forme double la teinte, la couleur ne parle jamais seule. */
+.vx-quote-status[data-status='CROSSED'] {
+  border-color: var(--vx-negative);
+  color: var(--vx-negative);
+}
+
+.vx-quote-status[data-status='STALE'] {
+  border-style: dashed;
 }
 
 /* ------------------------------------------------------------------ */
@@ -2432,9 +2525,16 @@ body {
 }
 
 .vx-inspector-actions {
+  /* REFONTE UI 2026-09-05 — L'UNIQUE ACTION RESTE VISIBLE. Elle arrivait après
+     une trentaine de lignes de faits dans une colonne à défilement interne ;
+     collée au bas de l'inspecteur (`.vx-inspector` défile), elle ne demande
+     plus de descendre pour la trouver. Fond opaque : rien ne passe dessous. */
+  position: sticky;
+  bottom: 0;
   margin-top: var(--vx-space-16);
-  padding-top: var(--vx-space-12);
+  padding: var(--vx-space-12) 0 var(--vx-space-4);
   border-top: 1px solid var(--vx-border-soft);
+  background: var(--vx-surface-1);
 }
 
 .vx-inspector-note {
@@ -4736,6 +4836,14 @@ body {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
+/* REFONTE UI 2026-09-05 — « nombres comparables en Geist Mono tabulaire »
+   (`DASHBOARD_COMPOSITION.md`). `.vx-num` ne posait que les chiffres
+   tabulaires : sur 115 usages, seuls ceux imbriqués dans deux tables
+   obtenaient la chasse fixe, les autres suivaient la police du paragraphe. */
+.vx-num {
+  font-family: var(--vx-font-mono);
+}
+
 .vx-perf-metric-value,
 .vx-inspector-value {
   color: var(--vx-silver);
@@ -5406,7 +5514,8 @@ label {
    ailleurs. Et seul `anywhere` RÉDUIT la largeur min-content : `break-word`
    ne change rien à ce calcul. */
 .vx-card-aside code,
-.vx-module-sentence code {
+.vx-module-sentence code,
+.vx-options-facts code {
   overflow-wrap: anywhere;
 }
 
@@ -6987,6 +7096,51 @@ label {
   min-width: 0;
 }
 
+/* REFONTE UI 2026-09-05 — DENSITÉ DE CARTE, décidée par la page.
+
+   POURQUOI. Une carte qui porte UNE valeur (spot, taux, dividende) recevait le
+   même chrome qu'une carte de figure : tête filetée, corps, pied de deux
+   lignes, marges de 20 px. Mesuré sur Options : corps de 72 px dans une carte
+   de 242 px — 70 % de la surface ne disait rien. Le rang `quiet` de `Card`
+   était censé le régler ; sur une planche, il est battu par ce bloc même
+   (spécificité 0,3,0 contre 0,2,0) et ne s'applique jamais.
+
+   CE QUE C'EST. Un attribut de COMPOSITION, `data-density="compact"`, posé par
+   la page sur la cellule du module, comme `data-size`. Il resserre le chrome ;
+   il ne touche ni la surface, ni la typographie de la valeur, ni les états.
+   Ce n'est pas un réglage utilisateur. */
+.vx-board > [data-module][data-density='compact'] > .vx-card {
+  gap: var(--vx-space-8);
+  padding: var(--vx-space-12) var(--vx-space-16) var(--vx-space-12);
+}
+
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-head {
+  padding-bottom: var(--vx-space-8);
+}
+
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-kicker {
+  margin-bottom: var(--vx-space-4);
+}
+
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-head h2 {
+  font-size: var(--vx-font-size-body);
+}
+
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-foot {
+  padding-top: var(--vx-space-8);
+}
+
+/* Une valeur seule dans une carte compacte : l'affichage (34 px) écrasait la
+   cellule étroite ; le corps d'affichage descend d'un cran, reste tabulaire,
+   et n'est jamais tronqué. */
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-metric-value {
+  font-size: var(--vx-font-size-display);
+}
+
+.vx-board > [data-module][data-density='compact'] > .vx-card .vx-metric {
+  padding: var(--vx-space-4) 0 0;
+}
+
 .vx-board > [data-module] > .vx-card .vx-card-foot {
   padding-top: var(--vx-space-12);
   border-top: 1px solid var(--vx-border-soft);
@@ -6996,11 +7150,35 @@ label {
   line-height: 1.55;
 }
 
-/* Le module absent : même panneau, filet pointillé, titre en titane. */
+/* Le module absent : même panneau, filet pointillé, titre en titane.
+
+   REFONTE UI 2026-09-05 — UNE ABSENCE PÈSE MOINS QU'UNE DONNÉE. Six cartes
+   d'absence sur Options recevaient le chrome d'une carte de données et une
+   pastille AMBRE : six « signaux » sur une page où l'ambre doit rester la
+   seule lumière de la dominante. La place reste TENUE (article 17) et le motif
+   reste écrit ; le chrome se resserre et la pastille passe au titane — le
+   texte porte le motif, la couleur n'a rien à ajouter. */
 .vx-board > [data-module] > .vx-absent {
+  gap: var(--vx-space-8);
+  padding: var(--vx-space-12) var(--vx-space-16);
   border-style: dashed;
   border-top-style: solid;
   background: var(--vx-surface-0);
+}
+
+.vx-board .vx-absent-head {
+  padding-bottom: var(--vx-space-8);
+}
+
+.vx-board .vx-absent-head h3 {
+  font-size: var(--vx-font-size-body);
+}
+
+.vx-board .vx-absent-badge {
+  padding: 2px var(--vx-space-8);
+  border-color: var(--vx-border-strong);
+  color: var(--vx-titanium);
+  font-size: var(--vx-font-size-micro);
 }
 
 .vx-board .vx-absent-head {
@@ -7231,7 +7409,9 @@ label {
 /* Le bouton « Inspecter » sous le ticker : discret, ambre à la sélection. */
 .vx-main button.vx-opp-inspect {
   display: inline-block;
-  min-height: 0;
+  /* Cible ≥ 28 px : ce bouton est réutilisé par Opportunités, Portefeuille,
+     Calendrier et la matrice des sources ; à 17 px il ne se cliquait pas. */
+  min-height: 28px;
   margin-top: var(--vx-space-4);
   padding: 1px var(--vx-space-8);
   border-color: var(--vx-border-soft);
@@ -7582,15 +7762,44 @@ label {
 
 /* ---- Grille d'Options (planche §5) ----------------------------------- */
 
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE : résumé → dominante → détail.
+
+   MESURÉ AVANT (1440×900, SYNTHETIC) : la chaîne — la dominante — n'arrivait
+   qu'en cinquième rangée, après ≈ 2 300 px de contexte ; rangée 1 `284 / 547`,
+   rangée 3 `303 / 321 / 575` : des cartes de valeur unique (corps 72 px) dans
+   des cellules de 242 px, à côté de figures trois fois plus hautes.
+
+   CE QUE LA GRILLE FAIT MAINTENANT. Douze colonnes, pour que les cartes
+   n'aient plus toutes la même largeur : une rangée de SYNTHÈSE courte (le
+   snapshot, le spot et les deux hypothèses du calcul — quatre cartes
+   compactes de hauteur voisine), la dominante en deuxième rangée, puis les
+   trois figures (sous-jacent, sourire, structure) qui partagent une hauteur
+   naturelle proche, la série longue en bande, et les absences regroupées en
+   bas — où leur régularité est le message. Le catalogue est INCHANGÉ : les
+   quinze modules gardent leur aire nommée. */
 .vx-options-grid {
   grid-template-areas:
-    'underlying underlying identity identity'
-    'spot move ivref ivrank'
-    'dividend rate volstruct volstruct'
-    'series series smile smile'
-    'chain chain chain chain'
-    'builder payoff metrics metrics';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'identity identity identity identity identity identity spot spot rate rate dividend dividend'
+    'chain chain chain chain chain chain chain chain chain chain chain chain'
+    'underlying underlying underlying smile smile smile smile volstruct volstruct volstruct volstruct volstruct'
+    'series series series series series series series series series series series series'
+    'move move ivref ivref ivrank ivrank builder builder payoff payoff metrics metrics';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+/* Dégradation laptop (< 1280 px, inspecteur ouvert) : la rangée de synthèse
+   se plie en deux, les trois figures gardent leur rangée. */
+@media (max-width: 1279px) {
+  .vx-options-grid {
+    grid-template-areas:
+      'identity identity identity identity identity identity identity identity identity identity identity identity'
+      'spot spot spot spot rate rate rate rate dividend dividend dividend dividend'
+      'chain chain chain chain chain chain chain chain chain chain chain chain'
+      'underlying underlying underlying underlying smile smile smile smile volstruct volstruct volstruct volstruct'
+      'series series series series series series series series series series series series'
+      'move move move move ivref ivref ivref ivref ivrank ivrank ivrank ivrank'
+      'builder builder builder builder payoff payoff payoff payoff metrics metrics metrics metrics';
+  }
 }
 
 .vx-options-grid [data-module='underlying'] { grid-area: underlying; }
@@ -7609,18 +7818,10 @@ label {
 .vx-options-grid [data-module='payoff-profile'] { grid-area: payoff; }
 .vx-options-grid [data-module='strategy-metrics'] { grid-area: metrics; }
 
-@media (min-width: 1600px) {
-  .vx-options-grid {
-    grid-template-areas:
-      'underlying underlying identity identity identity'
-      'spot dividend rate move ivref'
-      'series series smile smile ivrank'
-      'volstruct volstruct volstruct volstruct volstruct'
-      'chain chain chain chain chain'
-      'builder payoff metrics metrics metrics';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
+/* À 1600 px la même composition tient : les douze colonnes s'élargissent, la
+   synthèse reste une ligne et la dominante garde toute la largeur. Aucune
+   variante — une composition par largeur est une composition de plus à
+   mesurer, et celle-ci passe les trois largeurs. */
 
 /* Le widget du sous-jacent occupe sa cellule entière. */
 .vx-board > [data-module] > .vx-iw {

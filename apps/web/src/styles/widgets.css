@@ -2139,6 +2139,8 @@
 }
 
 .vx-dt-open {
+  /* Cible ≥ 28 px (WCAG 2.5.8) sans élargir la ligne dense. */
+  min-height: 28px;
   padding: 2px var(--vx-space-8);
   border: 1px solid var(--vx-border);
   border-radius: var(--vx-radius-6);
@@ -3824,3 +3826,136 @@
 .vx-sources-grid > [data-module='backups'] { grid-area: backups; }
 .vx-sources-grid > [data-module='components-health'] { grid-area: components; }
 .vx-sources-grid > [data-module='unknown-probes'] { grid-area: probes; }
+
+/* ==========================================================================
+   REFONTE UI 2026-09-05 — CHAÎNE D'OPTIONS : tête, groupes, faits de groupe,
+   bande de synthèse du snapshot, largeurs de colonne.
+   Même famille que les règles `.vx-chain-*` ci-dessus ; ajoutées en fin de
+   fichier, elles gagnent à spécificité égale par l'ordre source.
+   ========================================================================== */
+
+/* La tête de la dominante ne répète plus la question de la page : un titre,
+   une ligne qui dit ce que la table garantit. */
+.vx-chain-head-text {
+  min-width: 0;
+}
+
+.vx-chain-head-note {
+  margin: var(--vx-space-4) 0 0;
+  color: var(--vx-text-muted);
+  font-size: var(--vx-font-size-meta);
+  line-height: 1.45;
+}
+
+/* Bouton de groupe : cible de 40 px, nom en chasse fixe, qualité en pastille,
+   deux comptes — les autres vivent dans la ligne de faits du groupe affiché. */
+.vx-chain-group {
+  min-height: calc(var(--vx-space-32) + var(--vx-space-8));
+  gap: var(--vx-space-4);
+}
+
+.vx-chain-group-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vx-space-8);
+}
+
+.vx-chain-group[aria-pressed='true'] {
+  border-color: var(--vx-option);
+  background-color: var(--vx-option-soft);
+}
+
+/* Faits du groupe affiché : la liste horizontale du cadre graphique. */
+.vx-chain-group-facts {
+  margin: 0 0 var(--vx-space-12);
+}
+
+.vx-chain-group-facts dd strong {
+  color: var(--vx-text);
+  font-family: var(--vx-font-mono);
+  font-weight: 600;
+}
+
+.vx-chain-group-facts .vx-num {
+  overflow-wrap: anywhere;
+}
+
+/* La bande de synthèse : six faits côte à côte, micro-libellé au-dessus. */
+.vx-chain-snapshot-facts {
+  display: grid;
+  /* Deux colonnes, mesuré : à trois, les pastilles de population passaient
+     sur trois lignes et la bande dépassait ses voisines d'un tiers. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--vx-space-8) var(--vx-space-16);
+  margin: 0;
+}
+
+.vx-chain-snapshot-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-4);
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.vx-chain-snapshot-facts dt {
+  color: var(--vx-text-muted);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-font-size-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vx-chain-snapshot-facts dd {
+  margin: 0;
+  color: var(--vx-text-secondary);
+  font-size: var(--vx-font-size-meta);
+  text-align: left;
+}
+
+.vx-chain-snapshot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vx-space-4);
+}
+
+.vx-chain-snapshot-refs,
+.vx-chain-snapshot-refs code {
+  display: inline;
+  overflow-wrap: anywhere;
+}
+
+/* Colonnes qui ne sont pas des nombres : l'action et l'axe. */
+.vx-chain-col-action {
+  width: calc(var(--vx-space-32) * 2 + var(--vx-space-16));
+}
+
+.vx-chain-col-strike {
+  width: 9ch;
+}
+
+.vx-chain-inspect-cell {
+  white-space: nowrap;
+}
+
+.vx-chain-inspect-cell .vx-quote-status {
+  margin: 0 var(--vx-space-4) 0 0;
+}
+
+.vx-chain-inspect[aria-pressed='true'] {
+  border-color: var(--vx-option);
+  color: var(--vx-text);
+}
+
+/* Le focus clavier ne passe pas sous les deux rangées d'en-tête collantes. */
+.vx-chain-table-scroll {
+  scroll-padding-top: calc(var(--vx-space-24) * 2 + var(--vx-space-8));
+}
+
+/* La série longue en bande : le tracé prend la hauteur d'une figure, pas
+   celle d'une vignette. */
+.vx-options-series-chart {
+  min-height: calc(var(--vx-space-32) * 2 + var(--vx-space-16));
+}

@@ -487,7 +487,13 @@ describe('Page Options — états', () => {
   it('loading au premier chargement', async () => {
     fetchMock.mockReturnValue(new Promise<Response>(() => {}));
     await renderOptions();
-    expect(await screen.findByText('Chargement')).toBeDefined();
+    // Deux modules disent « Chargement » : le sélecteur (vue Marchés en
+    // attente — une attente, pas une couverture vide) et le cadre de la
+    // chaîne. Le cadre réserve la FORME de ce qui vient : un squelette de
+    // table, pas une barre de seize pixels qui saute à trois mille.
+    const chargements = await screen.findAllByText('Chargement');
+    expect(chargements.length).toBeGreaterThan(0);
+    expect(document.querySelector('[data-state="loading"] .vx-skel-table')).not.toBeNull();
   });
 
   it('session requise sur 401', async () => {
@@ -577,4 +583,89 @@ describe('Page Options — états', () => {
     expect(screen.getByText(/Colonnes affichées : 6 sur 12 servies/)).toBeTruthy();
   });
 
+});
+
+/**
+ * REFONTE UI 2026-09-05 — ce que la recomposition gèle.
+ *
+ * Le sélecteur se plie sans rien retirer, une panne n'est pas une couverture
+ * vide, le statut de quote est un fait de côté, la synthèse et les valeurs
+ * portent leur densité, et la ligne de faits du groupe affiché existe.
+ */
+describe('Page Options — refonte de la composition', () => {
+  it('le sélecteur se plie derrière le sous-jacent courant, sans rien retirer', async () => {
+    repondre(jsonResponse(makeOptionChain()));
+    await renderOptions();
+    const fold = document.querySelector('details.vx-underlying-fold');
+    expect(fold).not.toBeNull();
+    const summary = fold?.querySelector('summary');
+    expect(summary?.textContent).toContain('SYN-TECH-01');
+    expect(summary?.textContent).toMatch(/autre/);
+    // La liste complète reste dans le document, avec le courant marqué.
+    const nav = screen.getByRole('navigation', { name: 'Sous-jacents disponibles', hidden: true });
+    // La vue Marchés arrive après la chaîne : on attend la pilule, on ne la suppose pas.
+    const courant = await within(nav).findByText('SYN-TECH-01');
+    expect(courant.getAttribute('aria-current')).toBe('page');
+  });
+
+  it('une panne de la vue Marchés n’est pas une couverture vide', async () => {
+    fetchMock.mockRejectedValue(new TypeError('fetch failed'));
+    await renderOptions();
+    await screen.findByText('Hors ligne');
+    const nav = screen.getByRole('navigation', { name: 'Sous-jacents disponibles', hidden: true });
+    expect(nav.textContent).toContain('Hors ligne');
+    expect(nav.textContent).not.toContain('couvre encore aucun');
+  });
+
+  it('le statut de quote est porté UNE fois par côté, à côté de l’action', async () => {
+    repondre(jsonResponse(makeOptionChain()));
+    await renderOptions();
+    const table = await screen.findByRole('table', { name: /SYN-TECH-01$/ });
+    const statuts = table.querySelectorAll('.vx-quote-status');
+    expect(statuts.length).toBeGreaterThan(0);
+    for (const statut of statuts) {
+      expect(statut.closest('.vx-chain-inspect-cell')).not.toBeNull();
+      expect(statut.textContent).not.toBe('OK');
+    }
+    // Deux cellules de cotation d'un même côté ne répètent plus le badge.
+    const ligne = statuts[0]?.closest('tr');
+    const cote = statuts[0]?.closest('td')?.getAttribute('data-side') ?? null;
+    const memes = [...(ligne?.querySelectorAll('.vx-quote-status') ?? [])].filter(
+      (element) => element.closest('td')?.getAttribute('data-side') === cote,
+    );
+    expect(memes).toHaveLength(1);
+  });
+
+  it('les cartes de synthèse portent leur taille de catalogue et leur densité', async () => {
+    repondre(jsonResponse(makeOptionChain()));
+    await renderOptions();
+    await screen.findByRole('table', { name: /SYN-TECH-01$/ });
+    for (const id of ['spot', 'rate', 'dividend', 'identity-strip']) {
+      const cellule = document.querySelector(`[data-module="${id}"]`);
+      expect(cellule?.getAttribute('data-density'), id).toBe('compact');
+      expect(cellule?.getAttribute('data-size'), id).toBe(OPTIONS_MODULES.find((m) => m.id === id)?.size);
+    }
+    // La dominante porte aussi sa taille : le socle l'étire à sa rangée.
+    expect(document.querySelector('[data-module="chain"]')?.getAttribute('data-size')).toBe('XL');
+    // Les absences sont compactes, mais toujours six, toujours motivées.
+    expect(document.querySelectorAll('[data-density="compact"] .vx-absent')).toHaveLength(6);
+  });
+
+  it('le groupe affiché a sa ligne de faits, et les boutons de groupe restent courts', async () => {
+    repondre(jsonResponse(makeOptionChain()));
+    await renderOptions();
+    await screen.findByRole('table', { name: /SYN-TECH-01$/ });
+    const faits = document.querySelector('.vx-chain-group-facts');
+    expect(faits?.textContent).toContain('Groupe affiché');
+    expect(faits?.textContent).toContain('Quotes saines');
+    expect(faits?.textContent).toContain('Écartés du calcul');
+    // Le bouton ne porte que la qualité et deux comptes.
+    const bouton = screen.getAllByTestId('chain-group')[0];
+    expect(bouton?.textContent).toContain('contrats attendus');
+    expect(bouton?.textContent).toContain('IV résolues');
+    expect(bouton?.textContent).not.toContain('quotes saines');
+    // L'action de ligne n'annonce plus un dialogue qui n'existe pas.
+    expect(document.querySelector('.vx-chain-inspect[aria-haspopup]')).toBeNull();
+    expect(document.querySelector('.vx-chain-inspect[aria-pressed]')).not.toBeNull();
+  });
 });
