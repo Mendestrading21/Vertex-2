@@ -450,9 +450,20 @@ body {
 }
 
 .vx-absent-note {
+  min-width: 0;
   padding-left: var(--vx-space-12);
   border-left: 2px solid var(--vx-border-strong);
   color: var(--vx-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* Un contrôle de formulaire ne déborde jamais de sa carte : sa largeur est
+   celle de la cellule (mesuré sur le fuseau du Calendrier et la jambe du
+   Simulateur à 1280, passe 2). */
+.vx-card select,
+.vx-card input:not([type='checkbox']):not([type='radio']) {
+  max-width: 100%;
+  min-width: 0;
 }
 
 /* ------------------------------------------------------------------ */
@@ -5366,6 +5377,9 @@ label {
   font-weight: 650;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  /* Un libellé en capitales chasse fixe (« CAPITALISATION ») dépasse une
+     colonne de 122 px à 1280 : il se replie plutôt que de déborder (passe 2). */
+  overflow-wrap: anywhere;
 }
 
 .vx-metric-value {
@@ -5412,6 +5426,7 @@ label {
 .vx-metric-note {
   color: var(--vx-text-muted);
   font-size: var(--vx-font-size-meta);
+  overflow-wrap: anywhere;
 }
 
 /* Le sens financier : couleur ET signe dans la chaîne servie. */
@@ -5491,6 +5506,14 @@ label {
 }
 
 .vx-agenda-line > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Les valeurs d'indicateurs servies (chaînes décimales longues) se replient
+   dans leur colonne à 1280 (mesuré sur Graphiques, passe 2). */
+.vx-indicator-list dd,
+.vx-indicator-list dt {
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -8184,8 +8207,11 @@ label {
   grid-template-areas:
     'census census census census freshness freshness freshness freshness lastsync lastsync lastsync lastsync'
     'registry registry registry registry registry registry registry registry registry registry registry registry'
-    'components components components components components components versions versions versions probes probes probes'
-    'exports exports exports exports health health fields fields errors errors incidents incidents'
+    /* PASSE 2 (2026-09-06, mesure 1600) : les exports (324 px) rejoignent la
+       rangée de diagnostic (444 / 356 / 231) au lieu de quatre absences de
+       147 px — 35 % → 24 % de vide ; les absences ferment la page seules. */
+    'components components components versions versions versions exports exports exports probes probes probes'
+    'health health health fields fields fields errors errors errors incidents incidents incidents'
     'lineage lineage quality quality audit audit reports reports backups backups backups backups';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
