@@ -443,6 +443,9 @@
   display: grid;
   justify-items: center;
   text-align: center;
+  /* Un Herfindahl servi à vingt décimales se replie dans le creux au lieu
+     d'en sortir (mesuré 226 px pour 114 px de creux, passe 2). */
+  overflow-wrap: anywhere;
   /* Le creux de l'anneau, jamais au-delà. */
   max-width: 62%;
 }
@@ -454,8 +457,10 @@
   color: var(--vx-text);
   font-variant-numeric: tabular-nums lining-nums;
   /* Une chaîne servie longue se replie DANS le creux ; elle n'est jamais
-     coupée, jamais arrondie — seul son cran typographique change. */
-  overflow-wrap: break-word;
+     coupée, jamais arrondie — seul son cran typographique change.
+     `anywhere` : `break-word` laissait une valeur sans espace (Herfindahl à
+     vingt décimales) déborder du creux, mesuré en passe 2. */
+  overflow-wrap: anywhere;
 }
 
 .vx-w2-ring-center[data-density='medium'] .vx-w2-ring-center-value {
@@ -569,7 +574,9 @@
 
 .vx-w2-shares-legend {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: var(--vx-space-4) var(--vx-space-12);
   margin: var(--vx-space-8) 0 0;
   padding: 0;
@@ -1242,12 +1249,17 @@
      variante ≥ 1600 px ne faisait que réordonner ces mêmes aires ; elle est
      supprimée (les douze colonnes s'élargissent, la dominante garde sa rangée). */
   grid-template-areas:
-    'value value value value value value totalperf totalperf totalperf currency currency currency'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : performance totale (298 px) et devise (214)
+       s'empilent face à la valorisation (629) : 29 % → 8 %. L'import CSV
+       (252) et le registre (361) s'empilent face au formulaire de saisie
+       (869) : 36 % → 9 %. */
+    'value value value value value value totalperf totalperf totalperf totalperf totalperf totalperf'
+    'value value value value value value currency currency currency currency currency currency'
     'concentration concentration concentration concentration concentration concentration concentration concentration dividends dividends dividends dividends'
     'positions positions positions positions positions positions positions positions positions positions positions positions'
     'performance performance performance performance performance performance performance performance performance performance performance performance'
-    'ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger'
-    'record record record record record record import import import import import import'
+    'record record record record record record record record import import import import'
+    'record record record record record record record record ledger ledger ledger ledger'
     'dayperf dayperf dayperf cash cash cash benchmark benchmark benchmark allocation allocation allocation'
     'sector sector sector country country country alerts alerts alerts attribution attribution attribution';
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1416,8 +1428,12 @@
   display: grid;
   grid-template-areas:
     'main main main main main main main main main main main main'
-    'volume volume volume volume overlays overlays overlays overlays indicators indicators indicators indicators'
-    'rsi rsi rsi rsi macd macd macd macd comparison comparison comparison comparison'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : les superpositions (1 014 px, deux tables)
+       prennent deux rangées ; volume (324) et indicateurs servis (601)
+       s'empilent au centre, la comparaison (736) à droite : 36 % → 11 %. */
+    'overlays overlays overlays overlays volume volume volume volume comparison comparison comparison comparison'
+    'overlays overlays overlays overlays indicators indicators indicators indicators comparison comparison comparison comparison'
+    'rsi rsi rsi rsi rsi rsi macd macd macd macd macd macd'
     'sync sync sync sync selected selected alerts alerts layouts layouts saved saved';
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
@@ -1900,11 +1916,17 @@
    1600 (les douze colonnes s'élargissent, la dominante garde sa rangée). */
 .vx-opp-grid {
   grid-template-areas:
-    'ideas ideas ideas ideas health health health health biassplit biassplit biassplit biassplit'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : santé (223 px) et répartition (223) s'empilent
+       face aux idées actives (440) : 33 % → 3 %. Le profil (1 051) tient
+       deux rangées face à la provenance (785) puis, à droite, la qualité (354)
+       et les exclusions (206) : 47 % / 44 % → 23 %. Les six absences
+       déclarées ferment la page sur une rangée de hauteur égale. */
+    'ideas ideas ideas ideas ideas ideas health health health health health health'
+    'ideas ideas ideas ideas ideas ideas biassplit biassplit biassplit biassplit biassplit biassplit'
     'ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking'
-    'exclusions exclusions exclusions exclusions exclusions exclusions profile profile profile provenance provenance provenance'
-    'quality quality quality score score score bias bias bias return return return'
-    'scatter scatter scatter scatter factors factors factors factors activity activity activity activity';
+    'profile profile profile profile provenance provenance provenance provenance quality quality quality quality'
+    'profile profile profile profile provenance provenance provenance provenance exclusions exclusions exclusions exclusions'
+    'score score bias bias return return scatter scatter factors factors activity activity';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
@@ -3733,7 +3755,10 @@
 .vx-metric-number {
   display: inline-block;
   overflow: hidden;
-  max-width: 14ch;
+  /* 14ch dépasse une colonne de 122 px (grille d'identité d'Analyse, cartes
+     de 216 px d'Aujourd'hui) : la borne est aussi celle de la cellule, et le
+     `title` garde la valeur entière (passe 2, mesuré). */
+  max-width: min(14ch, 100%);
   vertical-align: bottom;
   white-space: nowrap;
   text-overflow: ellipsis;

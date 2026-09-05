@@ -3983,6 +3983,8 @@ body {
 }
 
 .vx-opp-profile-lists > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: var(--vx-space-12);
   background: var(--vx-surface-1);
   border: 1px solid var(--vx-border-soft);
@@ -5374,7 +5376,11 @@ label {
   font-weight: 600;
   letter-spacing: -0.025em;
   line-height: 1.1;
-  overflow-wrap: break-word;
+  /* `anywhere`, pas `break-word` : un identifiant servi sans espace
+     (`synthetic-unadjusted`, un instant ISO) doit pouvoir se replier dans une
+     cellule de 216 px ; mesuré en débordement horizontal sur Aujourd'hui,
+     Analyse et Portefeuille (passe 2). */
+  overflow-wrap: anywhere;
 }
 
 .vx-metric-value.vx-cell-absent {
@@ -5478,9 +5484,15 @@ label {
 .vx-agenda-mini {
   display: flex;
   flex-direction: column;
+  min-width: 0;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.vx-agenda-line > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .vx-agenda-line {
@@ -5501,6 +5513,12 @@ label {
   color: var(--vx-silver);
   font-family: var(--vx-font-mono);
   font-variant-numeric: tabular-nums;
+  /* L'instant reste insécable ; le fuseau qui le suit peut passer à la
+     ligne dans une carte de 216 px (mesuré 250 px pour 182, passe 2). */
+  white-space: normal;
+}
+
+.vx-agenda-time time {
   white-space: nowrap;
 }
 
@@ -5521,10 +5539,10 @@ label {
 
 .vx-agenda-status {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--vx-space-8);
   color: var(--vx-text-muted);
-  white-space: nowrap;
 }
 
 .vx-mini-list {
@@ -5712,11 +5730,17 @@ label {
 .vx-today-grid {
   display: grid;
   grid-template-areas:
-    'health health health catalyst catalyst catalyst portfolio portfolio portfolio opp opp opp'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : le prochain catalyseur (342 px) et le
+       portefeuille manuel (438) s'empilent face à la santé des sources (732) ;
+       la rangée passe de 29 % à 13 % de vide. L'agenda (648) rejoint le focus
+       (462) au lieu des trois absences (204), qui ferment la page sur leur
+       propre rangée : 34 % → 14 %. */
+    'health health health health catalyst catalyst catalyst catalyst opp opp opp opp'
+    'health health health health portfolio portfolio portfolio portfolio opp opp opp opp'
     'attention attention attention attention attention attention attention attention attention attention attention attention'
     'global global global global global global sectors sectors sectors sectors sectors sectors'
-    'focus focus focus focus focus focus focus focus focus focus focus focus'
-    'calendar calendar calendar calendar calendar calendar regime regime vol vol risks risks';
+    'focus focus focus focus focus focus calendar calendar calendar calendar calendar calendar'
+    'regime regime regime regime vol vol vol vol risks risks risks risks';
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
@@ -7161,8 +7185,12 @@ label {
   grid-template-areas:
     'header header header header header header header header facts facts facts facts'
     'chart chart chart chart chart chart chart chart chart chart chart chart'
-    'indicators indicators indicators indicators oscillators oscillators oscillators oscillators scenarios scenarios scenarios scenarios'
-    'financials financials financials financials evidence evidence evidence evidence peers peers peers peers'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : les preuves (576 px) rejoignent indicateurs (580)
+       et oscillateurs (633) ; financiers (288) et pairs (197) s'empilent face
+       aux scénarios (467). Rangée à 39 % de vide → deux rangées à 4 %. */
+    'indicators indicators indicators indicators oscillators oscillators oscillators oscillators evidence evidence evidence evidence'
+    'scenarios scenarios scenarios scenarios scenarios scenarios financials financials financials financials financials financials'
+    'scenarios scenarios scenarios scenarios scenarios scenarios peers peers peers peers peers peers'
     'verdict verdict verdict verdict verdict verdict risks risks risks catalysts catalysts catalysts'
     'revisions revisions revisions regime regime regime quality quality quality valuation valuation valuation'
     'confidence confidence confidence confidence levels levels levels levels contradictions contradictions contradictions contradictions';
@@ -7909,8 +7937,11 @@ label {
     'timeline timeline timeline timeline timeline timeline timeline timeline timeline filters filters filters'
     'timeline timeline timeline timeline timeline timeline timeline timeline timeline catsplit catsplit catsplit'
     'timeline timeline timeline timeline timeline timeline timeline timeline timeline sources sources sources'
-    'exposure exposure exposure exposure exposure exposure orphans orphans orphans orphans orphans orphans'
-    'review review review review review review review review review review review review'
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : la revue (1 121 px) n'occupe plus une rangée
+       entière ; l'exposition (871) et les thèses orphelines (212) s'empilent
+       face à elle : 38 % → 1 % de vide. */
+    'exposure exposure exposure exposure exposure exposure review review review review review review'
+    'orphans orphans orphans orphans orphans orphans review review review review review review'
     'impact impact confidence confidence surprises surprises consensus consensus history history alerts alerts';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
