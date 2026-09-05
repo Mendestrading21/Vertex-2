@@ -49,12 +49,12 @@ export function GlobalMarketModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot Marchés"
+      kicker="Observé"
       title={module.title}
       titleId="vx-today-global-market-title"
       className="vx-today-module"
       {...(data?.as_of !== null && data?.as_of !== undefined && moduleShowsContent(state)
-        ? { footer: <>as_of {data.as_of} · population {publie(data.population)}</> }
+        ? { footer: <>snapshot Marchés · as_of {data.as_of} · population {publie(data.population)}</> }
         : {})}
     >
       <ModuleStatus state={state} raw={state === 'closed' ? data?.state : data?.reason} />
@@ -106,12 +106,12 @@ export function NextCatalystModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Agenda publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-today-next-catalyst-title"
       className="vx-today-module"
       {...(moduleShowsContent(state) && data !== undefined
-        ? { footer: <>snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> }
+        ? { footer: <>agenda · snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> }
         : {})}
     >
       <ModuleStatus state={state} raw={state === 'closed' ? data?.state : data?.reason} />
@@ -156,11 +156,13 @@ export function SourceHealthModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Capacités testées"
+      kicker="Observé"
       title={module.title}
       titleId="vx-today-source-health-title"
       className="vx-today-module"
-      {...(data !== undefined ? { footer: <>snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> } : {})}
+      {...(data !== undefined
+        ? { footer: <>capacités testées · snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> }
+        : {})}
     >
       <ModuleStatus state={state} />
       {data !== undefined ? (
@@ -217,7 +219,7 @@ export function OpportunitiesModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Moteur fail-closed"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-today-opportunities-title"
       className="vx-today-module"
@@ -225,7 +227,7 @@ export function OpportunitiesModule() {
         ? {
             footer: (
               <>
-                ordre publié : {publie(summary.orderingMethod)} ·{' '}
+                moteur fail-closed · ordre publié : {publie(summary.orderingMethod)} ·{' '}
                 <Link to="/opportunities">voir toutes les opportunités</Link>
               </>
             ),
@@ -320,12 +322,12 @@ export function SectorsModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot Marchés"
+      kicker="Observé"
       title={module.title}
       titleId="vx-today-sectors-title"
       className="vx-today-module"
       {...(moduleShowsContent(state) && data !== undefined
-        ? { footer: <>rendement 1 j par instrument, chaîne serveur · <Link to="/markets">voir Marchés</Link></> }
+        ? { footer: <>snapshot Marchés · rendement 1 j par instrument · <Link to="/markets">voir Marchés</Link></> }
         : {})}
     >
       <ModuleStatus state={state} raw={state === 'closed' ? data?.state : data?.reason} />
@@ -347,7 +349,7 @@ export function ManualPortfolioModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Déclaré par l’utilisateur"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-today-portfolio-title"
       className="vx-today-module"
@@ -432,7 +434,7 @@ export function CalendarModule() {
   return (
     <Card
       rank="quiet"
-      kicker="Agenda publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-today-calendar-title"
       className="vx-today-module"
@@ -440,8 +442,7 @@ export function CalendarModule() {
         ? {
             footer: (
               <>
-                {lines.length} premiers sur {data.agenda.length} publiés, ordre du worker ·{' '}
-                <Link to="/calendar">voir le calendrier complet</Link>
+                {lines.length}/{data.agenda.length} publiés · <Link to="/calendar">voir le calendrier</Link>
               </>
             ),
           }

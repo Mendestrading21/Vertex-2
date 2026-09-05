@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { AttentionSnapshot } from '../api/client.ts';
 import { pageStateOf, useAttention } from '../api/hooks.ts';
 import type { PageDataState } from '../api/hooks.ts';
@@ -10,6 +12,8 @@ import { SyntheticBanner } from '../components/SyntheticBanner.tsx';
 import { InspectorPanel } from '../shell/inspector.tsx';
 import { AttentionQueue } from './AttentionQueue.tsx';
 import { FocusRowModule } from '../components/widgets/InstrumentTile.tsx';
+import { ModuleCell as SharedModuleCell } from '../components/widgets/ModuleCell.tsx';
+import type { ModuleDensity } from '../components/widgets/ModuleCell.tsx';
 import { SnapshotRail } from './SnapshotRail.tsx';
 import {
   CalendarModule,
@@ -93,20 +97,51 @@ function degradedDetailOf(state: DataState | 'auth-required', data: AttentionSna
   return undefined;
 }
 
+/**
+ * La cellule d'un module de CETTE planche : la taille vient du catalogue
+ * (`data-size`, ADR-017), la densité est décidée ici, la classe reste celle
+ * de composition (`vx-today-cell`). Aucun module de cette page n'est rendu
+ * par `Widget` : chaque cellule est l'unique porteur de `data-module`.
+ */
+function ModuleCell({
+  id,
+  density,
+  className,
+  children,
+}: {
+  readonly id: string;
+  readonly density?: ModuleDensity;
+  readonly className?: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <SharedModuleCell
+      id={id}
+      size={todayModule(id).size}
+      className={className ?? 'vx-today-cell'}
+      {...(density === undefined ? {} : { density })}
+    >
+      {children}
+    </SharedModuleCell>
+  );
+}
+
 function AbsentTodayModule({ id }: { readonly id: string }) {
   const module = todayModule(id);
   if (module.status.kind !== 'absent') {
     throw new Error(`Module ${id} is served, not absent`);
   }
   return (
-    <div data-module={id} className="vx-today-cell">
+    // Une absence tient sa place à sa taille de catalogue, en densité
+    // compacte : elle pèse moins qu'une donnée (article 17).
+    <ModuleCell id={id} density="compact">
       <AbsentModule
         title={module.title}
         question={module.question}
         reason={module.status.reason}
         note={module.status.note}
       />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -136,29 +171,26 @@ function TodayBoard({
   const degradedDetail = degradedDetailOf(state, data);
   return (
     <div className="vx-today-grid" data-testid="today-grid">
-      <AbsentTodayModule id="regime" />
-
-      <div data-module="global-market" className="vx-today-cell">
-        <GlobalMarketModule />
-      </div>
-      <AbsentTodayModule id="volatility" />
-      <div data-module="next-catalyst" className="vx-today-cell">
-        <NextCatalystModule />
-      </div>
-      <div data-module="source-health" className="vx-today-cell">
-        <SourceHealthModule />
-      </div>
-
       {/*
-        Les instruments suivis — prix, variation, mini-courbe, volume — sur
-        les dossiers d'analyse publiés. Un module de plus que la planche §1 :
-        demandé explicitement, servi entièrement, borné à quatre dossiers.
+        REFONTE UI 2026-09-05 — L'ORDRE DU DOM EST L'ORDRE DE LECTURE de la
+        composition (`.vx-today-grid`, global.css) : signal court, file,
+        preuve, suivis, calendrier puis absences. Le clavier et l'écran lisent
+        la même planche.
       */}
-      <div data-module="focus" className="vx-today-cell">
-        <FocusRowModule />
-      </div>
+      <ModuleCell id="source-health" density="compact">
+        <SourceHealthModule />
+      </ModuleCell>
+      <ModuleCell id="next-catalyst" density="compact">
+        <NextCatalystModule />
+      </ModuleCell>
+      <ModuleCell id="manual-portfolio" density="compact">
+        <ManualPortfolioModule />
+      </ModuleCell>
+      <ModuleCell id="opportunities" density="compact">
+        <OpportunitiesModule />
+      </ModuleCell>
 
-      <div data-module="attention" className="vx-today-cell vx-today-primary">
+      <ModuleCell id="attention" className="vx-today-cell vx-today-primary">
         <DataStateBoundary
           state={state}
           {...(degradedDetail !== undefined ? { detail: degradedDetail } : {})}
@@ -173,14 +205,13 @@ function TodayBoard({
           <SyntheticBanner population={data.population} />
           <Card
             rank="dominant"
-            kicker="Priorité publiée"
+            kicker="Calculé"
             title="File d'attention"
             titleId="vx-attention-title"
             aside={<>{data.items.length} éléments</>}
             footer={
               <>
-                Ordre publié par le worker — aucun reclassement local. Population{' '}
-                {data.population ?? 'non publiée'}
+                Ordre du worker · population {data.population ?? 'non publiée'}
                 {data.as_of === null ? '' : ` · as_of ${data.as_of}`}
               </>
             }
@@ -192,21 +223,30 @@ function TodayBoard({
             />
           </Card>
         </DataStateBoundary>
-      </div>
+      </ModuleCell>
 
-      <div data-module="opportunities" className="vx-today-cell">
-        <OpportunitiesModule />
-      </div>
-      <AbsentTodayModule id="active-risks" />
-      <div data-module="sectors" className="vx-today-cell">
+      <ModuleCell id="global-market">
+        <GlobalMarketModule />
+      </ModuleCell>
+      <ModuleCell id="sectors">
         <SectorsModule />
-      </div>
-      <div data-module="manual-portfolio" className="vx-today-cell">
-        <ManualPortfolioModule />
-      </div>
-      <div data-module="calendar" className="vx-today-cell">
+      </ModuleCell>
+
+      {/*
+        Les instruments suivis — prix, variation, mini-courbe, volume — sur
+        les dossiers d'analyse publiés. Un module de plus que la planche §1 :
+        demandé explicitement, servi entièrement, borné à quatre dossiers.
+      */}
+      <ModuleCell id="focus">
+        <FocusRowModule />
+      </ModuleCell>
+
+      <ModuleCell id="calendar">
         <CalendarModule />
-      </div>
+      </ModuleCell>
+      <AbsentTodayModule id="regime" />
+      <AbsentTodayModule id="volatility" />
+      <AbsentTodayModule id="active-risks" />
     </div>
   );
 }

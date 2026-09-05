@@ -8490,48 +8490,47 @@ label {
    compose dix-sept modules autour du registre des sources ; la santé des
    composants garde son corps, la grille lui donne le matériau des cartes. */
 
-/*
-  MÊME RÈGLE QU'À CALENDRIER : une carte haute ne partage plus sa ligne
-  qu'avec une autre carte haute.
+/* MÊME RÈGLE QU'À CALENDRIER : une carte haute ne partage sa ligne qu'avec
+   une autre carte haute ; les absences, en densité compacte, se valent en
+   hauteur et vont ensemble.
 
-  Mesuré à 1440 sur l'ancienne composition : `health census freshness fields`
-  valait 145 / 548 / 419 / 173 px, soit 41 % de vide ; `exports backups probes`
-  valait 404 / 173 / 194, soit 36 %. Et `errors incidents lastsync versions`
-  était à 32 %, à un cheveu du seuil — corrigée aussi, une porte qu'on frôle
-  finit par la franchir.
+   REFONTE UI 2026-09-05 — ORDRE DE LECTURE : SIGNAL → REGISTRE → DIAGNOSTIC →
+   absences.
 
-  Les paires COURTES restent en tête de bande et les hautes dessous : le
-  chiffre de synthèse (`global-health`) garde sa place en haut à gauche, là où
-  l'œil arrive.
-*/
+   AVANT : la dominante (le registre) n'arrivait qu'en cinquième rangée, sous
+   quatre rangées dont deux entièrement absentes ; les absences s'étalaient
+   sur quatre rangées ; les exports (deux liens) tenaient une bande pleine ;
+   la santé des composants fermait la page.
+
+   MAINTENANT. Douze colonnes : une rangée de SIGNAL (dénombrements,
+   fraîcheur, dernière vérification — trois cartes courtes de hauteur
+   voisine), le registre en deuxième rangée et en pleine largeur, puis le
+   DIAGNOSTIC (santé des composants, versions, sondes ; exports à côté des
+   premières absences), et les absences regroupées en bas — où leur
+   régularité est le message. Le catalogue est INCHANGÉ : les dix-sept
+   modules gardent leur aire nommée (`widgets.css`). */
 .vx-sources-grid {
   grid-template-areas:
-    'health health fields fields'
-    'census census freshness freshness'
-    'errors errors incidents incidents'
-    'lastsync lastsync versions versions'
-    'registry registry registry registry'
-    'lineage quality audit reports'
-    'exports exports exports exports'
-    'backups backups probes probes'
-    'components components components components';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'census census census census freshness freshness freshness freshness lastsync lastsync lastsync lastsync'
+    'registry registry registry registry registry registry registry registry registry registry registry registry'
+    'components components components components components components versions versions versions probes probes probes'
+    'exports exports exports exports health health fields fields errors errors incidents incidents'
+    'lineage lineage quality quality audit audit reports reports backups backups backups backups';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
-@media (min-width: 1600px) {
+/* Dégradation laptop (< 1280 px, inspecteur ouvert) : la rangée de
+   diagnostic se plie en deux, les absences passent à trois par rangée. */
+@media (max-width: 1279px) {
   .vx-sources-grid {
-    /* À 1600 les cinq colonnes accueillent les courtes ensemble et les
-       hautes ensemble, selon la même règle. */
     grid-template-areas:
-      'health health fields errors errors'
-      'census census census freshness freshness'
-      'incidents incidents lineage quality quality'
-      'lastsync lastsync lastsync versions versions'
-      'registry registry registry registry registry'
-      'audit audit reports backups probes'
-      'exports exports exports exports exports'
-      'components components components components components';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+      'census census census census freshness freshness freshness freshness lastsync lastsync lastsync lastsync'
+      'registry registry registry registry registry registry registry registry registry registry registry registry'
+      'components components components components components components components components components components components components'
+      'versions versions versions versions probes probes probes probes exports exports exports exports'
+      'health health health health fields fields fields fields errors errors errors errors'
+      'incidents incidents incidents incidents lineage lineage lineage lineage quality quality quality quality'
+      'audit audit audit audit reports reports reports reports backups backups backups backups';
   }
 }
 

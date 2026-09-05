@@ -8,6 +8,7 @@ import { DataStateBoundary } from '../components/DataStateBoundary.tsx';
 import type { ModuleState } from '../components/moduleState.ts';
 import { SyntheticBanner } from '../components/SyntheticBanner.tsx';
 import { SourceHealthMatrix } from './SourceHealthMatrix.tsx';
+import { ModuleCell } from '../components/widgets/ModuleCell.tsx';
 import { CapabilityInspector } from './sources/CapabilityInspector.tsx';
 import {
   AbsentSourcesModule,
@@ -41,6 +42,14 @@ import { sourcesModule } from './sources/sourcesModules.ts';
  * lignée, journal d'audit, rapports, sauvegardes — ils tiennent leur place
  * avec le motif de leur absence. Rien n'est simulé.
  *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE. La planche se lit désormais
+ * SIGNAL → REGISTRE → DIAGNOSTIC → absences : les dénombrements, la
+ * fraîcheur et la dernière vérification en tête, la dominante en deuxième
+ * rangée, puis la santé des composants, les versions et les sondes, les
+ * exports, et les neuf absences regroupées en bas — où leur régularité est
+ * le message. La composition vit dans `.vx-sources-grid` (`global.css`) ;
+ * le catalogue est inchangé et l'ordre du DOM suit l'ordre de lecture.
+ *
  * L'inspecteur n'existe que si une capacité est RÉELLEMENT ouverte : le
  * témoin « aucune colonne morte » du shell lit cette page sans sélection.
  *
@@ -62,12 +71,18 @@ function RegistryModule({
   return (
     <Card
       rank="dominant"
-      kicker="Capacités déclarées × sondes persistées"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-src-registry-title"
       className="vx-matrix-card"
-      aside={<>{data.total} déclarée(s) · vérifié à {data.checked_at}</>}
-      footer={<>quatorze capacités croisées avec les sondes réellement persistées ; un statut jamais sondé reste ERROR / NEVER_TESTED</>}
+      // Le compte vient du DTO (`total`), jamais d'un chiffre écrit dans le
+      // code ; l'instant est celui de la réponse, daté par le serveur.
+      aside={
+        <>
+          {data.total} déclarée(s) · vérifié à <time dateTime={data.checked_at}>{data.checked_at}</time>
+        </>
+      }
+      footer={<>capacités déclarées × sondes persistées · jamais sondé = NEVER_TESTED</>}
     >
       <SourceHealthMatrix entries={data.capabilities} total={data.total} selected={selected} onInspect={onInspect} />
     </Card>
@@ -100,17 +115,13 @@ function SourcesBoard({ data, state }: { readonly data: SystemCapabilities; read
       {attentionSettled ? <SyntheticBanner population={population} /> : null}
 
       <div className="vx-sources-grid vx-board" data-testid="sources-grid">
-        <AbsentSourcesModule id="global-health" />
+        {/* SIGNAL : ce que la réponse dit d'elle-même. */}
         <StatusCensusModule data={data} state={state} />
         <FreshnessModule health={data.health} state={state} />
-        <AbsentSourcesModule id="field-coverage" />
-
-        <AbsentSourcesModule id="error-rate" />
-        <AbsentSourcesModule id="incidents" />
         <LastSyncModule data={data} state={state} />
-        <VersionsModule health={data.health} state={state} />
 
-        <div data-module="registry">
+        {/* REGISTRE : la dominante, en pleine largeur. */}
+        <ModuleCell id="registry" size={sourcesModule('registry').size}>
           <RegistryModule
             data={data}
             selected={opened?.capability_id ?? null}
@@ -118,19 +129,26 @@ function SourcesBoard({ data, state }: { readonly data: SystemCapabilities; read
               setSelected((previous) => (previous === capabilityId ? null : capabilityId));
             }}
           />
-        </div>
+        </ModuleCell>
+
+        {/* DIAGNOSTIC : composants, versions, sondes, exports. */}
+        <ModuleCell id="components-health" size={sourcesModule('components-health').size}>
+          <HealthPanel health={data.health} />
+        </ModuleCell>
+        <VersionsModule health={data.health} state={state} />
+        <UnknownProbesModule data={data} state={state} />
+        <ExportsModule state={state} />
+
+        {/* ABSENCES : neuf motifs fermés, regroupés. */}
+        <AbsentSourcesModule id="global-health" />
+        <AbsentSourcesModule id="field-coverage" />
+        <AbsentSourcesModule id="error-rate" />
+        <AbsentSourcesModule id="incidents" />
         <AbsentSourcesModule id="lineage" />
         <AbsentSourcesModule id="field-quality" />
-
         <AbsentSourcesModule id="audit-log" />
         <AbsentSourcesModule id="reports" />
-        <ExportsModule state={state} />
         <AbsentSourcesModule id="backups" />
-
-        <div data-module="components-health">
-          <HealthPanel health={data.health} />
-        </div>
-        <UnknownProbesModule data={data} state={state} />
       </div>
 
       {opened !== null ? (
