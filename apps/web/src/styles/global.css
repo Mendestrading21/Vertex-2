@@ -8208,11 +8208,15 @@ label {
     'census census census census freshness freshness freshness freshness lastsync lastsync lastsync lastsync'
     'registry registry registry registry registry registry registry registry registry registry registry registry'
     /* PASSE 2 (2026-09-06, mesure 1600) : les exports (324 px) rejoignent la
-       rangée de diagnostic (444 / 356 / 231) au lieu de quatre absences de
-       147 px — 35 % → 24 % de vide ; les absences ferment la page seules. */
-    'components components components versions versions versions exports exports exports probes probes probes'
-    'health health health fields fields fields errors errors errors incidents incidents incidents'
-    'lineage lineage quality quality audit audit reports reports backups backups backups backups';
+       rangée de diagnostic par paires de hauteurs voisines : composants (444)
+       avec versions (356), exports (324) avec sondes inconnues (231) ; les neuf
+       absences déclarées ferment la page sur trois rangées égales. Mesuré
+       35 % → 10 % et 14 % de vide (1600), 39 % → 7 % et 12 % (1280). */
+    'components components components components components components versions versions versions versions versions versions'
+    'exports exports exports exports exports exports probes probes probes probes probes probes'
+    'health health health health fields fields fields fields errors errors errors errors'
+    'incidents incidents incidents incidents lineage lineage lineage lineage quality quality quality quality'
+    'audit audit audit audit reports reports reports reports backups backups backups backups';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
