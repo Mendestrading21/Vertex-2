@@ -1276,8 +1276,7 @@ body {
 /* Santé des composants                                                */
 /* ------------------------------------------------------------------ */
 
-.vx-health h2,
-.vx-unknown-probes h2 {
+.vx-health h2 {
   margin: 0 0 var(--vx-space-12);
   font-size: var(--vx-font-size-title);
   font-weight: 600;
@@ -1345,14 +1344,6 @@ body {
   font-size: var(--vx-font-size-meta);
 }
 
-.vx-unknown-probes {
-  margin-top: var(--vx-space-24);
-}
-
-.vx-unknown-probes ul {
-  margin: var(--vx-space-8) 0 0;
-  padding-left: var(--vx-space-20);
-}
 
 /* ------------------------------------------------------------------ */
 /* Page Aujourd'hui — bandeau santé et file d'attention                */
@@ -1405,19 +1396,6 @@ body {
   color: var(--vx-negative);
 }
 
-.vx-queue-summary {
-  margin: 0 0 var(--vx-space-16);
-  color: var(--vx-text-muted);
-  font-size: var(--vx-font-size-meta);
-}
-
-.vx-today-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 0.72fr);
-  align-items: start;
-  /* Gouttière canonique 12–16 px. Elle valait 20 px. */
-  gap: var(--vx-space-12);
-}
 
 /* V3 — `.vx-today-primary` ne porte PLUS de surface : la carte en porte une,
    et une seule. Cette classe ne sert plus qu'à la composition (placement dans
@@ -1427,42 +1405,6 @@ body {
   min-width: 0;
 }
 
-/* Même tête que `.vx-card-head` : espaces, filet, alignement. Deux têtes de
-   panneau qui ne respirent pas pareil, c'est deux styles. */
-.vx-panel-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--vx-space-16);
-  margin-bottom: var(--vx-space-12);
-  padding-bottom: var(--vx-space-12);
-  border-bottom: 1px solid var(--vx-border-soft);
-}
-
-.vx-panel-head h2 {
-  margin: 0;
-  font-size: var(--vx-font-size-title);
-  font-weight: 620;
-  letter-spacing: -0.02em;
-}
-
-.vx-panel-head > p {
-  max-width: 46ch;
-  margin: 0;
-  color: var(--vx-text-muted);
-  font-size: var(--vx-font-size-meta);
-  text-align: right;
-}
-
-.vx-panel-kicker {
-  margin: 0 0 var(--vx-space-4);
-  color: var(--vx-text-muted);
-  font-family: var(--vx-font-mono);
-  font-size: var(--vx-font-size-meta);
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
 
 /* V3 — le rail n'est plus une surface : c'est une PILE de cartes `quiet`.
    Il portait auparavant sa propre bordure, son fond et son ombre AUTOUR de
@@ -2341,11 +2283,6 @@ body {
   font-size: var(--vx-font-size-meta);
 }
 
-.vx-chain-selected-meta {
-  margin: 0 0 var(--vx-space-12);
-  color: var(--vx-text-secondary);
-  font-size: var(--vx-font-size-meta);
-}
 
 .vx-chain-table-scroll {
   /* `relative` : ancre les spans .vx-visually-hidden (position absolute) des
@@ -2671,7 +2608,6 @@ body {
 }
 
 .vx-advice-facts div,
-.vx-sim-summary div,
 .vx-sim-echo div {
   display: flex;
   gap: var(--vx-space-12);
@@ -2681,13 +2617,11 @@ body {
 }
 
 .vx-advice-facts dt,
-.vx-sim-summary dt,
 .vx-sim-echo dt {
   color: var(--vx-text-muted);
 }
 
 .vx-advice-facts dd,
-.vx-sim-summary dd,
 .vx-sim-echo dd {
   margin: 0;
   text-align: right;
@@ -3030,7 +2964,6 @@ body {
   font-size: var(--vx-font-size-title);
 }
 
-.vx-pf-summary-head,
 .vx-pf-ledger-head {
   display: flex;
   align-items: center;
@@ -3039,7 +2972,6 @@ body {
   flex-wrap: wrap;
 }
 
-.vx-pf-summary-meta,
 .vx-pf-provenance,
 .vx-pf-concentration-meta,
 .vx-pf-excluded-note,
@@ -3073,14 +3005,6 @@ body {
   margin: 0;
 }
 
-.vx-pf-summary-list {
-  margin: 0 0 var(--vx-space-8);
-  padding-left: var(--vx-space-20);
-}
-
-.vx-pf-summary-list li {
-  margin-bottom: var(--vx-space-4);
-}
 
 .vx-pf-table-scroll {
   overflow-x: auto;
@@ -3165,34 +3089,6 @@ body {
   font-size: var(--vx-font-size-body);
 }
 
-.vx-pf-bars {
-  margin: 0 0 var(--vx-space-12);
-  padding: 0;
-  list-style: none;
-}
-
-.vx-pf-bar-row {
-  display: grid;
-  grid-template-columns: 120px minmax(0, 1fr) 140px;
-  align-items: center;
-  gap: var(--vx-space-12);
-  min-width: 0;
-  margin-bottom: var(--vx-space-4);
-}
-
-.vx-pf-bar-track {
-  display: block;
-  height: 12px;
-  background: var(--vx-surface-2);
-  border-radius: var(--vx-radius-6);
-  overflow: hidden;
-}
-
-.vx-pf-bar-fill {
-  display: block;
-  height: 100%;
-  background: var(--vx-silver);
-}
 
 .vx-pf-form-grid,
 .vx-thesis-form-grid {
@@ -3454,8 +3350,7 @@ body {
 
 .vx-cat-scope,
 .vx-cat-populations,
-.vx-cat-missing,
-.vx-cat-orphans-note {
+.vx-cat-missing {
   margin: var(--vx-space-8) 0 var(--vx-space-16);
   color: var(--vx-text-secondary);
   font-size: var(--vx-font-size-meta);
@@ -3717,32 +3612,16 @@ body {
 .vx-pf-provenance code,
 .vx-perf-metric-raw code,
 .vx-perf-metric-meta code,
-.vx-pf-summary-meta code,
-.vx-thesis-action-form code,
-.vx-pf-summary-list code {
+.vx-thesis-action-form code {
   word-break: break-all;
 }
 
-.vx-pf-summary-meta,
 .vx-pf-provenance,
 .vx-perf-population,
 .vx-fu-populations {
   overflow-wrap: break-word;
 }
 
-/* V3 — le poids exact ne déborde plus de sa ligne, et n'écrase plus la barre.
-   Le rendu était `word-break: break-all` sur une colonne de 160 px : une
-   chaîne de 28 décimales s'y étalait sur trois lignes, la ligne de barre
-   faisait 60 px de haut, et l'œil ne comparait plus rien.
-   Le texte est désormais borné à une ligne, tronqué par `text-overflow`. La
-   troncature est un fait de RENDU, pas un arrondi : aucune valeur nouvelle
-   n'est fabriquée. La chaîne complète reste au survol (`title`), dans le nom
-   accessible de la ligne, et dans la table équivalente juste dessous. */
-.vx-pf-bar-value {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
 
 /* ------------------------------------------------------------------ */
 /* Vague finale — Calendrier (/calendar)                               */
@@ -3762,11 +3641,6 @@ body {
   font-weight: 600;
 }
 
-.vx-cal-window-note {
-  margin: 0 0 var(--vx-space-12);
-  color: var(--vx-text-secondary);
-  font-size: var(--vx-font-size-meta);
-}
 
 .vx-cal-window input[type='text'] {
   min-height: 32px;
@@ -3933,9 +3807,7 @@ body {
 }
 
 .vx-cal-event-meta,
-.vx-cal-event-status-note,
-.vx-cal-freshness,
-.vx-cal-event-extra {
+.vx-cal-event-status-note {
   margin: var(--vx-space-8) 0 0;
   color: var(--vx-text-secondary);
   font-size: var(--vx-font-size-meta);
@@ -4119,8 +3991,7 @@ body {
 
 .vx-opp-profile-id,
 .vx-opp-profile-note,
-.vx-opp-calref-status,
-.vx-opp-ordering {
+.vx-opp-calref-status {
   margin: 0 0 var(--vx-space-8);
   color: var(--vx-text-secondary);
   font-size: var(--vx-font-size-meta);
@@ -4386,9 +4257,7 @@ body {
     padding: var(--vx-space-16) var(--vx-space-16) var(--vx-space-32);
   }
 
-  .vx-today-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  
 
   .vx-snapshot-rail {
     position: static;
@@ -4397,16 +4266,9 @@ body {
     align-items: start;
   }
 
-  .vx-panel-head {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: var(--vx-space-8);
-  }
+  
 
-  .vx-panel-head > p {
-    max-width: 70ch;
-    text-align: left;
-  }
+  
 
   .vx-queue-item {
     align-items: stretch;
@@ -4684,8 +4546,7 @@ body {
   letter-spacing: -0.035em;
 }
 
-.vx-page-eyebrow,
-.vx-panel-kicker {
+.vx-page-eyebrow {
   color: var(--vx-signal);
 }
 
@@ -4763,22 +4624,17 @@ body {
 }
 
 .vx-chartframe-head,
-.vx-panel-head,
-.vx-pf-summary-head,
 .vx-pf-ledger-head {
   border-bottom-color: var(--vx-border);
 }
 
 .vx-chartframe-head h2,
-.vx-panel-head h2,
-.vx-health h2,
-.vx-unknown-probes h2 {
+.vx-health h2 {
   font-weight: 620;
   letter-spacing: -0.02em;
 }
 
 .vx-chartframe-meta,
-.vx-pf-summary-meta,
 .vx-health-strip,
 .vx-ai-trace {
   border-color: var(--vx-border);
@@ -4831,7 +4687,6 @@ body {
 
 .vx-perf-metric-value,
 .vx-inspector-value,
-.vx-pf-summary-list dd,
 .vx-num {
   font-variant-numeric: tabular-nums lining-nums;
 }
@@ -5098,7 +4953,6 @@ label {
 }
 
 /* Signature particulière de chaque famille de page. */
-.vx-main[data-page='today'] .vx-today-layout,
 .vx-main[data-page='portfolio'] .vx-pf-summary,
 .vx-main[data-page='portfolio'] .vx-perf-metrics {
   position: relative;
@@ -5170,172 +5024,6 @@ label {
    La couleur ne porte JAMAIS l'information seule : chaque case affiche son
    coefficient en clair, et son infobulle nomme la bande en francais. */
 
-/* V3 — LE PANNEAU GÉNÉRIQUE ADOPTE LA CARTE, ombre comprise.
-   Cette règle habille TOUS les panneaux de TOUTES les pages. Elle leur donnait
-   l'ombre de panneau et le fond profond réservés à la dominante : sur une page
-   à cinq panneaux, cinq surfaces revendiquaient le regard, donc aucune ne
-   l'obtenait. C'est la « dérive bento générique » que le contrat canonique
-   refuse nommément.
-   Les panneaux prennent donc l'apparence de `.vx-card` au rang par défaut —
-   verre graphite, bordure titane fine, aucune ombre — et la lumière reste à la
-   seule carte dominante de la page. */
-.vx-risk-page-section,
-.vx-page > .vx-panel {
-  min-width: 0;
-  margin-bottom: var(--vx-space-12);
-  padding: var(--vx-space-16);
-  border: 1px solid var(--vx-border-soft);
-  border-radius: var(--vx-radius-10);
-  background: var(--vx-surface-1);
-}
-
-.vx-riskmatrix-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--vx-border-soft);
-  border-radius: var(--vx-radius-10);
-}
-
-.vx-riskmatrix-scroll:focus-visible {
-  outline: 2px solid var(--vx-signal);
-  outline-offset: 2px;
-}
-
-.vx-riskmatrix-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: var(--vx-font-mono);
-  font-size: var(--vx-font-size-meta);
-  font-variant-numeric: tabular-nums;
-}
-
-.vx-riskmatrix-caption {
-  padding: var(--vx-space-12) var(--vx-space-16);
-  color: var(--vx-text-muted);
-  font-family: var(--vx-font-sans, inherit);
-  font-size: var(--vx-font-size-meta);
-  text-align: left;
-}
-
-.vx-riskmatrix-colhead,
-.vx-riskmatrix-rowhead {
-  padding: var(--vx-space-8) var(--vx-space-12);
-  color: var(--vx-text-secondary);
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.vx-riskmatrix-colhead {
-  border-bottom: 1px solid var(--vx-border);
-}
-
-.vx-riskmatrix-rowhead {
-  position: sticky;
-  left: 0;
-  z-index: 1;
-  border-right: 1px solid var(--vx-border);
-  background: var(--vx-surface-0);
-  text-align: left;
-}
-
-.vx-riskmatrix-corner {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--vx-surface-0);
-}
-
-.vx-riskmatrix-colhead abbr,
-.vx-riskmatrix-rowhead abbr {
-  border: 0;
-  text-decoration: none;
-}
-
-.vx-riskmatrix-cell {
-  padding: var(--vx-space-8) var(--vx-space-12);
-  border: 1px solid var(--vx-grid-line);
-  color: var(--vx-text);
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Les cinq bandes PUBLIEES par le serveur. Aucune valeur par defaut : une
-   bande inconnue n'atteint jamais l'ecran, le relais API la refuse. */
-.vx-riskmatrix-cell[data-band='self'],
-.vx-riskmatrix-swatch[data-band='self'] {
-  background: var(--vx-titanium-soft);
-  color: var(--vx-text-muted);
-}
-
-/* INTENSITÉS SÉPARÉES — les bandes se voyaient à peine, et deux d'entre elles
-   ne se voyaient pas l'une de l'autre.
-   Mesuré sur capture : `moderate_positive` valait `signal-faint` (0,065
-   d'opacité) contre `weak` transparent — deux cases quasi identiques ; et
-   `moderate_negative` et `strong_negative` partageaient EXACTEMENT le même
-   fond, ne se distinguant que par un liseré d'un pixel. Une matrice dont les
-   bandes ne se distinguent pas ne dit rien : elle donne l'illusion d'une
-   gradation.
-   Chaque côté prend donc deux crans franchement écartés, pris dans les jetons
-   qui existent déjà. LES DEUX TEINTES RESTENT NEUTRES — ambre et cyan, jamais
-   vert et rouge : une corrélation positive n'est pas « bonne » et une
-   corrélation négative n'est pas « mauvaise », et le signe financier ne doit
-   pas déteindre sur une mesure qui n'en porte pas. Un test mesure l'écart. */
-.vx-riskmatrix-cell[data-band='strong_positive'],
-.vx-riskmatrix-swatch[data-band='strong_positive'] {
-  background: var(--vx-signal-strong);
-  box-shadow: inset 0 0 0 1px var(--vx-signal);
-  color: var(--vx-signal-bright);
-}
-
-.vx-riskmatrix-cell[data-band='moderate_positive'],
-.vx-riskmatrix-swatch[data-band='moderate_positive'] {
-  background: var(--vx-signal-soft);
-  color: var(--vx-signal);
-}
-
-.vx-riskmatrix-cell[data-band='weak'],
-.vx-riskmatrix-swatch[data-band='weak'] {
-  background: transparent;
-  color: var(--vx-text-muted);
-}
-
-.vx-riskmatrix-cell[data-band='moderate_negative'],
-.vx-riskmatrix-swatch[data-band='moderate_negative'] {
-  background: var(--vx-macro-soft);
-  color: var(--vx-macro);
-}
-
-.vx-riskmatrix-cell[data-band='strong_negative'],
-.vx-riskmatrix-swatch[data-band='strong_negative'] {
-  background: var(--vx-macro-strong);
-  box-shadow: inset 0 0 0 1px var(--vx-macro);
-  color: var(--vx-macro);
-}
-
-.vx-riskmatrix-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--vx-space-12) var(--vx-space-20);
-  margin: var(--vx-space-16) 0 0;
-  padding: 0;
-  color: var(--vx-text-muted);
-  font-size: var(--vx-font-size-meta);
-  list-style: none;
-}
-
-.vx-riskmatrix-legend-item {
-  display: flex;
-  align-items: center;
-  gap: var(--vx-space-8);
-}
-
-.vx-riskmatrix-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 1px solid var(--vx-border);
-  border-radius: var(--vx-radius-6);
-}
 
 .vx-risk-extremes,
 .vx-risk-coverage {
@@ -5421,17 +5109,6 @@ label {
   font-weight: 600;
 }
 
-@media (max-width: 900px) {
-  .vx-riskmatrix-table {
-    font-size: var(--vx-font-size-micro);
-  }
-
-  .vx-riskmatrix-cell,
-  .vx-riskmatrix-colhead,
-  .vx-riskmatrix-rowhead {
-    padding: var(--vx-space-4) var(--vx-space-8);
-  }
-}
 
 /* ================================================================== */
 /* LA CARTE — primitive unique des douze destinations                  */
@@ -5600,36 +5277,6 @@ label {
 
 /* ---- Compositions de page ---------------------------------------- */
 
-/* Une page = une dominante + ses modules. La dominante occupe « environ la
-   moitié de la largeur de travail » quand un inspecteur l'accompagne, la
-   majorité sinon. Les gouttières restent dans la bande canonique. */
-.vx-cards {
-  display: grid;
-  gap: var(--vx-space-12);
-}
-
-.vx-cards[data-layout='dominant-aside'] {
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.62fr);
-  align-items: start;
-}
-
-.vx-cards[data-layout='row-3'] {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.vx-cards[data-layout='row-4'] {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 1279px) {
-  .vx-cards[data-layout='dominant-aside'] {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .vx-cards[data-layout='row-4'] {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
 
 /* La timeline des catalyseurs : bornée comme l'agenda du Calendrier, et pour
    la même raison — 3 146 px de page mesurés, dont l'essentiel en événements
@@ -6135,11 +5782,6 @@ label {
   height: 360px;
 }
 
-/* La table équivalente reste sous la carte, bornée comme les autres tables
-   longues (règle commune plus haut) — elle défile, elle ne tronque pas. */
-.vx-markets-picked {
-  color: var(--vx-signal);
-}
 
 .vx-main button.vx-markets-pick {
   /* Cible ≥ 28 px : la ligne de table la réserve déjà, le bouton la remplit. */
@@ -7018,7 +6660,8 @@ label {
 .vx-board {
   display: grid;
   gap: var(--vx-space-20) var(--vx-space-16);
-  align-items: stretch;
+  /* `align-items` est décidé UNE fois, dans widgets.css (`start`, avec les
+     tailles L/XL étirées par `data-size`) : plus de valeur concurrente ici. */
   margin-top: var(--vx-space-20);
 }
 
@@ -8175,8 +7818,7 @@ label {
   margin: 0;
 }
 
-.vx-pf-grid .vx-pf-lots tr[data-selected='true'] > *,
-.vx-riskmatrix-table tr[data-selected='true'] > * {
+.vx-pf-grid .vx-pf-lots tr[data-selected='true'] > * {
   background: var(--vx-surface-2);
 }
 
@@ -8202,7 +7844,6 @@ label {
   margin-top: var(--vx-space-16);
 }
 
-.vx-risk-alignment-list,
 .vx-risk-discards-list {
   display: flex;
   flex-wrap: wrap;
@@ -8212,7 +7853,6 @@ label {
   list-style: none;
 }
 
-.vx-risk-alignment-list li,
 .vx-risk-discards-list li {
   padding: var(--vx-space-4) var(--vx-space-8);
   border: 1px solid var(--vx-border-soft);
@@ -8222,7 +7862,6 @@ label {
   font-variant-numeric: tabular-nums;
 }
 
-.vx-risk-alignment-list li span,
 .vx-risk-discards-list li span {
   margin-right: var(--vx-space-4);
   color: var(--vx-text);
@@ -8235,24 +7874,6 @@ label {
   border-top: 1px solid var(--vx-border-soft);
 }
 
-.vx-riskmatrix-rowbtn {
-  padding: 0 var(--vx-space-4);
-  border: 1px solid transparent;
-  border-radius: var(--vx-radius-6);
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-
-.vx-riskmatrix-rowbtn:hover {
-  border-color: var(--vx-border);
-}
-
-.vx-riskmatrix-rowbtn[aria-pressed='true'] {
-  border-color: var(--vx-signal);
-  color: var(--vx-signal-bright);
-}
 
 /* ================================================================== */
 /* LOT-A7 — COMPOSITION DES PLANCHES §10 (Catalyseurs) ET §11 (Calendrier) */
