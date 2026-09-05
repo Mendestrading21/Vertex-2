@@ -7949,23 +7949,26 @@ label {
 /* ---- Grille du Simulateur (planche §6) ------------------------------- */
 
 .vx-sim-grid {
+  /* REFONTE UI 2026-09-06 — douze colonnes nommées. Le composeur (8/12) et
+     ses hypothèses (4/12) ouvrent la page ; le payoff (dominante seulement
+     une fois calculé) prend 8/12 sur deux rangées, avec les résultats
+     certifiés à sa droite. LA GRILLE DE SCÉNARIOS EST UNE MATRICE : son axe
+     des spots a besoin de LARGEUR (six colonnes, coupée à « SPOT 350 » sur
+     deux colonnes de l'ancienne grille) — elle garde 8/12 sur deux rangées,
+     flanquée des catalyseurs du sous-jacent et de la provenance. Écho des
+     hypothèses et méthode ferment la partie servie ; les cinq absences
+     déclarées sont groupées en dernier, sur deux rangées de hauteur
+     comparable. */
   grid-template-areas:
-    'entry entry entry params'
-    'payoff payoff payoff params'
-    'payoff payoff payoff kpi'
-    /* LA GRILLE DE SCÉNARIOS EST UNE MATRICE : son axe des spots a besoin de
-       LARGEUR, pas de hauteur. Sur deux colonnes (≈455 px), la table portait
-       six colonnes — le temps restant plus cinq spots — et se faisait couper
-       à « SPOT 350 » : les deux dernières valeurs de P&L sortaient du champ.
-       Or comparer les spots EST la fonction de cette matrice.
-       Sur trois colonnes et deux rangées, elle tient, et ses deux voisines
-       — toutes deux des absences déclarées, donc courtes — s'empilent dans la
-       colonne restante au lieu de la laisser vide. */
-    'scenarios scenarios scenarios mc'
-    'scenarios scenarios scenarios kpiprob'
-    'stress sensitivity impact catalysts'
-    'assumptions sources method method';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'entry entry entry entry entry entry entry entry params params params params'
+    'payoff payoff payoff payoff payoff payoff payoff payoff params params params params'
+    'payoff payoff payoff payoff payoff payoff payoff payoff kpi kpi kpi kpi'
+    'scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios catalysts catalysts catalysts catalysts'
+    'scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios sources sources sources sources'
+    'assumptions assumptions assumptions assumptions method method method method method method method method'
+    'mc mc mc mc kpiprob kpiprob kpiprob kpiprob stress stress stress stress'
+    'sensitivity sensitivity sensitivity sensitivity sensitivity sensitivity impact impact impact impact impact impact';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-sim-grid [data-module='manual-entry'] { grid-area: entry; }
@@ -7983,16 +7986,18 @@ label {
 .vx-sim-grid [data-module='sources'] { grid-area: sources; }
 .vx-sim-grid [data-module='method'] { grid-area: method; }
 
-@media (min-width: 1600px) {
+@media (max-width: 1279px) {
   .vx-sim-grid {
+    /* Dégradation laptop (1024) : deux colonnes ; la matrice garde toute la
+       largeur, seule façon de lire ses six colonnes. */
     grid-template-areas:
-      'entry entry entry entry params'
-      'payoff payoff payoff kpi params'
-      'payoff payoff payoff kpi kpiprob'
-      'scenarios scenarios scenarios scenarios mc'
-      'stress stress sensitivity impact catalysts'
-      'assumptions sources sources method method';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+      'entry entry entry entry entry entry entry entry params params params params'
+      'payoff payoff payoff payoff payoff payoff payoff payoff payoff payoff payoff payoff'
+      'kpi kpi kpi kpi kpi kpi catalysts catalysts catalysts catalysts catalysts catalysts'
+      'scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios scenarios'
+      'assumptions assumptions assumptions assumptions sources sources sources sources method method method method'
+      'mc mc mc mc kpiprob kpiprob kpiprob kpiprob stress stress stress stress'
+      'sensitivity sensitivity sensitivity sensitivity sensitivity sensitivity impact impact impact impact impact impact';
   }
 }
 
@@ -8377,35 +8382,36 @@ label {
   m'attend ». La règle d'importance devient une bande de pied, pleine largeur.
 */
 .vx-cal-grid {
-  /* RECOMPOSÉE par hauteurs MESURÉES (1280x800, population SYNTHETIC) :
-     counters 2982 px partageait sa rangée avec exposure 281 et density 355 —
-     60 % de vide, la pire rangée des douze planches. counters n'a aucun pair
-     de sa taille : il prend sa propre rangée, et les deux courtes se
-     retrouvent entre elles (281 / 355, soit 10 % de vide). */
+  /* REFONTE UI 2026-09-06 — douze colonnes nommées, même grammaire que les
+     autres planches (Options en premier). L'ordre de lecture est celui du
+     DOM : contrôles → agenda (dominante, 9/12) flanqué du prochain événement
+     et des conflits → dénombrements → registre par jour et densité →
+     révisions et provenance → les deux absences déclarées, groupées en
+     dernier. `counters` (table de dix lignes) partage sa rangée avec la règle
+     d'importance, l'autre table : deux hauteurs comparables, aucune rangée
+     à plus d'un tiers de vide (mesure 1440, population SYNTHETIC). */
   grid-template-areas:
-    'controls controls controls tz'
-    'agenda agenda agenda next'
-    'agenda agenda agenda conflicts'
-    'counters counters counters counters'
-    'exposure exposure density density'
-    'revisions revisions provenance provenance'
-    'reminders reminders changes changes'
-    'rule rule rule rule';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'controls controls controls controls controls controls controls controls controls tz tz tz'
+    'agenda agenda agenda agenda agenda agenda agenda agenda agenda next next next'
+    'agenda agenda agenda agenda agenda agenda agenda agenda agenda conflicts conflicts conflicts'
+    'counters counters counters counters counters counters rule rule rule rule rule rule'
+    'exposure exposure exposure exposure exposure exposure density density density density density density'
+    'revisions revisions revisions revisions revisions revisions provenance provenance provenance provenance provenance provenance'
+    'reminders reminders reminders reminders reminders reminders changes changes changes changes changes changes';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
-@media (min-width: 1600px) {
+@media (max-width: 1279px) {
   .vx-cal-grid {
-    /* Même règle à 1600 : `counters` (571 px) ne partage plus sa ligne avec
-       `reminders` (212) et `changes` (260) — mesuré à 39 % de vide. */
+    /* Dégradation laptop (1024) : deux colonnes, l'agenda garde sa rangée. */
     grid-template-areas:
-      'controls controls controls tz next'
-      'agenda agenda agenda conflicts revisions'
-      'agenda agenda agenda exposure density'
-      'counters counters counters provenance provenance'
-      'reminders reminders reminders changes changes'
-      'rule rule rule rule rule';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+      'controls controls controls controls controls controls controls controls tz tz tz tz'
+      'agenda agenda agenda agenda agenda agenda agenda agenda agenda agenda agenda agenda'
+      'next next next next next next conflicts conflicts conflicts conflicts conflicts conflicts'
+      'counters counters counters counters counters counters rule rule rule rule rule rule'
+      'exposure exposure exposure exposure exposure exposure density density density density density density'
+      'revisions revisions revisions revisions revisions revisions provenance provenance provenance provenance provenance provenance'
+      'reminders reminders reminders reminders reminders reminders changes changes changes changes changes changes';
   }
 }
 

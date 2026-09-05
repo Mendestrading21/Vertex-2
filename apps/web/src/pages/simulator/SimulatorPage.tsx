@@ -6,6 +6,7 @@ import type { SimulationPreviewResponse } from '../../api/client.ts';
 import { AuthRequiredNotice } from '../../components/AuthRequiredNotice.tsx';
 import { Card } from '../../components/Card.tsx';
 import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { AssumptionsEditor, LegsEditor } from './SimComposer.tsx';
 import { EchoModule, KpiModule, MethodModule, PayoffResult, ScenarioGridModule } from './SimResult.tsx';
 import { AbsentSimulatorModule, CatalystsModule, SourcesModule } from './SimulatorModules.tsx';
@@ -197,7 +198,7 @@ export function SimulatorPage() {
       </div>
 
       <div className="vx-sim-grid vx-board" data-testid="simulator-grid">
-        <div data-module="manual-entry">
+        <ModuleCell id="manual-entry" size={simulatorModule('manual-entry').size}>
           <Card
             rank="quiet"
             kicker="Saisie bornée"
@@ -223,9 +224,9 @@ export function SimulatorPage() {
               </span>
             </div>
           </Card>
-        </div>
+        </ModuleCell>
 
-        <div data-module="base-parameters">
+        <ModuleCell id="base-parameters" size={simulatorModule('base-parameters').size}>
           <Card
             rank="quiet"
             kicker="Saisie bornée"
@@ -236,37 +237,50 @@ export function SimulatorPage() {
           >
             <AssumptionsEditor assumptions={assumptions} onChange={setAssumptions} />
           </Card>
-        </div>
+        </ModuleCell>
 
-        <div data-module="payoff" {...(outcome.phase === 'ok' ? { 'data-testid': 'sim-result' } : {})}>
+        {/*
+          REFONTE UI 2026-09-06 — l'ordre du DOM est l'ordre de lecture de la
+          grille nommée (`.vx-sim-grid`, global.css) : composeur → payoff et
+          résultats certifiés → matrice de scénarios flanquée des catalyseurs
+          et de la provenance → écho des hypothèses et méthode → les cinq
+          absences déclarées, groupées en dernier. Le `data-testid` du
+          résultat reste sur la cellule du payoff, posé seulement quand un
+          calcul a réellement abouti.
+        */}
+        <div
+          data-module="payoff"
+          data-size={simulatorModule('payoff').size}
+          {...(outcome.phase === 'ok' ? { 'data-testid': 'sim-result' } : {})}
+        >
           <OutcomeCell outcome={outcome} />
         </div>
-        <div data-module="kpi-served">
+        <ModuleCell id="kpi-served" size={simulatorModule('kpi-served').size}>
           <KpiModule result={result} />
-        </div>
+        </ModuleCell>
 
-        <div data-module="scenarios">
+        <ModuleCell id="scenarios" size={simulatorModule('scenarios').size}>
           <ScenarioGridModule result={result} />
-        </div>
+        </ModuleCell>
+        <ModuleCell id="catalysts" size={simulatorModule('catalysts').size}>
+          <CatalystsModule transfer={transfer} />
+        </ModuleCell>
+        <ModuleCell id="sources" size={simulatorModule('sources').size}>
+          <SourcesModule transfer={transfer} />
+        </ModuleCell>
+
+        <ModuleCell id="key-assumptions" size={simulatorModule('key-assumptions').size}>
+          <EchoModule result={result} />
+        </ModuleCell>
+        <ModuleCell id="method" size={simulatorModule('method').size}>
+          <MethodModule result={result} />
+        </ModuleCell>
+
         <AbsentSimulatorModule id="monte-carlo" />
         <AbsentSimulatorModule id="kpi-probabilistic" />
-
         <AbsentSimulatorModule id="stress-tests" />
         <AbsentSimulatorModule id="sensitivity" />
         <AbsentSimulatorModule id="portfolio-impact" />
-        <div data-module="catalysts">
-          <CatalystsModule transfer={transfer} />
-        </div>
-
-        <div data-module="key-assumptions">
-          <EchoModule result={result} />
-        </div>
-        <div data-module="sources">
-          <SourcesModule transfer={transfer} />
-        </div>
-        <div data-module="method">
-          <MethodModule result={result} />
-        </div>
       </div>
 
       <StudyInspector result={result} transfer={transfer} legCount={legs.length} />

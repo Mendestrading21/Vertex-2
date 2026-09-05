@@ -26,7 +26,7 @@ export function AbsentSimulatorModule({ id }: { readonly id: string }) {
     throw new Error(`Module ${id} is served, not absent`);
   }
   return (
-    <div data-module={id}>
+    <div data-module={id} data-size={module.size}>
       <AbsentModule title={module.title} question={module.question} reason={module.status.reason} note={module.status.note} />
     </div>
   );
