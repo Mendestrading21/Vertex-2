@@ -105,6 +105,13 @@ export interface WidgetProps {
   /** Classe de la PAGE sur la carte — témoin de composition, jamais du style
    *  de surface, qui reste celui de `Card`. */
   readonly className?: string;
+  /**
+   * Densité de COMPOSITION (`data-density` sur la cellule), décidée par la
+   * page : `compact` resserre le chrome d'une carte d'une valeur ou d'un
+   * compte, comme `ModuleCell` le fait pour les cellules nues. La surface, la
+   * typographie de la valeur et les états ne changent pas.
+   */
+  readonly density?: 'compact';
   readonly children: ReactNode;
 }
 
@@ -202,6 +209,7 @@ export function Widget({
   conclusion,
   stateDetail,
   footer,
+  density,
   children,
 }: WidgetProps) {
   const updated = useUpdatedFlag(served?.snapshotVersion);
@@ -213,6 +221,7 @@ export function Widget({
       data-module={id}
       data-size={size}
       data-state={state}
+      {...(density === undefined ? {} : { 'data-density': density })}
       {...(updated ? { 'data-updated': 'true' } : {})}
     >
       <Card
