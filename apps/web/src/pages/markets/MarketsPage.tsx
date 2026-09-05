@@ -466,7 +466,7 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
           <FocusRowModule />
         </div>
 
-        <MarketsFrame data={data} state={state} selected={selected} onSelect={setSelected} />
+        <MarketsFrame data={data} state={state} selected={selected} onSelect={choisir} />
 
         <Widget
           id="sectors"
@@ -478,7 +478,7 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
           action={<StatusChip label={`${data.sectors.length} secteur(s) publié(s)`} tone="neutral" />}
           footer={<>rendement 1 j par instrument, chaîne serveur ; aucun rendement de secteur n&apos;est publié</>}
         >
-          <SectorGrid sectors={data.sectors} selected={selected} onSelect={setSelected} />
+          <SectorGrid sectors={data.sectors} selected={selected} onSelect={choisir} />
         </Widget>
 
         <AbsentMarketsModule id="rates-curve" />
@@ -496,7 +496,9 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
           entry={selectedEntry}
           data={data}
           onClose={() => {
-            choisir(null);
+            // Fermer l'inspecteur retire la mise en avant LOCALE ; le choix d'espace
+            // de travail reste : on a regardé cet instrument, la page suivante le sait.
+            setSelected(null);
           }}
         />
       )}

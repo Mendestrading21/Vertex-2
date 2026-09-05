@@ -6,6 +6,7 @@ import type { SessionState } from '../api/client.ts';
 import { sseLinkStore } from '../api/events.ts';
 import { isKnownResource, useSnapshotMeta } from '../api/hooks.ts';
 import type { PageDef } from '../app/pages.ts';
+import { useWorkspace } from '../app/workspace.tsx';
 import { LiveBadge } from '../components/widgets/LiveBadge.tsx';
 
 /** `handle` de route portant la définition de page (posé dans routes.tsx). */
@@ -68,6 +69,17 @@ export function ContextBar({ onOpenSearch }: ContextBarProps) {
   const tracked = live?.resource !== null && live?.resource !== undefined
     ? isKnownResource(live.resource)
     : false;
+  /*
+    REFONTE UI 2026-09-05 — LE CONTEXTE DE TRAVAIL DEVIENT VISIBLE.
+
+    `activeInstrument` était écrit par trois pages (adopté depuis l'URL sur
+    Analyse et Options, choisi sur Marchés) et LU par personne : le modèle de
+    contexte du skill maître existait sans aucun témoin à l'écran. Le bandeau
+    le montre à côté du titre de page, en lien vers le dossier d'analyse —
+    c'est le fil qui relie une tuile de Marchés à la page suivante. Aucun
+    instrument n'est inventé : sans choix, rien n'est affiché.
+  */
+  const { activeInstrument } = useWorkspace();
 
   return (
     <header className="vx-contextbar">
@@ -79,6 +91,21 @@ export function ContextBar({ onOpenSearch }: ContextBarProps) {
           /
         </span>
         <span className="vx-contextbar-page">{title}</span>
+        {activeInstrument === null ? null : (
+          <>
+            <span className="vx-contextbar-divider" aria-hidden="true">
+              /
+            </span>
+            <Link
+              to={`/analysis/${encodeURIComponent(activeInstrument)}`}
+              className="vx-contextbar-instrument"
+              data-testid="contextbar-instrument"
+              aria-label={`Instrument actif ${activeInstrument} — ouvrir son dossier d'analyse`}
+            >
+              <code>{activeInstrument}</code>
+            </Link>
+          </>
+        )}
       </div>
       {/*
         Le déclencheur est VISIBLE, et pas seulement un raccourci : un raccourci

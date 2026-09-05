@@ -597,7 +597,7 @@ function ChainRoute({ underlying }: { readonly underlying: string }) {
 export function OptionsPage() {
   const { underlying } = useParams<{ underlying?: string }>();
   // Même règle que sur Analyse : le contexte SUIT l'adresse.
-  const { adopter } = useWorkspace();
+  const { adopter, activeInstrument } = useWorkspace();
   useEffect(() => {
     adopter(underlying ?? null);
   }, [adopter, underlying]);
@@ -613,6 +613,17 @@ export function OptionsPage() {
 
       {underlying === undefined || underlying === '' ? (
         <>
+          {/* Le contexte de travail est un fil, pas un défaut : sans
+              sous-jacent dans l'adresse, la page PROPOSE l'instrument regardé
+              ailleurs, elle ne l'ouvre pas à la place de l'utilisateur. */}
+          {activeInstrument === null ? null : (
+            <p className="vx-underlying-shortcut" data-testid="options-active-instrument">
+              Instrument du contexte :{' '}
+              <Link to={`/options/${encodeURIComponent(activeInstrument)}`}>
+                ouvrir la chaîne de <code>{activeInstrument}</code>
+              </Link>
+            </p>
+          )}
           <UnderlyingPicker current={null} />
           <NoUnderlyingBoard />
         </>

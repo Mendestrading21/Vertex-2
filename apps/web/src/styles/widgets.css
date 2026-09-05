@@ -3959,3 +3959,37 @@
 .vx-options-series-chart {
   min-height: calc(var(--vx-space-32) * 2 + var(--vx-space-16));
 }
+
+/* ==========================================================================
+   REFONTE UI 2026-09-05 — INSTRUMENT ACTIF DANS LE BANDEAU DE CONTEXTE
+   Le fil entre les pages : une pilule en chasse fixe, un lien vers le
+   dossier, aucune lumière de plus que l'argent du titre.
+   ========================================================================== */
+.vx-contextbar-instrument {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--vx-space-24);
+  padding: 0 var(--vx-space-8);
+  border: 1px solid var(--vx-border-soft);
+  border-radius: var(--vx-radius-pill);
+  color: var(--vx-text);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-font-size-meta);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.vx-contextbar-instrument code {
+  font-family: inherit;
+}
+
+.vx-contextbar-instrument:hover {
+  background: var(--vx-hover);
+}
+
+/* Options sans sous-jacent : le raccourci vers l'instrument du contexte. */
+.vx-underlying-shortcut {
+  margin: 0 0 var(--vx-space-12);
+  color: var(--vx-text-secondary);
+  font-size: var(--vx-font-size-meta);
+}
