@@ -13,7 +13,8 @@ import pytest
 
 import vertex_worker.ingest as ingest_module
 from vertex_core.synthetic import generate_envelopes
-from vertex_worker.ingest import TOPIC_OBSERVATION_INGESTED, ingest_envelope
+from vertex_persistence.repository.outbox import CoalescedEnqueue
+from vertex_worker.ingest import COALESCE_GLOBAL, TOPIC_OBSERVATION_INGESTED, ingest_envelope
 
 BASE_TIME = datetime(2026, 8, 25, 12, 0, 0, tzinfo=UTC)
 
@@ -44,16 +45,20 @@ def test_insert_and_enqueue_share_the_session(monkeypatch, envelope) -> None:
         return True
 
     enqueues: list[tuple[object, str, object]] = []
+    keys: list[str] = []
 
-    def fake_enqueue(session, topic, payload):
+    def fake_enqueue(session, topic, payload, *, coalesce_key):
         enqueues.append((session, topic, payload))
-        return 42
+        keys.append(coalesce_key)
+        return CoalescedEnqueue(message_id=42, enqueued=True)
 
     monkeypatch.setattr(ingest_module, "insert_observation", fake_insert)
-    monkeypatch.setattr(ingest_module, "enqueue_outbox", fake_enqueue)
+    monkeypatch.setattr(ingest_module, "enqueue_outbox_coalesced", fake_enqueue)
     session = RecordingSession()
 
     result = ingest_envelope(session, envelope)
+    # Both jobs recompute the whole table: they are coalesced on the global key.
+    assert keys == [COALESCE_GLOBAL, COALESCE_GLOBAL]
 
     assert calls["insert_session"] is session
     # A generic (non-quote) envelope enqueues its fusion job and the review
@@ -85,7 +90,11 @@ def test_envelope_fields_are_forwarded_exactly(monkeypatch, envelope) -> None:
         return True
 
     monkeypatch.setattr(ingest_module, "insert_observation", fake_insert)
-    monkeypatch.setattr(ingest_module, "enqueue_outbox", lambda *a, **k: 1)
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda *a, **k: CoalescedEnqueue(message_id=1, enqueued=True),
+    )
 
     ingest_envelope(RecordingSession(), envelope)
 
@@ -105,6 +114,7 @@ def test_duplicate_event_id_enqueues_nothing(monkeypatch, envelope) -> None:
         raise AssertionError("enqueue_outbox must not be called for a duplicate")
 
     monkeypatch.setattr(ingest_module, "enqueue_outbox", fail_enqueue)
+    monkeypatch.setattr(ingest_module, "enqueue_outbox_coalesced", fail_enqueue)
     session = RecordingSession()
 
     result = ingest_envelope(session, envelope)
@@ -131,6 +141,13 @@ def test_calendar_event_enqueues_calendar_and_opportunities(monkeypatch) -> None
         "enqueue_outbox",
         lambda session, topic, payload: enqueues.append(topic) or 1,
     )
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda session, topic, payload, *, coalesce_key: (
+            enqueues.append(topic) or CoalescedEnqueue(message_id=1, enqueued=True)
+        ),
+    )
 
     ingest_envelope(RecordingSession(), envelope)
 
@@ -155,6 +172,13 @@ def test_daily_bars_enqueue_analysis_and_opportunities(monkeypatch) -> None:
         "enqueue_outbox",
         lambda session, topic, payload: enqueues.append(topic) or 1,
     )
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda session, topic, payload, *, coalesce_key: (
+            enqueues.append(topic) or CoalescedEnqueue(message_id=1, enqueued=True)
+        ),
+    )
 
     ingest_envelope(RecordingSession(), envelope)
 
@@ -166,9 +190,7 @@ def test_daily_bars_enqueue_analysis_and_opportunities(monkeypatch) -> None:
     ]
 
 
-def test_normalized_sec_enqueues_only_sec_snapshot_and_common_topics(
-    monkeypatch, envelope
-) -> None:
+def test_normalized_sec_enqueues_only_sec_snapshot_and_common_topics(monkeypatch, envelope) -> None:
     sec_envelope = envelope.model_copy(
         update={
             "schema_version": "sec.edgar.fundamental-fact/1",
@@ -184,6 +206,13 @@ def test_normalized_sec_enqueues_only_sec_snapshot_and_common_topics(
         "enqueue_outbox",
         lambda session, topic, payload: enqueues.append(topic) or 1,
     )
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda session, topic, payload, *, coalesce_key: (
+            enqueues.append(topic) or CoalescedEnqueue(message_id=1, enqueued=True)
+        ),
+    )
 
     ingest_envelope(RecordingSession(), sec_envelope)
 
@@ -192,3 +221,35 @@ def test_normalized_sec_enqueues_only_sec_snapshot_and_common_topics(
         "sec.fundamentals.ingested",
         "review_queue.refresh",
     ]
+
+
+def test_sec_filing_job_is_never_coalesced(monkeypatch, envelope) -> None:
+    """Its handler reads the ``event_id`` of the message: two filings are two jobs."""
+    sec_envelope = envelope.model_copy(
+        update={
+            "schema_version": "sec.edgar.filing/1",
+            "source": "sec_edgar",
+            "instrument_id": "AAPL",
+            "rights": "R1_PUBLIC_FACT_SEC_EDGAR_POLICY_2026_08_28",
+        }
+    )
+    monkeypatch.setattr(ingest_module, "insert_observation", lambda s, **k: True)
+    plain: list[str] = []
+    coalesced: list[str] = []
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox",
+        lambda session, topic, payload: plain.append(topic) or 1,
+    )
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda session, topic, payload, *, coalesce_key: (
+            coalesced.append(topic) or CoalescedEnqueue(message_id=1, enqueued=True)
+        ),
+    )
+
+    ingest_envelope(RecordingSession(), sec_envelope)
+
+    assert plain == ["sec.fundamentals.ingested"]
+    assert coalesced == [TOPIC_OBSERVATION_INGESTED, "review_queue.refresh"]

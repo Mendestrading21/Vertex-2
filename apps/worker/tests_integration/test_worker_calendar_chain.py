@@ -196,9 +196,7 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
     envelopes = generate_calendar_event_envelopes(seed=SEED, base_time=BASE_TIME)
     assert len(envelopes) == 17
     original_estimated = next(
-        envelope
-        for envelope in envelopes
-        if envelope.payload["event_id"] == REVISED_STABLE_ID
+        envelope for envelope in envelopes if envelope.payload["event_id"] == REVISED_STABLE_ID
     )
     assert original_estimated.payload["status"] == EVENT_STATUS_ESTIMATED
     estimated_instant = original_estimated.payload["event_time_utc"]
@@ -214,9 +212,7 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
 
     with session_factory() as session:
         inserted = sum(
-            1
-            for envelope in (*envelopes, revision)
-            if ingest_envelope(session, envelope).inserted
+            1 for envelope in (*envelopes, revision) if ingest_envelope(session, envelope).inserted
         )
         session.commit()
     assert inserted == len(envelopes) + 1 == 18
@@ -227,7 +223,7 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
             .select_from(OutboxMessage)
             .where(OutboxMessage.topic == TOPIC_CALENDAR_INGESTED)
         ).scalar_one()
-    assert calendar_jobs == inserted  # one calendar job per inserted event
+    assert calendar_jobs == 1  # 18 inserted events, one coalesced calendar job
 
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
@@ -282,11 +278,9 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
     # Both labels coexist in the published agenda and stay distinct.
     assert content["statuses"][EVENT_STATUS_ESTIMATED] >= 1
     assert content["statuses"][EVENT_STATUS_CONFIRMED] >= 1
-    assert (
-        content["statuses"][EVENT_STATUS_ESTIMATED]
-        + content["statuses"][EVENT_STATUS_CONFIRMED]
-        == len(agenda)
-    )
+    assert content["statuses"][EVENT_STATUS_ESTIMATED] + content["statuses"][
+        EVENT_STATUS_CONFIRMED
+    ] == len(agenda)
     assert sum(content["categories"].values()) == len(agenda)
     assert set(content["categories"]) == {
         EVENT_CATEGORY_EARNINGS,
@@ -304,15 +298,13 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
     # Timezone conservation: both representations and the IANA label travel.
     for entry in agenda:
         assert entry["exchange_timezone"] == SYNTHETIC_EXCHANGE_TIMEZONE
-        assert datetime.fromisoformat(
-            entry["event_time_local"]
-        ) == datetime.fromisoformat(entry["event_time_utc"])
+        assert datetime.fromisoformat(entry["event_time_local"]) == datetime.fromisoformat(
+            entry["event_time_utc"]
+        )
 
     # -- 3. the manual position and the thesis really cross the agenda ------
     position_event = by_stable_id[f"syn-ev-earnings-{POSITION_TICKER}"]
-    assert position_event["event_context"]["positions"] == [
-        {"portfolio_id": portfolio_id}
-    ]
+    assert position_event["event_context"]["positions"] == [{"portfolio_id": portfolio_id}]
     assert position_event["event_context"]["theses"] == []
     assert position_event["importance"] == {
         "rank": 2,
@@ -396,9 +388,7 @@ def test_calendar_chain_end_to_end(session_factory) -> None:
     later_runner = make_runner(session_factory, clock)
     assert later_runner.drain(max_batches=5) == 1
     with session_factory() as session:
-        later = get_current_snapshot(
-            session, kind=SNAPSHOT_KIND_CALENDAR, key=SNAPSHOT_KEY_GLOBAL
-        )
+        later = get_current_snapshot(session, kind=SNAPSHOT_KIND_CALENDAR, key=SNAPSHOT_KEY_GLOBAL)
     assert later is not None
     assert later.version == first_version + 1
     assert later.content["as_of"] == clock.now.isoformat()

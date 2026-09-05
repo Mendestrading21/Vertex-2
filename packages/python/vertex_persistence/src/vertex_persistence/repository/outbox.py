@@ -49,10 +49,13 @@ from vertex_persistence.repository._validation import (
 )
 
 __all__ = [
+    "COALESCE_KEY_FIELD",
     "ClaimedOutboxMessage",
+    "CoalescedEnqueue",
     "ack_outbox",
     "claim_outbox_batch",
     "enqueue_outbox",
+    "enqueue_outbox_coalesced",
     "fail_outbox",
     "reap_expired_leases",
 ]
@@ -100,6 +103,77 @@ def enqueue_outbox(session: Session, topic: str, payload: Any) -> int:
     session.add(row)
     session.flush()
     return row.id
+
+
+COALESCE_KEY_FIELD = "coalesce_key"
+"""Payload field carrying the coalescence key of a message enqueued through
+:func:`enqueue_outbox_coalesced`. Plain :func:`enqueue_outbox` messages never
+carry it and are never coalesced."""
+
+
+@dataclass(frozen=True)
+class CoalescedEnqueue:
+    """Outcome of :func:`enqueue_outbox_coalesced`.
+
+    ``enqueued`` is ``False`` when a PENDING message with the same topic and
+    key already existed: ``message_id`` is then that message's id.
+    """
+
+    message_id: int
+    enqueued: bool
+
+
+def enqueue_outbox_coalesced(
+    session: Session, topic: str, payload: Any, *, coalesce_key: str
+) -> CoalescedEnqueue:
+    """Enqueue ``payload`` on ``topic`` unless an identical job is already waiting.
+
+    WHY. Measured on the real database on 2026-09-06: 14 364 daily quotes had
+    produced 14 360 versions of ``markets_overview`` and 20 517 observations
+    20 517 versions of ``attention`` and ``review_queue`` — one recompute and
+    one publication per observation, although every one of these handlers
+    recomputes from the WHOLE table and ignores the message payload. A batch
+    of five hundred quotes only needs one recompute after the last one.
+
+    RULE. At most one PENDING, unleased message per ``(topic, coalesce_key)``.
+    A message that is already IN_PROGRESS (or FAILED and waiting for its
+    retry) never absorbs a new job: its handler may have read the table
+    before this transaction's row became visible, so a fresh PENDING message
+    is enqueued behind it.
+
+    RACE. The existing PENDING row is read ``FOR UPDATE`` inside the caller's
+    transaction. :func:`claim_outbox_batch` claims with ``SKIP LOCKED``, so a
+    worker cannot claim that row until this transaction commits — and once it
+    does, the row it claims will see the observation committed here. If the
+    worker claimed the row first, it is no longer PENDING and a new message
+    is enqueued. No observation can therefore be left without a recompute.
+
+    ``coalesce_key`` is written into the payload under
+    :data:`COALESCE_KEY_FIELD`; handlers that read the payload keep every
+    other field untouched. No commit happens here (outbox atomicity).
+    """
+    topic = require_non_empty_str("topic", topic)
+    coalesce_key = require_non_empty_str("coalesce_key", coalesce_key)
+    existing = session.execute(
+        select(OutboxMessage.id)
+        .where(
+            OutboxMessage.topic == topic,
+            OutboxMessage.status == OutboxStatus.PENDING.value,
+            OutboxMessage.lease_until.is_(None),
+            OutboxMessage.payload[COALESCE_KEY_FIELD].astext == coalesce_key,
+        )
+        .order_by(OutboxMessage.id)
+        .limit(1)
+        .with_for_update()
+    ).scalar_one_or_none()
+    if existing is not None:
+        return CoalescedEnqueue(message_id=int(existing), enqueued=False)
+    encoded = to_jsonb_object("payload", payload)
+    if not isinstance(encoded, dict):
+        raise ValidationFailedError("payload: a coalesced message needs an object payload")
+    merged = dict(encoded)
+    merged[COALESCE_KEY_FIELD] = coalesce_key
+    return CoalescedEnqueue(message_id=enqueue_outbox(session, topic, merged), enqueued=True)
 
 
 def claim_outbox_batch(
@@ -166,9 +240,7 @@ def claim_outbox_batch(
     return claimed
 
 
-def _load_owned_in_progress(
-    session: Session, message_id: int, lease_token: str
-) -> OutboxMessage:
+def _load_owned_in_progress(session: Session, message_id: int, lease_token: str) -> OutboxMessage:
     """Load one message the caller still owns, or raise a typed error.
 
     Ownership is checked before status so a worker whose lease was reaped or
@@ -188,9 +260,7 @@ def _load_owned_in_progress(
     if row.status != OutboxStatus.IN_PROGRESS.value:
         # Defensive: a matching token outside IN_PROGRESS is an impossible
         # state (tokens are cleared on ack, fail and reap) — fail closed.
-        raise OutboxStateError(
-            f"outbox message {message_id} is {row.status}, expected IN_PROGRESS"
-        )
+        raise OutboxStateError(f"outbox message {message_id} is {row.status}, expected IN_PROGRESS")
     return row
 
 
@@ -210,9 +280,7 @@ def _record_failed_attempt(
         row.lease_until = now + timedelta(seconds=compute_backoff_seconds(row.attempts))
 
 
-def ack_outbox(
-    session: Session, message_id: int, *, lease_token: str, now: datetime
-) -> None:
+def ack_outbox(session: Session, message_id: int, *, lease_token: str, now: datetime) -> None:
     """Mark one owned IN_PROGRESS message DONE (successful handling).
 
     ``lease_token`` must be the token returned by the claim; a stale worker

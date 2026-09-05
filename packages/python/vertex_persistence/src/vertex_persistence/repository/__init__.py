@@ -15,10 +15,13 @@ from vertex_persistence.repository.ledger import (
 )
 from vertex_persistence.repository.observations import insert_observation
 from vertex_persistence.repository.outbox import (
+    COALESCE_KEY_FIELD,
     ClaimedOutboxMessage,
+    CoalescedEnqueue,
     ack_outbox,
     claim_outbox_batch,
     enqueue_outbox,
+    enqueue_outbox_coalesced,
     fail_outbox,
     reap_expired_leases,
 )
@@ -60,7 +63,9 @@ from vertex_persistence.repository.theses import (
 )
 
 __all__ = [
+    "COALESCE_KEY_FIELD",
     "ClaimedOutboxMessage",
+    "CoalescedEnqueue",
     "CreatedThesis",
     "CredentialRecord",
     "CurrentSnapshot",
@@ -83,6 +88,7 @@ __all__ = [
     "create_session",
     "create_thesis",
     "enqueue_outbox",
+    "enqueue_outbox_coalesced",
     "fail_outbox",
     "get_credential",
     "get_current_snapshot",

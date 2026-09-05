@@ -73,7 +73,7 @@ def test_markets_chain_end_to_end(session_factory) -> None:
             .select_from(OutboxMessage)
             .where(OutboxMessage.topic == TOPIC_QUOTES_INGESTED)
         ).scalar_one()
-    assert quote_jobs == inserted  # one markets job per inserted daily quote
+    assert quote_jobs == 1  # 46 inserted quotes, one coalesced markets job
 
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
@@ -90,9 +90,7 @@ def test_markets_chain_end_to_end(session_factory) -> None:
     assert remaining == 0
 
     with session_factory() as session:
-        snapshot = get_current_snapshot(
-            session, kind=SNAPSHOT_KIND_MARKETS, key="global"
-        )
+        snapshot = get_current_snapshot(session, kind=SNAPSHOT_KIND_MARKETS, key="global")
     assert snapshot is not None
     content = snapshot.content
 
@@ -106,10 +104,7 @@ def test_markets_chain_end_to_end(session_factory) -> None:
     assert coverage["received"] == 24
     assert coverage["covered"] == 22
     assert coverage["discarded"] == 2
-    assert all(
-        entry["reason"] == REASON_MISSING_CLOSE
-        for entry in coverage["discarded_tickers"]
-    )
+    assert all(entry["reason"] == REASON_MISSING_CLOSE for entry in coverage["discarded_tickers"])
     assert coverage["rejected_records"] == []
 
     # All 6 declared sectors are present; published tickers belong to them.
@@ -176,9 +171,7 @@ def test_markets_chain_end_to_end(session_factory) -> None:
     assert replay_runner.drain(max_batches=5) == 1
 
     with session_factory() as session:
-        replayed = get_current_snapshot(
-            session, kind=SNAPSHOT_KIND_MARKETS, key="global"
-        )
+        replayed = get_current_snapshot(session, kind=SNAPSHOT_KIND_MARKETS, key="global")
     assert replayed is not None
     assert replayed.version == first_version
     assert replayed.content_hash == first_hash
