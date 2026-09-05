@@ -5113,7 +5113,9 @@ label {
    Une signature de page se porte par la dominante et par le contenu, jamais
    par une géométrie qui contredit le système. */
 
-.vx-main[data-page='options'] .vx-chain-group[aria-current='true'],
+/* La ligne `.vx-chain-group[aria-current='true']` qui ouvrait cette liste ne
+   matchait aucun élément (le bouton de groupe porte `aria-pressed`) : retirée,
+   la sélection de groupe vit dans widgets.css. */
 .vx-main[data-page='catalysts'] .vx-fu-due-item:hover,
 .vx-main[data-page='opportunities'] .vx-opp-group:hover {
   border-color: var(--vx-signal-deep);
@@ -5570,16 +5572,9 @@ label {
   box-shadow: var(--vx-shadow-panel), var(--vx-shadow-inset);
 }
 
-.vx-card[data-rank='dominant']::before {
-  position: absolute;
-  z-index: 1;
-  top: 0;
-  left: var(--vx-space-20);
-  width: 76px;
-  height: 2px;
-  background: linear-gradient(90deg, var(--vx-signal-bright), var(--vx-signal-deep));
-  content: '';
-}
+/* La tranche métallique de la dominante est déclarée UNE fois, par le rang
+   (`[data-rank='dominant']::before` plus haut) ; la copie propre à `.vx-card`
+   était identique et a été retirée. */
 
 .vx-card[data-rank='dominant'] .vx-card-head h2 {
   font-size: var(--vx-font-size-display);
@@ -7109,35 +7104,35 @@ label {
    la page sur la cellule du module, comme `data-size`. Il resserre le chrome ;
    il ne touche ni la surface, ni la typographie de la valeur, ni les états.
    Ce n'est pas un réglage utilisateur. */
-.vx-board > [data-module][data-density='compact'] > .vx-card {
+.vx-main [data-module][data-density='compact'] > .vx-card {
   gap: var(--vx-space-8);
   padding: var(--vx-space-12) var(--vx-space-16) var(--vx-space-12);
 }
 
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-head {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-card-head {
   padding-bottom: var(--vx-space-8);
 }
 
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-kicker {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-card-kicker {
   margin-bottom: var(--vx-space-4);
 }
 
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-head h2 {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-card-head h2 {
   font-size: var(--vx-font-size-body);
 }
 
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-card-foot {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-card-foot {
   padding-top: var(--vx-space-8);
 }
 
 /* Une valeur seule dans une carte compacte : l'affichage (34 px) écrasait la
    cellule étroite ; le corps d'affichage descend d'un cran, reste tabulaire,
    et n'est jamais tronqué. */
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-metric-value {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-metric-value {
   font-size: var(--vx-font-size-display);
 }
 
-.vx-board > [data-module][data-density='compact'] > .vx-card .vx-metric {
+.vx-main [data-module][data-density='compact'] > .vx-card .vx-metric {
   padding: var(--vx-space-4) 0 0;
 }
 
@@ -7158,7 +7153,7 @@ label {
    seule lumière de la dominante. La place reste TENUE (article 17) et le motif
    reste écrit ; le chrome se resserre et la pastille passe au titane — le
    texte porte le motif, la couleur n'a rien à ajouter. */
-.vx-board > [data-module] > .vx-absent {
+.vx-main [data-module] > .vx-absent {
   gap: var(--vx-space-8);
   padding: var(--vx-space-12) var(--vx-space-16);
   border-style: dashed;
@@ -7166,22 +7161,22 @@ label {
   background: var(--vx-surface-0);
 }
 
-.vx-board .vx-absent-head {
+.vx-main [data-module] > .vx-absent > .vx-absent-head {
   padding-bottom: var(--vx-space-8);
 }
 
-.vx-board .vx-absent-head h3 {
+.vx-main [data-module] > .vx-absent .vx-absent-head h3 {
   font-size: var(--vx-font-size-body);
 }
 
-.vx-board .vx-absent-badge {
+.vx-main [data-module] > .vx-absent .vx-absent-badge {
   padding: 2px var(--vx-space-8);
   border-color: var(--vx-border-strong);
   color: var(--vx-titanium);
   font-size: var(--vx-font-size-micro);
 }
 
-.vx-board .vx-absent-head {
+.vx-main [data-module] > .vx-absent > .vx-absent-head {
   flex-wrap: wrap;
   gap: var(--vx-space-4) var(--vx-space-12);
   padding-bottom: var(--vx-space-12);
