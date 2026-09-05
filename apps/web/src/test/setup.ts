@@ -1,5 +1,21 @@
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+/**
+ * REFONTE UI 2026-09-05 — LE PREMIER TEST D'UNE PAGE PERDAIT LA COURSE.
+ *
+ * Chaque fichier de page monte l'application ENTIÈRE (routeur, React Query,
+ * shell, planche) dans son premier `findByRole`. Sous une exécution complète
+ * et parallèle de la suite, ce premier rendu dépasse le budget PAR DÉFAUT de
+ * `findBy*` (1 000 ms) ; mesuré ici : cinq fichiers rouges en suite complète,
+ * verts un par un, toujours sur le PREMIER test du fichier. Ce n'est pas un
+ * défaut du produit ni des assertions : c'est un délai d'attente calibré pour
+ * un composant isolé, appliqué à une page.
+ *
+ * Le budget passe à 4 s. Aucune assertion n'est affaiblie : une page qui ne
+ * rend pas ce qu'on attend échoue toujours — quatre secondes plus tard.
+ */
+configure({ asyncUtilTimeout: 4_000 });
 
 /**
  * LOT T6 — `matchMedia` MANQUAIT À L'ENVIRONNEMENT, ET DES ERREURS NON
