@@ -19,6 +19,7 @@ import type { ModuleState } from '../components/moduleState.ts';
 import { statusLabelOf } from './calendar/calendarView.ts';
 import { opportunitiesFrameStateOf } from './opportunities/opportunitiesView.ts';
 import { valuationContentOf } from './portfolio/portfolioView.ts';
+import { publishedOr } from '../components/inspector/SnapshotFacts.tsx';
 import {
   capabilityStatusCensus,
   leadingAgenda,
@@ -34,9 +35,6 @@ import {
  * Aucun calcul : chaînes serveur, comptes publiés, ordre publié.
  */
 
-function publie(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === '' ? 'non publié' : String(value);
-}
 
 // ---------------------------------------------------------------------------
 
@@ -54,7 +52,7 @@ export function GlobalMarketModule() {
       titleId="vx-today-global-market-title"
       className="vx-today-module"
       {...(data?.as_of !== null && data?.as_of !== undefined && moduleShowsContent(state)
-        ? { footer: <>snapshot Marchés · as_of {data.as_of} · population {publie(data.population)}</> }
+        ? { footer: <>snapshot Marchés · as_of {data.as_of} · population {publishedOr(data.population)}</> }
         : {})}
     >
       <ModuleStatus state={state} raw={state === 'closed' ? data?.state : data?.reason} />
@@ -111,7 +109,7 @@ export function NextCatalystModule() {
       titleId="vx-today-next-catalyst-title"
       className="vx-today-module"
       {...(moduleShowsContent(state) && data !== undefined
-        ? { footer: <>agenda · snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> }
+        ? { footer: <>agenda · snapshot v{publishedOr(data.snapshot_version)} · as_of {publishedOr(data.as_of)}</> }
         : {})}
     >
       <ModuleStatus state={state} raw={state === 'closed' ? data?.state : data?.reason} />
@@ -161,7 +159,7 @@ export function SourceHealthModule() {
       titleId="vx-today-source-health-title"
       className="vx-today-module"
       {...(data !== undefined
-        ? { footer: <>capacités testées · snapshot v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}</> }
+        ? { footer: <>capacités testées · snapshot v{publishedOr(data.snapshot_version)} · as_of {publishedOr(data.as_of)}</> }
         : {})}
     >
       <ModuleStatus state={state} />
@@ -227,7 +225,7 @@ export function OpportunitiesModule() {
         ? {
             footer: (
               <>
-                moteur fail-closed · ordre publié : {publie(summary.orderingMethod)} ·{' '}
+                moteur fail-closed · ordre publié : {publishedOr(summary.orderingMethod)} ·{' '}
                 <Link to="/opportunities">voir toutes les opportunités</Link>
               </>
             ),
@@ -357,7 +355,7 @@ export function ManualPortfolioModule() {
         ? {
             footer: (
               <>
-                marques {publie(summary.markPopulation)} · as_of {publie(summary.asOf)} ·{' '}
+                marques {publishedOr(summary.markPopulation)} · as_of {publishedOr(summary.asOf)} ·{' '}
                 <Link to="/portfolio">voir Portefeuille</Link>
               </>
             ),
@@ -409,7 +407,7 @@ export function ManualPortfolioModule() {
             ))
           )}
           <p className="vx-module-sentence">
-            lots valorisés {publie(summary.lotsValued)} · exclus {publie(summary.lotsExcluded)}
+            lots valorisés {publishedOr(summary.lotsValued)} · exclus {publishedOr(summary.lotsExcluded)}
           </p>
         </>
       ) : moduleShowsContent(state) && summary === null && data !== undefined ? (

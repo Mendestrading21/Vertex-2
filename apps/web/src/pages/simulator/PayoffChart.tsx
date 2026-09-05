@@ -6,7 +6,7 @@ import type {
   SimulationPayoffPoint,
 } from '../../api/client.ts';
 import type { EChartsInstance } from '../../charts/echartsLoader.ts';
-import { chartAxis, chartBase } from '../../charts/theme.ts';
+import { cssToken, chartAxis, chartBase } from '../../charts/theme.ts';
 import { geometryValue } from '../../components/widgets/geometry.ts';
 
 /**
@@ -22,12 +22,6 @@ import { geometryValue } from '../../components/widgets/geometry.ts';
  * accessible exact (mêmes chaînes).
  */
 
-function cssToken(name: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 /**
  * Valeur numérique d'une chaîne servie, POUR LA GÉOMÉTRIE SEULE — ou `null`.

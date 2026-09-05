@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { EChartsInstance } from '../../../charts/echartsLoader.ts';
 import { geometryNumber } from './performanceView.ts';
 import type { MetricBlockView, SeriesPointView } from './performanceView.ts';
+import { cssToken } from '../../../charts/theme.ts';
 
 /**
  * Dominante de /performance — courbe de valeur (brute + nette) et courbe de
@@ -15,12 +16,6 @@ import type { MetricBlockView, SeriesPointView } from './performanceView.ts';
  * chaînes exactes.
  */
 
-function cssToken(name: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 export function PerformanceChart({
   points,

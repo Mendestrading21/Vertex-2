@@ -28,6 +28,7 @@ import { absentModules, chartsModule, comparisonViewOf } from './chartsView.ts';
 import { pageAccentAttrs } from '../../components/widgets/pageAccent.ts';
 import { MethodNote } from '../../components/widgets/MethodNote.tsx';
 import { moduleStateOf } from '../../components/moduleState.ts';
+import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
  * Page Graphiques (`TL / 08`) — question : « Quelles relations puis-je
@@ -112,13 +113,6 @@ function windowOptions(count: number): readonly PeriodOption[] {
   });
 }
 
-/** Une valeur absente est DITE absente — jamais un tiret ambigu. */
-function publie(valeur: string | number | null | undefined): string {
-  if (valeur === null || valeur === undefined || valeur === '') {
-    return 'non publié';
-  }
-  return String(valeur);
-}
 
 function ChartsFrame({
   data,
@@ -139,7 +133,7 @@ function ChartsFrame({
   const asOf = data.as_of ?? null;
   const detail =
     state === 'stale'
-      ? `Snapshot publié périmé par le relais (âge publié ${publie(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
+      ? `Snapshot publié périmé par le relais (âge publié ${publishedOr(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
       : state === 'partial'
         ? 'Série publiée avec des barres écartées par le worker : la couverture ci-dessus dit lesquelles.'
         : state === 'delayed'
@@ -156,7 +150,7 @@ function ChartsFrame({
 
   const description =
     bars !== null && bars.status === 'OK'
-      ? `${publie(bars.count ?? bars.bars.length)} barres journalières publiées de ${publie(bars.firstTradingDay)} à ${publie(bars.lastTradingDay)}, dont ${affichees.length} affichées ; dernière clôture ${publie(bars.lastClose)} ${currency}.`
+      ? `${publishedOr(bars.count ?? bars.bars.length)} barres journalières publiées de ${publishedOr(bars.firstTradingDay)} à ${publishedOr(bars.lastTradingDay)}, dont ${affichees.length} affichées ; dernière clôture ${publishedOr(bars.lastClose)} ${currency}.`
       : 'Aucune série de barres exploitable publiée.';
 
   return (
@@ -191,7 +185,7 @@ function ChartsFrame({
           <dd>
             {bars === null
               ? 'aucune série publiée'
-              : `${publie(bars.count)} barre(s) valides (${publie(bars.firstTradingDay)} → ${publie(bars.lastTradingDay)}), ${bars.discardedCount} écartée(s), base ${publie(bars.adjustmentBasis)}`}
+              : `${publishedOr(bars.count)} barre(s) valides (${publishedOr(bars.firstTradingDay)} → ${publishedOr(bars.lastTradingDay)}), ${bars.discardedCount} écartée(s), base ${publishedOr(bars.adjustmentBasis)}`}
           </dd>
         </div>
       </dl>
@@ -238,7 +232,7 @@ function ChartsFrame({
         }
         limites={
           <>
-            population <code>{publie(data.population)}</code> déclarée par le worker ; aucun
+            population <code>{publishedOr(data.population)}</code> déclarée par le worker ; aucun
             overlay, indicateur, rebasage ni comparaison n&apos;est calculé dans le navigateur — ce
             qui n&apos;est pas publié est déclaré absent ci-dessous, avec son motif.
           </>
@@ -271,33 +265,33 @@ function SeriesInspector({
         </div>
         <div>
           <dt>Devise</dt>
-          <dd>{publie(bars?.currency)}</dd>
+          <dd>{publishedOr(bars?.currency)}</dd>
         </div>
         <div>
           <dt>Base d&apos;ajustement</dt>
-          <dd>{publie(bars?.adjustmentBasis)}</dd>
+          <dd>{publishedOr(bars?.adjustmentBasis)}</dd>
         </div>
         <div>
           <dt>Qualité publiée</dt>
-          <dd>{publie(bars?.quality)}</dd>
+          <dd>{publishedOr(bars?.quality)}</dd>
         </div>
         <div>
           <dt>Fraîcheur</dt>
           <dd>
-            as_of {publie(data.as_of)} · âge publié {publie(data.age_seconds)} s · fresh{' '}
+            as_of {publishedOr(data.as_of)} · âge publié {publishedOr(data.age_seconds)} s · fresh{' '}
             {bars?.fresh === null || bars?.fresh === undefined ? 'non publié' : String(bars.fresh)}
           </dd>
         </div>
         <div>
           <dt>Référence d&apos;observation</dt>
           <dd>
-            <code>{publie(bars?.sourceEventId)}</code>
+            <code>{publishedOr(bars?.sourceEventId)}</code>
           </dd>
         </div>
         <div>
           <dt>Snapshot · moteur</dt>
           <dd>
-            v{publie(data.snapshot_version)} · <code>{publie(data.engine_version)}</code>
+            v{publishedOr(data.snapshot_version)} · <code>{publishedOr(data.engine_version)}</code>
           </dd>
         </div>
         <div>

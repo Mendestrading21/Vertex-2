@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { LightweightChartApi } from '../../charts/lightweightChartsLoader.ts';
 import type { OhlcvBar } from './analysisView.ts';
 import { geometryNumber } from './analysisView.ts';
+import { cssToken } from '../../charts/theme.ts';
 
 /**
  * CandleChart — chandeliers + volume (dominante de /analysis).
@@ -19,12 +20,6 @@ import { geometryNumber } from './analysisView.ts';
  * L'équivalence d'accès complète est la table OHLCV rendue par la page.
  */
 
-function cssToken(name: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 export interface CandleChartProps {
   readonly bars: readonly OhlcvBar[];

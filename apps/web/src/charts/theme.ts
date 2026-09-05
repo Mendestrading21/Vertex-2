@@ -33,6 +33,18 @@
 /** Lit un jeton CSS résolu. Le thème ne connaît aucune valeur littérale. */
 export type TokenReader = (name: string) => string;
 
+/**
+ * Le lecteur de jetons par défaut : la valeur RÉSOLUE d'une variable CSS sur
+ * `:root`, ou une chaîne vide hors navigateur (tests). Recopié à l'identique
+ * dans cinq graphiques avant la refonte du 2026-09-05 ; une seule définition.
+ */
+export function cssToken(name: string): string {
+  if (typeof window === 'undefined') {
+    return '';
+  }
+  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
 export interface ChartBaseOptions {
   /** Marges de la zone traçable. Chaque graphique a ses propres étiquettes. */
   readonly grid?: { left?: number; right?: number; top?: number; bottom?: number };

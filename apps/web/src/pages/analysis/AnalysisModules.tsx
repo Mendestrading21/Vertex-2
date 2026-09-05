@@ -27,6 +27,7 @@ import { analysisModule } from './analysisModules.ts';
 import type { AdviceView, BarsView } from './analysisView.ts';
 import { IDENTITY_STATE_FR, secFundamentalsViewOf } from './secView.ts';
 import { ServedNumber } from '../../components/widgets/ServedNumber.tsx';
+import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
  * Les modules SERVIS de la planche §4, hors la dominante (le cadre des
@@ -43,9 +44,6 @@ const VOLUME_WINDOW = 14;
 const CATALYST_LINES = 6;
 const FACT_ROWS = 12;
 
-function publie(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === '' ? 'non publié' : String(value);
-}
 
 /** L'entrée Marchés de l'instrument, si le snapshot la couvre. */
 function useMarketsEntry(instrument: string): {
@@ -140,7 +138,7 @@ export function InstrumentHeaderModule({
       </div>
 
       <footer className="vx-iw-foot">
-        {bars === null ? 'aucune série publiée' : `clôture ${publie(bars.lastTradingDay)}`}
+        {bars === null ? 'aucune série publiée' : `clôture ${publishedOr(bars.lastTradingDay)}`}
         {lineBars.length > 0 ? ` · ${lineBars.length} séances tracées` : ''}
         {entry === null ? '' : ` · variation 1 j du snapshot Marchés (${entry.ticker.trading_day})`}
       </footer>
@@ -202,8 +200,8 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
         ? {
             footer: (
               <>
-                source <code>{publie(data.source)}</code> · droits <code>{publie(data.rights)}</code> · snapshot v
-                {publie(data.snapshot_version)} · données au {publie(data.data_as_of)}
+                source <code>{publishedOr(data.source)}</code> · droits <code>{publishedOr(data.rights)}</code> · snapshot v
+                {publishedOr(data.snapshot_version)} · données au {publishedOr(data.data_as_of)}
               </>
             ),
           }
@@ -218,12 +216,12 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
       {moduleShowsContent(state) && data !== undefined && view !== null ? (
         <div data-testid="sec-facts">
           <p className="vx-module-sentence">
-            <code>{publie(data.identity_state)}</code> —{' '}
+            <code>{publishedOr(data.identity_state)}</code> —{' '}
             {data.identity_state === null ? 'état non publié' : (IDENTITY_STATE_FR[data.identity_state] ?? data.identity_state)}
             {data.entity_name === null ? null : (
               <>
                 {' '}
-                · {data.entity_name} (CIK <code>{publie(data.cik)}</code>)
+                · {data.entity_name} (CIK <code>{publishedOr(data.cik)}</code>)
               </>
             )}
           </p>
@@ -234,7 +232,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
             <ul className="vx-sec-filings">
               {view.filings.map((filing) => (
                 <li key={filing.accession}>
-                  <code>{filing.form ?? 'formulaire non publié'}</code> · disponible {publie(filing.availableAt)}
+                  <code>{filing.form ?? 'formulaire non publié'}</code> · disponible {publishedOr(filing.availableAt)}
                   {filing.primaryDocumentUrl === null ? (
                     <>
                       {' '}
@@ -300,7 +298,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
           <p className="vx-module-sentence">
             {view.facts.length > FACT_ROWS ? `${FACT_ROWS} premiers faits de ${view.facts.length} publiés · ` : ''}
             {view.conflictCount} conflit{view.conflictCount > 1 ? 's' : ''} publié{view.conflictCount > 1 ? 's' : ''} ·{' '}
-            {publie(view.coverage.observationsConsidered)} observations considérées
+            {publishedOr(view.coverage.observationsConsidered)} observations considérées
           </p>
         </div>
       ) : null}
@@ -332,7 +330,7 @@ export function CatalystsModule({ instrument }: { readonly instrument: string })
         ? {
             footer: (
               <>
-                {lines.length} sur {events.length} pour cet instrument · snapshot v{publie(data.snapshot_version)} ·{' '}
+                {lines.length} sur {events.length} pour cet instrument · snapshot v{publishedOr(data.snapshot_version)} ·{' '}
                 <Link to="/calendar">voir le calendrier</Link>
               </>
             ),
