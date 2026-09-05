@@ -1145,20 +1145,33 @@
    colonne devenaient invisibles. Une seule vérité, au bon endroit.
    =========================================================================== */
 
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   AVANT (LOT P4, quatre colonnes) : la dominante partageait sa rangée avec
+   les paires extrêmes, la couverture du périmètre n'arrivait qu'en troisième
+   rangée, et deux absences (registre, journal des alertes) étaient égarées en
+   quatrième rangée parmi les modules servis. MAINTENANT, douze colonnes pour
+   que les cartes n'aient plus toutes la même largeur, dans l'ordre de la
+   question « qu'est-ce qui bouge ensemble dans mon périmètre ? » :
+     1. SIGNAL — le périmètre DÉCLARÉ (couverture), le drawdown et la
+        concentration du registre : trois cartes compactes, quatre colonnes
+        chacune ;
+     2. la dominante `correlations` (`XL`) seule sur sa rangée, toute la
+        largeur : la matrice n'a plus de compagnon qui la rétrécit ;
+     3. ce que la matrice a produit ou coûté — paires extrêmes, alignement,
+        écartés — sur une rangée, quatre colonnes chacune ;
+     4. et 5. les douze absences déclarées regroupées en bas, deux colonnes
+        chacune, en densité compacte — où leur régularité est le message.
+   Le catalogue est INCHANGÉ : les dix-neuf modules gardent leur aire nommée.
+   L'ancienne variante ≥ 1600 px ne faisait que réordonner ces mêmes aires ;
+   elle est supprimée. */
 .vx-risk-grid {
-  /* LOT P4 — hiérarchie de lecture : les mesures SERVIES d'abord, la
-     dominante haute et centrale avec ses deux compagnons de droite, les
-     absences déclarées regroupées en bas. Le drawdown occupe deux colonnes
-     pour porter sa courbe ; la concentration en porte sa bande de parts. */
   grid-template-areas:
-    'drawdown drawdown concentration concentration'
-    'correlations correlations correlations extremes'
-    'coverage coverage alignment alignment'
-    'discards discards register alerts'
-    'score var benchrel vol'
-    'liquidity turnover stress factors'
-    'budget budget radar radar';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'coverage coverage coverage coverage drawdown drawdown drawdown drawdown concentration concentration concentration concentration'
+    'correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations'
+    'extremes extremes extremes extremes alignment alignment alignment alignment discards discards discards discards'
+    'score score var var benchrel benchrel vol vol liquidity liquidity turnover turnover'
+    'stress stress factors factors budget budget radar radar register register alerts alerts';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-risk-grid > [data-module='risk-score'] { grid-area: score; }
@@ -1180,18 +1193,6 @@
 .vx-risk-grid > [data-module='discards'] { grid-area: discards; }
 .vx-risk-grid > [data-module='risk-register'] { grid-area: register; }
 .vx-risk-grid > [data-module='alert-log'] { grid-area: alerts; }
-
-@media (min-width: 1600px) {
-  .vx-risk-grid {
-    grid-template-areas:
-      'drawdown drawdown concentration concentration extremes'
-      'correlations correlations correlations coverage coverage'
-      'alignment alignment discards register alerts'
-      'score var benchrel vol liquidity'
-      'turnover stress factors budget radar';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* La chaîne du Herfindahl fait jusqu'à 28 décimales : affichée au corps des
    métriques, elle occupait deux lignes en très grand et écrasait la bande de
@@ -1223,18 +1224,33 @@
         « Valeur marquée » et « P&L latent » tombaient hors du cadre et ne se
         lisaient qu'au défilement horizontal (mesuré sur capture 1440). Elle
         prend la largeur entière.
-     Les absences déclarées ferment la planche. */
+     Les absences déclarées ferment la planche.
+
+     REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+     AVANT : quatre colonnes ; la valorisation (un bloc de trois mesures par
+     devise) en occupait trois face à la performance totale compacte, qui
+     débordait sur sa seule colonne ; la concentration s'étirait sur deux
+     rangées pour loger devises et dividendes à sa droite.
+     MAINTENANT, douze colonnes pour que les cartes n'aient plus toutes la
+     même largeur : une rangée de SIGNAL (valorisation sur la moitié,
+     performance totale et devises sur un quart chacune — trois cartes
+     compactes de hauteur voisine), la DOMINANTE sur deux tiers à côté des
+     dividendes déclarés, les LOTS puis la PERFORMANCE en pleine largeur, le
+     JOURNAL en bande, la SAISIE en deux moitiés, et les huit absences
+     regroupées en bas — où leur régularité est le message. Le catalogue est
+     INCHANGÉ : les dix-huit modules gardent leur aire nommée. L'ancienne
+     variante ≥ 1600 px ne faisait que réordonner ces mêmes aires ; elle est
+     supprimée (les douze colonnes s'élargissent, la dominante garde sa rangée). */
   grid-template-areas:
-    'value value value totalperf'
-    'concentration concentration concentration currency'
-    'concentration concentration concentration dividends'
-    'positions positions positions positions'
-    'performance performance performance performance'
-    'ledger ledger ledger ledger'
-    'record record import import'
-    'dayperf cash benchmark allocation'
-    'sector country alerts attribution';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'value value value value value value totalperf totalperf totalperf currency currency currency'
+    'concentration concentration concentration concentration concentration concentration concentration concentration dividends dividends dividends dividends'
+    'positions positions positions positions positions positions positions positions positions positions positions positions'
+    'performance performance performance performance performance performance performance performance performance performance performance performance'
+    'ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger ledger'
+    'record record record record record record import import import import import import'
+    'dayperf dayperf dayperf cash cash cash benchmark benchmark benchmark allocation allocation allocation'
+    'sector sector sector country country country alerts alerts alerts attribution attribution attribution';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-pf-grid > [data-module='value'] { grid-area: value; }
@@ -1256,21 +1272,6 @@
 .vx-pf-grid > [data-module='record-transaction'] { grid-area: record; }
 .vx-pf-grid > [data-module='csv-import'] { grid-area: import; }
 
-@media (min-width: 1600px) {
-  .vx-pf-grid {
-    grid-template-areas:
-      'value value value totalperf currency'
-      'concentration concentration concentration dividends dividends'
-      'positions positions positions positions positions'
-      'performance performance performance performance performance'
-      'ledger ledger ledger ledger ledger'
-      'record record record import import'
-      'dayperf cash benchmark allocation sector'
-      'country alerts attribution attribution attribution';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
 /* ===========================================================================
    LOT P1 — PLACEMENT DE LA PLANCHE §2 (Marchés)
    ---------------------------------------------------------------------------
@@ -1283,17 +1284,28 @@
    question de la page ; elles étaient une colonne sur quatre au milieu de
    trois absences déclarées. Elles ouvrent la planche ; les absences la
    ferment.
-   =========================================================================== */
+
+   REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   AVANT : le rail des instruments suivis (`focus`) formait une bande pleine
+   entre la synthèse et la carte, et repoussait la dominante en troisième
+   rangée ; les écartés vivaient sous les secteurs, loin de la santé qu'ils
+   expliquent. MAINTENANT, douze colonnes pour que les cartes n'aient plus
+   toutes la même largeur : une rangée de SIGNAL (breadth, santé, écartés —
+   trois cartes de comptes publiés, de hauteur voisine), la dominante en
+   deuxième rangée sur toute la largeur, puis la carte sectorielle (`L`) à
+   côté du rail des instruments suivis (`M`), et les sept absences regroupées
+   en bas — où leur régularité est le message. Le catalogue est INCHANGÉ :
+   les treize modules gardent leur aire nommée. L'ancienne variante ≥ 1600 px
+   ne faisait que réordonner ces mêmes aires ; elle est supprimée. */
 .vx-markets-grid {
   display: grid;
   grid-template-areas:
-    'breadth breadth health health'
-    'focus focus focus focus'
-    'map map map map'
-    'sectors sectors sectors discards'
-    'sessions vol indices rates'
-    'fx correlation volstruct volstruct';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'breadth breadth breadth breadth health health health health discards discards discards discards'
+    'map map map map map map map map map map map map'
+    'sectors sectors sectors sectors sectors sectors sectors sectors focus focus focus focus'
+    'sessions sessions sessions vol vol vol indices indices indices rates rates rates'
+    'fx fx fx fx correlation correlation correlation correlation volstruct volstruct volstruct volstruct';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
   margin-top: var(--vx-space-12);
@@ -1312,19 +1324,6 @@
 .vx-markets-grid [data-module='correlation'] { grid-area: correlation; }
 .vx-markets-grid [data-module='vol-structure'] { grid-area: volstruct; }
 .vx-markets-grid [data-module='discards'] { grid-area: discards; }
-
-@media (min-width: 1600px) {
-  .vx-markets-grid {
-    grid-template-areas:
-      'breadth breadth breadth health health'
-      'focus focus focus focus focus'
-      'map map map map map'
-      'sectors sectors sectors discards discards'
-      'sessions vol indices rates fx'
-      'correlation correlation volstruct volstruct volstruct';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* Les bornes d'une jauge ne se touchent jamais : dans une colonne étroite,
    « 0 » et « 100 » se lisaient « 0100 » (mesuré sur capture 1440). Le texte
@@ -1399,17 +1398,28 @@
    Elle est désormais composée — le cadre graphique en pleine largeur, ses
    mesures dessous, les séries servies par le moteur ensuite, les absences en
    fermeture.
-   =========================================================================== */
+
+   REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   Pas de bande de signal : la dominante ouvre la page, c'est elle qu'on vient
+   voir. AVANT : quatre colonnes, la dernière rangée laissait deux cellules
+   VIDES (`saved saved . .`), et `synchronized` — `M` au catalogue — tenait
+   dans une seule colonne, moins large que les absences `S` voisines ; la
+   variante ≥ 1600 ne faisait que réordonner les mêmes cellules, supprimée.
+   MAINTENANT : douze colonnes, plus aucune cellule vide. Le cadre en pleine
+   bande ; sous lui, ce qui accompagne la série (volume, overlays, indicateurs
+   servis) à parts égales ; puis les trois figures calculées (RSI, MACD,
+   comparaison) à parts égales ; enfin les cinq absences sur une rangée, la
+   synchronisation (`M`) plus large que les quatre `S`. Le catalogue est
+   INCHANGÉ : les douze modules gardent leur aire nommée ; `data-size` reste
+   le span déclaré (ADR-017), les aires le composent sans le redéfinir. */
 .vx-charts-grid {
   display: grid;
   grid-template-areas:
-    'main main main main'
-    'volume volume indicators indicators'
-    'overlays overlays rsi rsi'
-    'macd macd comparison comparison'
-    'sync selected alerts layouts'
-    'saved saved . .';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'main main main main main main main main main main main main'
+    'volume volume volume volume overlays overlays overlays overlays indicators indicators indicators indicators'
+    'rsi rsi rsi rsi macd macd macd macd comparison comparison comparison comparison'
+    'sync sync sync sync selected selected alerts alerts layouts layouts saved saved';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
   margin-top: var(--vx-space-12);
@@ -1432,20 +1442,8 @@
   min-width: 0;
 }
 
-@media (min-width: 1600px) {
-  .vx-charts-grid {
-    grid-template-areas:
-      'main main main main main'
-      'volume volume indicators indicators indicators'
-      'overlays overlays overlays rsi rsi'
-      'macd macd comparison comparison comparison'
-      'sync selected alerts layouts saved';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
-/* Le volume de la planche §8 occupe deux colonnes : ses barres ont la place
-   d'être hautes, et ses chiffres d'axe celle d'être lus. */
+/* Le volume de la planche §8 occupe un tiers de la bande : ses barres ont la
+   place d'être hautes, et ses chiffres d'axe celle d'être lus. */
 .vx-charts-grid .vx-w2-daybars {
   height: 132px;
 }
@@ -1882,29 +1880,32 @@
    de la planche. Un `[data-module]` imbriqué plus bas — il en existe dans
    l'inspecteur — ne doit jamais hériter d'une aire de la grille.
    =========================================================================== */
-/*
-  COMPOSITION PAR HAUTEURS VOISINES (même règle qu'à Calendrier et Sources).
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
 
-  Mesuré à 1440 : `'ideas score bias return'` valait 457 / 173 / 173 / 173 px,
-  soit 47 % de vide — une carte haute contre TROIS courtes. L'arithmétique de
-  la porte est instructive : la même carte haute face à UNE seule courte donne
-  31 %, sous le seuil. Ce n'est donc pas la différence de hauteur qui creuse le
-  trou, c'est le NOMBRE de courtes qui la subissent.
+   AVANT : la planche S'OUVRAIT sur trois absences (score moyen, biais global,
+   rendement attendu), les candidats évalués — deux comptes — tenaient seuls
+   une bande, et les six absences étaient dispersées sur les rangées 1, 4 et 6.
 
-  Les trois mesures de synthèse passent donc en tête, ensemble et de même
-  hauteur ; la file des idées actives prend sa bande. Les deux dernières
-  rangées étaient à 30 %, à trois points du seuil : appariées elles aussi, une
-  porte qu'on frôle finit par la franchir.
-*/
+   CE QUE LA GRILLE FAIT MAINTENANT. Douze colonnes, pour que les cartes
+   n'aient plus toutes la même largeur, et quatre temps de lecture :
+     1. les COMPTES SERVIS — candidats évalués, statuts sur l'univers,
+        directions — trois cartes de hauteur voisine ;
+     2. le CLASSEMENT, la dominante, en pleine largeur ;
+     3. les RAISONS d'exclusion (la carte la plus lue après le classement,
+        moitié de la largeur), le profil et la provenance des catalyseurs ;
+     4. les LIMITES déclarées puis les six ABSENCES, regroupées en bas, où
+        leur régularité est le message.
+   Le catalogue est INCHANGÉ : les quatorze modules gardent leur aire nommée.
+   Aucune variante par largeur : la même composition passe 1280, 1440 et
+   1600 (les douze colonnes s'élargissent, la dominante garde sa rangée). */
 .vx-opp-grid {
   grid-template-areas:
-    'score bias return return'
-    'ideas ideas ideas ideas'
-    'ranking ranking ranking ranking'
-    'biassplit health scatter factors'
-    'profile profile provenance provenance'
-    'exclusions exclusions quality activity';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'ideas ideas ideas ideas health health health health biassplit biassplit biassplit biassplit'
+    'ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking'
+    'exclusions exclusions exclusions exclusions exclusions exclusions profile profile profile provenance provenance provenance'
+    'quality quality quality score score score bias bias bias return return return'
+    'scatter scatter scatter scatter factors factors factors factors activity activity activity activity';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-opp-grid > [data-module='active-ideas'] { grid-area: ideas; }
@@ -1921,19 +1922,6 @@
 .vx-opp-grid > [data-module='recent-activity'] { grid-area: activity; }
 .vx-opp-grid > [data-module='catalysts-provenance'] { grid-area: provenance; }
 .vx-opp-grid > [data-module='quality'] { grid-area: quality; }
-
-@media (min-width: 1600px) {
-  .vx-opp-grid {
-    grid-template-areas:
-      'score score bias bias return'
-      'ideas ideas ideas ideas ideas'
-      'ranking ranking ranking ranking ranking'
-      'biassplit health health scatter factors'
-      'profile profile profile provenance provenance'
-      'exclusions exclusions activity quality quality';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* ===========================================================================
    LOT P3a — LA TEINTE DE PAGE CESSE D'ÊTRE UNE DÉCLARATION MORTE
@@ -3992,4 +3980,53 @@
   margin: 0 0 var(--vx-space-12);
   color: var(--vx-text-secondary);
   font-size: var(--vx-font-size-meta);
+}
+
+/* === REFONTE UI 2026-09-05 — MARCHÉS === */
+
+/* LA DOMINANTE OCCUPE TOUTE LA LARGEUR : sa carte reprend la hauteur bornée
+   du socle (`.vx-marketmap-canvas`, `global.css` : « 22 instruments répartis
+   en six secteurs ne se lisent pas dans 420 px »). La hauteur fixe de 360 px
+   datait de la composition à quatre colonnes, où la table vivait « sous une
+   carte de 360 px » ; à douze colonnes, la carte est seule sur sa rangée et
+   aucune voisine ne se creuse. Même borne haute et basse que le socle, aucune
+   nouvelle mesure. */
+.vx-markets-grid .vx-marketmap-canvas {
+  height: clamp(420px, 42vh, 560px);
+}
+
+/* === REFONTE UI 2026-09-05 — RISQUES === */
+
+/* LA COUVERTURE NE DÉBORDE PLUS (dette `layout-gates` V9). La fenêtre servie
+   est deux horodatages ISO joints par une flèche : un seul jeton, insécable,
+   plus large que la colonne `minmax(160px, 1fr)` de la liste de faits — et un
+   enfant de grille garde `min-width: auto`, donc il poussait la carte au lieu
+   de se plier. Le jeton se coupe où il faut ; rien n'est masqué. */
+.vx-risk-grid .vx-risk-coverage dd,
+.vx-risk-grid .vx-risk-coverage dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* LA MATRICE DÉFILE LOCALEMENT, jamais coupée. La dominante occupe toute la
+   largeur ; si un périmètre plus large que la carte est publié, le contenu
+   reste atteignable dans les deux sens (`overflow: auto`, pas `hidden`). */
+.vx-risk-grid .vx-riskmatrix .vx-w2-grid-scroll {
+  overflow: auto;
+}
+
+/* === REFONTE UI 2026-09-05 — ANALYSE === */
+
+/* CE QUI DÉBORDAIT, ET POURQUOI CE N'EST PAS CACHÉ. Les risques déclarés
+   citent des identifiants de gate et des codes de raison en chasse fixe, que
+   le navigateur ne coupe pas ; l'evidence joint ses sources sur une ligne. À
+   un tiers de planche, ils tiennent ; quand une chaîne servie reste plus large
+   que sa carte, elle passe à la ligne lettre à lettre plutôt que d'être
+   rognée — la valeur entière reste dans le document. La grille des scénarios
+   garde son défilement LOCAL (`.vx-ohlcv-scroll`, `global.css`). Jamais
+   `overflow: hidden` sur une donnée. */
+.vx-analysis-grid [data-module='key-risks'] .vx-inspector-list,
+.vx-analysis-grid [data-module='key-risks'] .vx-opp-limits,
+.vx-analysis-grid [data-module='evidence'] .vx-evidence-meta {
+  overflow-wrap: anywhere;
 }

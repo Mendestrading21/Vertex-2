@@ -121,7 +121,7 @@ function MatrixModule({
       id="correlations"
       size={module.size}
       rank="dominant"
-      kicker="Corrélations publiées"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-risk-matrix-title"
       state={state}
@@ -133,7 +133,7 @@ function MatrixModule({
           : view.refusalReason
       }
       action={view === null ? undefined : <MatrixStateChip view={view} />}
-      footer={<>rendements quotidiens sur les séances communes ; coefficients et bandes publiés par le worker, jamais recalculés</>}
+      footer={<>rendements quotidiens sur les séances communes ; coefficients et bandes publiés, jamais recalculés ici</>}
     >
       {view === null || view.serverState === 'empty' ? (
         <p className="vx-module-sentence" role="status">
@@ -194,15 +194,17 @@ function RiskBoard({
 
   return (
     <>
+      {/*
+        REFONTE UI 2026-09-05 — l'ordre du DOM est l'ordre de LECTURE des
+        aires nommées (`widgets.css`, `.vx-risk-grid`) : le clavier et le
+        lecteur d'écran suivent le même parcours que l'œil. Signal (périmètre
+        déclaré, drawdown, concentration) → la dominante → ce que la matrice
+        a produit ou coûté → les douze absences déclarées.
+      */}
       <div className="vx-risk-grid vx-board" data-testid="risk-grid">
-        <AbsentRiskModule id="risk-score" />
-        <AbsentRiskModule id="var-cvar" />
+        <CoverageModule view={view} state={state} />
         <DrawdownModule />
-        <AbsentRiskModule id="benchmark-relative" />
-
-        <AbsentRiskModule id="volatility" />
         <RegisterConcentrationModule />
-        <AbsentRiskModule id="liquidity" />
 
         <MatrixModule
           data={data}
@@ -214,17 +216,21 @@ function RiskBoard({
             setSelected((previous) => (previous === ticker ? null : ticker));
           }}
         />
-        <AbsentRiskModule id="turnover" />
-        <ExtremesModule view={view} state={state} />
 
+        <ExtremesModule view={view} state={state} />
+        <AlignmentModule view={view} state={state} />
+        <DiscardsModule view={view} state={state} />
+
+        <AbsentRiskModule id="risk-score" />
+        <AbsentRiskModule id="var-cvar" />
+        <AbsentRiskModule id="benchmark-relative" />
+        <AbsentRiskModule id="volatility" />
+        <AbsentRiskModule id="liquidity" />
+        <AbsentRiskModule id="turnover" />
         <AbsentRiskModule id="stress-loss" />
         <AbsentRiskModule id="factor-exposures" />
         <AbsentRiskModule id="risk-budget" />
         <AbsentRiskModule id="radar" />
-
-        <CoverageModule view={view} state={state} />
-        <AlignmentModule view={view} state={state} />
-        <DiscardsModule view={view} state={state} />
         <AbsentRiskModule id="risk-register" />
         <AbsentRiskModule id="alert-log" />
       </div>

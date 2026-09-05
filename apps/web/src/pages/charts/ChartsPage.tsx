@@ -15,6 +15,7 @@ import type { BarsView } from '../analysis/analysisView.ts';
 import { analysisStateOf, barsViewOf } from '../analysis/analysisView.ts';
 import { PeriodTabs } from '../../components/widgets/PeriodTabs.tsx';
 import type { PeriodOption } from '../../components/widgets/PeriodTabs.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import {
   ComparisonModule,
@@ -131,6 +132,7 @@ function ChartsFrame({
 }) {
   const currency = bars?.currency ?? 'devise non publiée';
   const asOf = data.as_of ?? null;
+  const mainModule = chartsModule('main-chart');
   const detail =
     state === 'stale'
       ? `Snapshot publié périmé par le relais (âge publié ${publishedOr(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
@@ -158,6 +160,14 @@ function ChartsFrame({
       className="vx-chartframe"
       data-rank="dominant"
       data-module="main-chart"
+      /*
+        REFONTE UI 2026-09-05 — la section EST la cellule du module (même
+        motif que `MarketsFrame` et `ChainFrame`) : elle porte le span du
+        catalogue, sans quoi `align-self: stretch` (réservé aux porteurs de
+        `data-size`) ne s'appliquait jamais à la dominante. Aucun parent de
+        plus : les tests lisent `data-module` SUR l'élément dominant.
+      */
+      data-size={mainModule.size}
       aria-labelledby="vx-charts-title"
     >
       <header className="vx-chartframe-head">
@@ -182,10 +192,16 @@ function ChartsFrame({
         </div>
         <div>
           <dt>Couverture</dt>
+          {/*
+            REFONTE UI 2026-09-05 — la méta du cadre dit ce que la figure
+            couvre (compte et bornes). Exclusions et base d'ajustement sont
+            la DÉFINITION de la série : elles appartiennent à l'inspecteur,
+            qui les portait déjà — les répéter ici faisait deux vérités.
+          */}
           <dd>
             {bars === null
               ? 'aucune série publiée'
-              : `${publishedOr(bars.count)} barre(s) valides (${publishedOr(bars.firstTradingDay)} → ${publishedOr(bars.lastTradingDay)}), ${bars.discardedCount} écartée(s), base ${publishedOr(bars.adjustmentBasis)}`}
+              : `${publishedOr(bars.count)} barre(s) valides, de ${publishedOr(bars.firstTradingDay)} à ${publishedOr(bars.lastTradingDay)}`}
           </dd>
         </div>
       </dl>
@@ -232,9 +248,8 @@ function ChartsFrame({
         }
         limites={
           <>
-            population <code>{publishedOr(data.population)}</code> déclarée par le worker ; aucun
-            overlay, indicateur, rebasage ni comparaison n&apos;est calculé dans le navigateur — ce
-            qui n&apos;est pas publié est déclaré absent ci-dessous, avec son motif.
+            population <code>{publishedOr(data.population)}</code> déclarée par le worker ; rien
+            n&apos;est recalculé dans le navigateur, ce qui n&apos;est pas publié est déclaré absent.
           </>
         }
       />
@@ -307,19 +322,24 @@ function SeriesInspector({
   );
 }
 
-/** Les modules de la planche sans source : présents, à leur place, motivés. */
+/**
+ * Les modules de la planche sans source : présents, à leur place, motivés.
+ *
+ * REFONTE UI 2026-09-05 — une absence pèse moins qu'une donnée : la cellule
+ * est compacte (chrome resserré, place tenue, motif écrit — article 17).
+ */
 function AbsentChartsModules() {
   return (
     <>
       {absentModules().map((module) => (
-        <div key={module.id} data-module={module.id} data-size={module.size}>
+        <ModuleCell key={module.id} id={module.id} size={module.size} density="compact">
           <AbsentModule
             title={module.title}
             question={module.question}
             reason={module.status.reason}
             note={module.status.note}
           />
-        </div>
+        </ModuleCell>
       ))}
     </>
   );
@@ -373,6 +393,12 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
         />
       ) : data !== undefined ? (
         <>
+          {/*
+            REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que
+            `.vx-options-grid`). Pas de bande de signal : la dominante ouvre
+            la page. Le DOM suit les aires de `widgets.css` : cadre → volume,
+            overlays, indicateurs → RSI, MACD, comparaison → absences.
+          */}
           <div className="vx-charts-grid vx-board" data-testid="charts-grid">
             <ChartsFrame
               key={instrument}
@@ -386,13 +412,17 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
 
             <VolumeModule bars={bars} servedState={etatServi} />
 
+            <OverlaysModule indicators={data.indicators} servedState={etatServi} />
+
+            {/* Des mesures ponctuelles, pas une figure : carte compacte. */}
             <Widget
               id="served-indicators"
               size={chartsModule('served-indicators').size}
-              kicker="Moteur serveur"
+              kicker="Calculé"
               title={chartsModule('served-indicators').title}
               titleId="vx-charts-indicators-title"
               state={etatServi}
+              density="compact"
               footer={<>mesures ponctuelles publiées par le worker, relayées verbatim</>}
             >
               {data.indicators === null || data.indicators === undefined ? (
@@ -407,7 +437,6 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
               )}
             </Widget>
 
-            <OverlaysModule indicators={data.indicators} servedState={etatServi} />
             <RsiModule indicators={data.indicators} servedState={etatServi} />
             <MacdModule indicators={data.indicators} servedState={etatServi} />
 

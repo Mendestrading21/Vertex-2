@@ -8,6 +8,7 @@ import { moduleStateOf } from '../../components/moduleState.ts';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { DayBars } from '../../components/widgets/DayBars.tsx';
 import type { DayBarEntry } from '../../components/widgets/DayBars.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { SparkFigure } from '../../components/widgets/SparkFigure.tsx';
 import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
@@ -46,6 +47,16 @@ import { signGroupOfServed } from '../../components/widgets/sign.ts';
  * 4. une paire extrême servie SEULE était effacée parce que l'autre manquait ;
  * 5. l'état servi de la valorisation était écrasé par un `'ok'` codé en dur :
  *    une valorisation périmée se lisait « prête ».
+ *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE ET DENSITÉ (même motif que
+ * Options et Aujourd'hui). Les kickers disent la NATURE de ce que la carte
+ * porte — Déclaré, Calculé, Publié — et non un résumé de son contenu ; les
+ * pieds ne répètent plus la doctrine : la couverture dit que le périmètre est
+ * déclaré par l'utilisateur, l'alignement que les séances communes sont
+ * exigées et qu'aucun trou n'est comblé. La couverture, le drawdown et les
+ * douze absences reçoivent la densité compacte par la prop `density` de
+ * `Widget` — ou par `ModuleCell` pour une absence, qui n'a pas de carte. La
+ * composition (aires nommées, douze colonnes) vit dans `widgets.css`.
  */
 
 /** État de module dérivé d'un état de page, sans jamais l'inventer. */
@@ -76,11 +87,14 @@ export function AbsentRiskModule({ id }: { readonly id: string }) {
     throw new Error(`Module ${id} is served, not absent`);
   }
   // `data-size` vient du catalogue comme pour un module servi : la planche
-  // compose de la même façon un module absent et un module servi.
+  // compose de la même façon un module absent et un module servi. La cellule
+  // est le SEUL porteur de `data-module` (aucun parent DOM de plus) ; la
+  // densité compacte est une décision de composition de la page, comme sur
+  // Aujourd'hui : une absence n'a pas besoin du chrome d'une figure.
   return (
-    <div data-module={id} data-size={module.size}>
+    <ModuleCell id={id} size={module.size} density="compact">
       <AbsentModule title={module.title} question={module.question} reason={module.status.reason} note={module.status.note} />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -103,7 +117,7 @@ export function ExtremesModule({
     <Widget
       id="extremes"
       size={module.size}
-      kicker="Publiées avec la matrice"
+      kicker="Publié"
       title={module.title}
       titleId="vx-risk-extremes-title"
       state={state}
@@ -178,7 +192,7 @@ export function CoverageModule({
   const module = riskModule('coverage');
   if (view === null) {
     return (
-      <Widget id="coverage" size={module.size} kicker="Périmètre déclaré" title={module.title} titleId="vx-risk-coverage-title" state={state} {...(served === undefined ? {} : { served })}>
+      <Widget id="coverage" size={module.size} density="compact" kicker="Déclaré" title={module.title} titleId="vx-risk-coverage-title" state={state} {...(served === undefined ? {} : { served })}>
         <p className="vx-module-sentence" role="status">
           Matrice non publiée : aucune couverture à décrire.
         </p>
@@ -190,12 +204,13 @@ export function CoverageModule({
     <Widget
       id="coverage"
       size={module.size}
-      kicker="Périmètre déclaré"
+      density="compact"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-risk-coverage-title"
       state={state}
       {...(served === undefined ? {} : { served })}
-      footer={<>le périmètre est DÉCLARÉ, jamais deviné : comparer qui à qui est une décision, pas une déduction du code</>}
+      footer={<>périmètre déclaré par l’utilisateur</>}
     >
       <dl className="vx-risk-coverage" data-testid="risk-coverage">
         <div>
@@ -269,7 +284,7 @@ export function AlignmentModule({
   const module = riskModule('alignment');
   if (view === null) {
     return (
-      <Widget id="alignment" size={module.size} kicker="Séances perdues" title={module.title} titleId="vx-risk-alignment-title" state={state} {...(served === undefined ? {} : { served })}>
+      <Widget id="alignment" size={module.size} kicker="Calculé" title={module.title} titleId="vx-risk-alignment-title" state={state} {...(served === undefined ? {} : { served })}>
         <p className="vx-module-sentence" role="status">
           Matrice non publiée.
         </p>
@@ -283,12 +298,12 @@ export function AlignmentModule({
     <Widget
       id="alignment"
       size={module.size}
-      kicker="Séances perdues"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-risk-alignment-title"
       state={state}
       {...(served === undefined ? {} : { served })}
-      footer={<>une séance manquante chez un seul instrument la retire à TOUS : le calcul exige une matrice complète et refuse un trou plutôt que de le combler</>}
+      footer={<>séances communes exigées ; aucun trou comblé</>}
     >
       <div data-testid="risk-alignment">
         <DayBars
@@ -324,7 +339,7 @@ export function DiscardsModule({
   const module = riskModule('discards');
   if (view === null) {
     return (
-      <Widget id="discards" size={module.size} kicker="Écartés avec leur raison" title={module.title} titleId="vx-risk-discards-title" state={state} {...(served === undefined ? {} : { served })}>
+      <Widget id="discards" size={module.size} kicker="Publié" title={module.title} titleId="vx-risk-discards-title" state={state} {...(served === undefined ? {} : { served })}>
         <p className="vx-module-sentence" role="status">
           Matrice non publiée.
         </p>
@@ -336,7 +351,7 @@ export function DiscardsModule({
     <Widget
       id="discards"
       size={module.size}
-      kicker="Écartés avec leur raison"
+      kicker="Publié"
       title={module.title}
       titleId="vx-risk-discards-title"
       state={state}
@@ -421,7 +436,7 @@ export function RegisterConcentrationModule() {
     <Widget
       id="concentration"
       size={module.size}
-      kicker="Registre manuel"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-risk-concentration-title"
       state={state}
@@ -481,7 +496,8 @@ export function DrawdownModule() {
     <Widget
       id="max-drawdown"
       size={module.size}
-      kicker="Snapshot de performance"
+      density="compact"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-risk-drawdown-title"
       state={state}

@@ -202,6 +202,9 @@ export function OpportunitiesSnapshotInspector({
               <>
                 <code>{publishedOr(view.ordering.method)}</code>
                 {view.ordering.keys.length === 0 ? null : <> · {view.ordering.keys.join(' → ')}</>}
+                {/* REFONTE UI 2026-09-05 — la note du moteur vivait dans le
+                    pied de la dominante ; elle est lue ici, une seule fois. */}
+                {view.ordering.note === null ? null : <> · {view.ordering.note}</>}
               </>
             ),
           },

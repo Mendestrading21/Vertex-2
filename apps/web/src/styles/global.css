@@ -6227,10 +6227,25 @@ label {
   background: transparent;
 }
 
-/* Sur Marchés la table équivalente vit SOUS une carte de 360 px : une borne
-   plus courte, elle défile toujours, ne tronque jamais. */
+/* Sur Marchés la table équivalente vit SOUS la carte, dans la dominante.
+
+   REFONTE UI 2026-09-05 — C'EST LA RÉGION QUI DÉFILE, PAS LA SECTION QUI
+   COUPE. La porte e2e `layout-gates` a mesuré une table peinte hors de sa
+   carte et effacée par `.vx-chartframe { overflow: hidden }` (dette
+   `market-map`, lot V4). La borne suit la chaîne d'Options (« la table défile
+   dans sa région, bornée, jamais tronquée ») : même hauteur, et `overflow:
+   auto` sur les deux axes, de sorte que la région défilante — déjà
+   focalisable au clavier — soit le seul endroit où la table dépasse. */
 .vx-markets-grid .vx-markets-table-scroll[tabindex] {
-  max-height: 320px;
+  max-height: 560px;
+  overflow: auto;
+}
+
+/* La région défilante est atteignable au clavier : son focus se voit, comme
+   celui de la chaîne d'Options. */
+.vx-markets-grid .vx-markets-table-scroll[tabindex]:focus-visible {
+  outline: 2px solid var(--vx-signal);
+  outline-offset: 2px;
 }
 
 /* La carte sectorielle occupe deux colonnes : deux tuiles de front. */
@@ -7480,17 +7495,35 @@ label {
 
 /* ---- Grille d'Analyse (planche §4) ----------------------------------- */
 
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE : SIGNAL → PREUVE → figures →
+   faits → DÉCISION et RISQUE → absences (même motif que `.vx-options-grid`).
+
+   AVANT. Quatre colonnes égales : quatre cartes d'une colonne (indicateurs,
+   catalyseurs, risques, evidence) débordaient en largeur — dette V7 du lot
+   V3a ; une absence (`revisions`) était collée sous les figures, contre la
+   dominante ; les sept absences étaient mêlées aux pairs et à l'evidence sur
+   les deux dernières rangées. La variante ≥ 1600 px ne faisait que réordonner
+   ces mêmes aires : supprimée.
+
+   MAINTENANT. Douze colonnes, pour que les cartes n'aient plus toutes la même
+   largeur : l'en-tête et l'identité en bande de SIGNAL, le graphique — la
+   PREUVE — seul sur sa rangée, puis les trois figures calculées (indicateurs,
+   oscillateurs, scénarios) à parts égales, les faits (financiers, evidence,
+   pairs) à parts égales, la DÉCISION (verdict, plus large) avec ce qui la
+   borne (risques, catalyseurs), et les sept absences regroupées en bas, où
+   leur régularité est le message. Les quatre cartes qui débordaient occupent
+   maintenant un tiers de planche au lieu d'un quart. Le catalogue est
+   INCHANGÉ : les dix-neuf modules gardent leur aire nommée. */
 .vx-analysis-grid {
   grid-template-areas:
-    'header header facts facts'
-    'chart chart chart indicators'
-    'chart chart chart oscillators'
-    'chart chart chart revisions'
-    'verdict verdict financials financials'
-    'scenarios scenarios catalysts risks'
-    'regime quality valuation confidence'
-    'peers evidence levels contradictions';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'header header header header header header header header facts facts facts facts'
+    'chart chart chart chart chart chart chart chart chart chart chart chart'
+    'indicators indicators indicators indicators oscillators oscillators oscillators oscillators scenarios scenarios scenarios scenarios'
+    'financials financials financials financials evidence evidence evidence evidence peers peers peers peers'
+    'verdict verdict verdict verdict verdict verdict risks risks risks catalysts catalysts catalysts'
+    'revisions revisions revisions regime regime regime quality quality quality valuation valuation valuation'
+    'confidence confidence confidence confidence levels levels levels levels contradictions contradictions contradictions contradictions';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-analysis-grid [data-module='instrument-header'] { grid-area: header; }
@@ -7512,21 +7545,6 @@ label {
 .vx-analysis-grid [data-module='evidence'] { grid-area: evidence; }
 .vx-analysis-grid [data-module='levels'] { grid-area: levels; }
 .vx-analysis-grid [data-module='contradictions'] { grid-area: contradictions; }
-
-@media (min-width: 1600px) {
-  .vx-analysis-grid {
-    grid-template-areas:
-      'header header header facts facts'
-      'chart chart chart chart indicators'
-      'chart chart chart chart oscillators'
-      'chart chart chart chart revisions'
-      'verdict verdict financials financials financials'
-      'scenarios scenarios scenarios catalysts risks'
-      'regime quality valuation confidence levels'
-      'peers peers evidence evidence contradictions';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* Le canvas garde une hauteur FIXE ; la table équivalente défile en dessous. */
 .vx-analysis-grid .vx-candles-canvas {
@@ -8241,39 +8259,34 @@ label {
    l'agenda, toutes deux régions défilantes bornées. La revue des thèses
    garde son corps entier ; la grille lui donne le matériau des cartes. */
 
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE : SIGNAL → CHRONOLOGIE →
+   EXPOSITION → REVUE → ABSENCES (même motif que `.vx-options-grid`).
+
+   AVANT. Quatre des huit premières cellules étaient des absences ; les
+   filtres — un contrôle — précédaient la dominante ; deux absences
+   (`history`, `alerts`) étaient collées aux figures ; et la revue des thèses
+   fermait la page comme seconde dominante. La variante ≥ 1600 ne faisait que
+   réordonner les mêmes cellules : supprimée.
+
+   MAINTENANT. Douze colonnes, pour que les cartes n'aient plus toutes la même
+   largeur : une bande de SIGNAL (les quatre comptes servis), la dominante sur
+   trois rangées avec, en colonne droite, ce qui la sert directement — ses
+   filtres, sa répartition, ses sources —, puis l'exposition du registre et les
+   thèses orphelines à parts égales, la revue en bande pleine (elle reste
+   `quiet` : une file, pas une seconde dominante), et les six absences
+   regroupées en bas, où leur régularité est le message. Le catalogue est
+   INCHANGÉ : les dix-sept modules gardent leur aire nommée (placement dans
+   `widgets.css`, LOT P6). */
 .vx-cat-grid {
   grid-template-areas:
-    'count impact confidence revisions'
-    'filters filters surprises consensus'
-    'timeline timeline timeline catsplit'
-    'timeline timeline timeline history'
-    'exposure exposure alerts sources'
-    'window conflicts orphans orphans'
-    'review review review review';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (min-width: 1600px) {
-  .vx-cat-grid {
-    /*
-      COMPOSITION PAR HAUTEURS VOISINES. Mesuré à 1600 sur l'ancienne
-      disposition : trois rangées à 46 %, 45 % et 52 % de vide, et une
-      quatrième à 30 % qui frôlait le seuil.
-
-      La planche porte SIX cartes de 173 px exactement — les mesures de
-      synthèse et les absences réduites à une ligne. Elles tiennent une bande à
-      elles cinq, sans un pixel de vide. Les deux grandes figures (`timeline`
-      852 px, `portfolio-exposure` 871 px) se répondent sur la même ligne.
-    */
-    grid-template-areas:
-      'count count revisions revisions conflicts'
-      'impact confidence surprises consensus alerts'
-      'timeline timeline timeline exposure exposure'
-      'catsplit catsplit orphans orphans window'
-      'filters filters sources sources history'
-      'review review review review review';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
+    'count count count revisions revisions revisions conflicts conflicts conflicts window window window'
+    'timeline timeline timeline timeline timeline timeline timeline timeline timeline filters filters filters'
+    'timeline timeline timeline timeline timeline timeline timeline timeline timeline catsplit catsplit catsplit'
+    'timeline timeline timeline timeline timeline timeline timeline timeline timeline sources sources sources'
+    'exposure exposure exposure exposure exposure exposure orphans orphans orphans orphans orphans orphans'
+    'review review review review review review review review review review review review'
+    'impact impact confidence confidence surprises surprises consensus consensus history history alerts alerts';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 /* La revue des thèses garde son corps mais reçoit le matériau des cartes. */

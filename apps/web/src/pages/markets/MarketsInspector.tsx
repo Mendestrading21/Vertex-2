@@ -3,6 +3,7 @@ import type { FlatTicker } from '../../components/markets/marketsView.ts';
 import { GROUP_LABELS_FR, frDecimal, signSymbolOf } from '../../components/markets/marketsView.ts';
 import { InspectorPanel } from '../../shell/inspector.tsx';
 import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
+import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
  * Inspecteur de la page Marchés (planche §2 : « instrument/secteur
@@ -18,9 +19,6 @@ import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx
  * propose rien. Une valeur absente est dite « non publié ».
  */
 
-function publie(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === '' ? 'non publié' : String(value);
-}
 
 function lineageString(calculation: Record<string, unknown>, key: string): string {
   const value = calculation[key];
@@ -53,14 +51,14 @@ export function InstrumentInspector({
           <dt>Dernière clôture</dt>
           <dd>
             <span className="vx-inspector-value">{frDecimal(ticker.last_close)}</span>{' '}
-            <span className="vx-inspector-unit">{publie(ticker.currency)}</span> · {ticker.trading_day}
+            <span className="vx-inspector-unit">{publishedOr(ticker.currency)}</span> · {ticker.trading_day}
           </dd>
         </div>
         <div>
           <dt>Clôture précédente</dt>
           <dd>
             <span className="vx-inspector-value">{frDecimal(ticker.previous_close)}</span>{' '}
-            <span className="vx-inspector-unit">{publie(ticker.currency)}</span> ·{' '}
+            <span className="vx-inspector-unit">{publishedOr(ticker.currency)}</span> ·{' '}
             {ticker.previous_trading_day}
           </dd>
         </div>
@@ -88,7 +86,7 @@ export function InstrumentInspector({
         <div>
           <dt>Snapshot</dt>
           <dd>
-            v{publie(data.snapshot_version)} · as_of {publie(data.as_of)}
+            v{publishedOr(data.snapshot_version)} · as_of {publishedOr(data.as_of)}
           </dd>
         </div>
       </dl>
@@ -115,7 +113,7 @@ export function SnapshotInspector({ data }: { readonly data: MarketsOverview }) 
         <div>
           <dt>Snapshot</dt>
           <dd>
-            v{publie(data.snapshot_version)} · <code>{publie(data.engine_version)}</code>
+            v{publishedOr(data.snapshot_version)} · <code>{publishedOr(data.engine_version)}</code>
           </dd>
         </div>
         <div>
@@ -148,19 +146,19 @@ export function SnapshotInspector({ data }: { readonly data: MarketsOverview }) 
         <div>
           <dt>Population</dt>
           <dd>
-            <code>{publie(data.population)}</code>
+            <code>{publishedOr(data.population)}</code>
           </dd>
         </div>
         <div>
           <dt>État worker</dt>
           <dd>
-            <code>{publie(data.data_state)}</code>
+            <code>{publishedOr(data.data_state)}</code>
           </dd>
         </div>
         <div>
           <dt>Unité</dt>
           <dd>
-            <code>{publie(data.unit)}</code> affichée en {publie(data.display_unit)}
+            <code>{publishedOr(data.unit)}</code> affichée en {publishedOr(data.display_unit)}
           </dd>
         </div>
         <div>

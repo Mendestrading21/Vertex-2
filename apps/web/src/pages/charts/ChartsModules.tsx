@@ -163,7 +163,7 @@ export function VolumeModule({
     <Widget
       id="volume"
       size={module.size}
-      kicker="Publié barre à barre"
+      kicker="Publié"
       title={module.title}
       titleId="vx-charts-volume-title"
       state={servedState}
@@ -199,11 +199,11 @@ export function OverlaysModule({
     <Widget
       id="overlays"
       size={module.size}
-      kicker="Moteur serveur (S6)"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-charts-overlays-title"
       state={servedState}
-      footer={<>séries rendues par le worker ; aucune moyenne n’est calculée dans le navigateur</>}
+      footer={<>séries rendues par le worker</>}
     >
       <div className="vx-charts-figures">
         <section aria-labelledby="vx-charts-sma-title">
@@ -298,7 +298,7 @@ export function RsiModule({
     <Widget
       id="rsi"
       size={module.size}
-      kicker="Moteur serveur (S6)"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-charts-rsi-title"
       state={servedState}
@@ -351,7 +351,7 @@ export function MacdModule({
     <Widget
       id="macd"
       size={module.size}
-      kicker="Moteur serveur (S6)"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-charts-macd-title"
       state={servedState}
@@ -402,7 +402,7 @@ export function ComparisonModule({
     <Widget
       id="comparison"
       size={module.size}
-      kicker="Rebasée par le serveur"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-charts-comparison-title"
       state={servedState}

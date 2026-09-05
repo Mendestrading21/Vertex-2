@@ -162,10 +162,10 @@ export function IdentityModule({
   return (
     <Card
       rank="quiet"
-      kicker="Faits publiés"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-identity-title"
-      footer={<>industrie, capitalisation et bêta : aucune source ne les publie — rien n’est déduit</>}
+      footer={<>industrie, capitalisation, bêta : non publiés</>}
     >
       <div className="vx-metrics-grid" data-testid="identity-facts">
         <Metric label="Secteur" value={entry === null ? null : entry.sectorLabel} size="compact" />
@@ -192,7 +192,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
   return (
     <Card
       rank="quiet"
-      kicker="Relais SEC EDGAR"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-financials-title"
       className="vx-sec"
@@ -323,7 +323,7 @@ export function CatalystsModule({ instrument }: { readonly instrument: string })
   return (
     <Card
       rank="quiet"
-      kicker="Agenda publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-catalysts-title"
       {...(moduleShowsContent(state) && data !== undefined
@@ -363,10 +363,10 @@ export function KeyRisksModule({ advice }: { readonly advice: AdviceView | null 
   return (
     <Card
       rank="quiet"
-      kicker="Déclaré par le moteur"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-analysis-risks-title"
-      footer={<>résumé, limites et gates non passées de l’AdviceResult — aucun risque estimé ici</>}
+      footer={<>résumé, gates et limites du verdict</>}
     >
       {advice === null ? (
         <p className="vx-module-sentence" role="status">
@@ -411,10 +411,10 @@ export function PeersModule({ instrument }: { readonly instrument: string }) {
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot Marchés"
+      kicker="Observé"
       title={module.title}
       titleId="vx-analysis-peers-title"
-      footer={<>rendement 1 j par instrument, chaîne serveur · <Link to="/markets">voir Marchés</Link></>}
+      footer={<>rendement 1 j du snapshot Marchés · <Link to="/markets">voir Marchés</Link></>}
     >
       <ModuleStatus state={state} />
       {moduleShowsContent(state) ? (
@@ -521,15 +521,14 @@ export function OscillatorsModule({
   return (
     <Card
       rank="quiet"
-      kicker="Moteur serveur (S6)"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-analysis-oscillators-title"
       className="vx-analysis-oscillators"
       footer={
         rsi?.kind === 'served' || macd?.kind === 'served' ? (
           <>
-            oscillateurs publiés par le worker · voir <Link to="/charts">Graphiques</Link> pour les
-            séries complètes
+            dernières valeurs publiées · <Link to="/charts">séries complètes sur Graphiques</Link>
           </>
         ) : (
           <>aucun oscillateur publié dans ce dossier</>

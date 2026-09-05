@@ -8,6 +8,7 @@ import { Metric } from '../../components/Metric.tsx';
 import { MODULE_STATE_LABELS } from '../../components/moduleState.ts';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { AgendaLine } from '../../components/calendar/AgendaLine.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { VERSION_STATE_CONFLICTING, categoryLabelOf } from '../calendar/calendarView.ts';
 import { catalystsModule } from './catalystsModules.ts';
@@ -31,10 +32,12 @@ export function AbsentCatalystsModule({ id }: { readonly id: string }) {
   }
   return (
     // `data-size` vient du catalogue comme pour un module servi : la planche
-    // compose de la même façon un module absent et un module servi.
-    <div data-module={id} data-size={module.size}>
+    // compose de la même façon un module absent et un module servi. Une
+    // absence porte un motif, pas une figure : sa carte est compacte
+    // (REFONTE UI 2026-09-05, même règle que sur Options).
+    <ModuleCell id={id} size={module.size} density="compact">
       <AbsentModule title={module.title} question={module.question} reason={module.status.reason} note={module.status.note} />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -90,7 +93,7 @@ export function UpcomingCountModule({
     <Widget
       id="upcoming-count"
       size={module.size}
-      kicker="Agenda × file de revue"
+      kicker="Dénombré"
       title={module.title}
       titleId="vx-cat-count-title"
       state={state}
@@ -120,7 +123,7 @@ export function RevisionsModule({ selection, state }: { readonly selection: Cata
     <Widget
       id="revisions"
       size={module.size}
-      kicker="Publiées par la source"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-revisions-title"
       state={state}
@@ -193,7 +196,7 @@ export function FiltersModule({
        * le corps (`SelectionAbsence`).
        */
       state="ready"
-      footer={<>un filtre masque, il ne reclasse pas ; le snapshot servi reste entier</>}
+      footer={<>un filtre masque, il ne reclasse pas</>}
     >
       {selection === null ? (
         <SelectionAbsence state={state} />
@@ -246,7 +249,7 @@ export function CategorySplitModule({ selection, state }: { readonly selection: 
     <Widget
       id="category-split"
       size={module.size}
-      kicker="Dénombrement"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-split-title"
       state={state}
@@ -280,7 +283,7 @@ export function PortfolioExposureModule({ selection, state }: { readonly selecti
     <Widget
       id="portfolio-exposure"
       size={module.size}
-      kicker="Registre manuel"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-cat-exposure-title"
       state={state}
@@ -323,7 +326,7 @@ export function SourcesFreshnessModule({ selection, state }: { readonly selectio
     <Widget
       id="sources-freshness"
       size={module.size}
-      kicker="Dénombrement"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-sources-title"
       state={state}
@@ -370,11 +373,11 @@ export function WindowModule({
     <Widget
       id="window"
       size={module.size}
-      kicker="Deux snapshots"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-window-title"
       state={state}
-      footer={<>populations séparées, jamais additionnées ; leur croisement ne crée aucune donnée nouvelle</>}
+      footer={<>deux snapshots, jamais additionnés</>}
     >
       {data === undefined ? (
         <SelectionAbsence state={state} />
@@ -422,7 +425,7 @@ export function ConflictsModule({ selection, state }: { readonly selection: Cata
     <Widget
       id="conflicts"
       size={module.size}
-      kicker="Publiés par le worker"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-conflicts-title"
       state={state}
@@ -448,13 +451,13 @@ export function OrphanThesesModule({ theses, state }: { readonly theses: readonl
     <Widget
       id="orphan-theses"
       size={module.size}
-      kicker="Fait de couverture"
+      kicker="Observé"
       title={module.title}
       titleId="vx-cat-orphans-title"
       className="vx-cat-orphans"
       state={state}
       {...(theses === null ? {} : { action: <>{theses.length}</> })}
-      footer={<>l’absence d’événement publié ne signifie pas qu’aucun événement n’existe — un fait de couverture, pas un verdict</>}
+      footer={<>fait de couverture, pas un verdict</>}
     >
       {theses === null ? (
         <SelectionAbsence state={state} />

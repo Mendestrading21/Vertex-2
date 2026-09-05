@@ -5,6 +5,7 @@ import type { EChartsInstance } from '../../charts/echartsLoader.ts';
 import type { SignGroup } from '../../components/markets/marketsView.ts';
 import { flattenTickers, frDecimal, geometryNumber } from '../../components/markets/marketsView.ts';
 import { SIGNED_SCALES, signedStep } from '../../design/signedScale.ts';
+import { cssToken } from '../../charts/theme.ts';
 
 /**
  * MarketMap — treemap ECharts secteurs → tickers (dominante de /markets).
@@ -27,12 +28,6 @@ import { SIGNED_SCALES, signedStep } from '../../design/signedScale.ts';
  *   parsées pour la géométrie du rendu.
  */
 
-function cssToken(name: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 interface TreemapLeaf {
   readonly name: string;
