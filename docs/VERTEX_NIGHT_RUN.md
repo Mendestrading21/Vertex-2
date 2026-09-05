@@ -85,3 +85,23 @@ financier, aucune lecture de compte/positions IBKR, aucun faux live.
 - Mission 3 démarrée : inventaire des modules par page (catalogues
   `*Modules.ts`), registre des sources (producteurs `edge-ibkr`, `edge-official`,
   consommateurs par préfixe de schéma), puis chaînes par valeur.
+
+## Checkpoint 04:40 (2026-09-06) — mission 3
+
+- Inventaire livré : `docs/VERTEX_DATA_COVERAGE.md` (base réelle lue en lecture
+  seule : 14 364 cotations / 57 instruments, 5 760 dépêches, aucune chaîne ni
+  calendrier ni SEC ni macro ; 14 360 versions de `markets_overview`),
+  `docs/VERTEX_SOURCE_REGISTRY.md`, `docs/VERTEX_RUNBOOK.md`,
+  `docs/VERTEX_FINAL_REPORT.md`.
+- Coalescence de l'outbox (`enqueue_outbox_coalesced`) : au plus un message en
+  attente par (sujet, clé) ; tests d'intégration sur base jetable `vertex_test`
+  (créée ce soir, propriétaire `vertex`) ; sept tests de chaîne mis à jour.
+- Collecteur réel de chaînes d'options (`vertex_edge_ibkr.options`,
+  `tools/run_edge_options.py`, client 75) ; collision de schéma levée
+  (`ibkr.option-chain-definition/1` vs `ibkr.option-chain-slice/1`) ; 408 tests
+  edge verts. Non lancé contre TWS (samedi ; hypothèses taux/dividende à
+  déclarer par l'utilisateur). Boucle locale `~/.vertex/ingest-loop.ps1`
+  patchée : l'étape s'active seulement quand les trois variables sont
+  déclarées.
+- Suite d'intégration complète (worker, persistance, API, edge) lancée en
+  arrière-plan sur `vertex_test` : résultat attendu avant le commit du code.
