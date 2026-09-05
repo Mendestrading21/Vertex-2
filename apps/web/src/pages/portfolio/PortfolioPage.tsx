@@ -178,7 +178,7 @@ function PortfolioBoard({
           )}
         </div>
         <AbsentPortfolioModule id="day-performance" />
-        <div data-module="total-performance">
+        <div data-module="total-performance" data-density="compact">
           <TotalPerformanceModule portfolioId={data.portfolio.id} />
         </div>
         <AbsentPortfolioModule id="cash" />

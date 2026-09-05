@@ -112,7 +112,7 @@ export function TotalPerformanceModule({ portfolioId }: { readonly portfolioId: 
     >
       <ModuleStatus state={state} raw={query.data?.reason ?? null} />
       {moduleShowsContent(state) && view !== null ? (
-        <div className="vx-metrics-row" data-testid="pf-total-performance">
+        <div className="vx-metrics-grid" data-testid="pf-total-performance">
           {(['twr_gross', 'twr_net', 'xirr_gross', 'xirr_net'] as const).map((key) => ratioMetric(key, view.metrics[key]))}
         </div>
       ) : moduleShowsContent(state) ? (
