@@ -72,7 +72,7 @@
  * exemption qui se déguise.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -245,7 +245,10 @@ function scanFile(path: string, contents?: string): Finding[] {
     ts.ScriptKind.TSX,
   );
   const findings: Finding[] = [];
-  const relativePath = contents === undefined ? relative(APP_ROOT, path) : path;
+  // Chemin POSIX quel que soit l'hôte : `relative` rend des antislashs sous
+  // Windows, et l'exemption — écrite une fois, avec des barres obliques — ne
+  // matchait plus. La porte tombait alors sur un faux positif hors CI.
+  const relativePath = contents === undefined ? relative(APP_ROOT, path).split(sep).join('/') : path;
 
   const report = (rule: string, text: string, node: ts.Node): void => {
     findings.push({
