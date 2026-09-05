@@ -57,3 +57,31 @@ financier, aucune lecture de compte/positions IBKR, aucun faux live.
   (SYNTHETIC), API 8001, Vite 5173.
 - Playwright non exécutable sur ce poste (aucun navigateur Playwright ;
   `global.setup.ts` suppose `python3`/`service postgresql`).
+
+## Checkpoint 01:30
+
+- Commits depuis le dernier point : `47d819f` (Aujourd'hui + Sources), `86d7965`
+  (instrument actif dans le bandeau, Marchés → contexte, raccourci Options),
+  `41b472d` (budget async 4 s des tests de page), `f8bba5e` (cssToken /
+  publishedOr uniques), `27d1b30` (Widget `density`).
+- Recomposées, vérifiées à l'écran (1440), non encore commitées : Opportunités,
+  Catalyseurs, Marchés (table de carte désormais dans une région défilante de
+  560 px, treemap plus haute). En cours (agents) : Analyse, Portefeuille,
+  Risques, Calendrier, Graphiques, Simulateur. Inventaire mission 3 en cours
+  (agent lecture seule).
+- Reprise : à la fin des agents → sync, typecheck, lint, vitest des pages,
+  captures, commit « feat(pages): … », puis lots transversaux (CSS mort,
+  cascade), quality gate complète, rapport mission 2, démarrage mission 3.
+
+## Checkpoint 02:50 (2026-09-06) — mission 2 terminée
+
+- Commits depuis 01:30 : `502362e` (sept pages), `aaad690` (Calendrier,
+  Simulateur), `aeb1025` (CSS mort), `1eff79c` (passe 2 rangées/débordements),
+  `7460161` (passe 3), `8d5dbda` (Sources). Rapport final de la mission 2 :
+  `docs/ui-refonte-vertex.md` §7.3 à §7.7 (tableau des rangées aux trois
+  viewports, bundle avant/après, dépendances évaluées, restes).
+- Preuves : tsc 0, Biome 0 (305 fichiers), Vitest 122 fichiers / 1 168 verts,
+  build 3,9 s, CSS 202 → 199 kB. Playwright toujours non exécutable ici.
+- Mission 3 démarrée : inventaire des modules par page (catalogues
+  `*Modules.ts`), registre des sources (producteurs `edge-ibkr`, `edge-official`,
+  consommateurs par préfixe de schéma), puis chaînes par valeur.
