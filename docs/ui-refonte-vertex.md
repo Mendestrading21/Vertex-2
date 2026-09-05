@@ -66,9 +66,40 @@ semée par `apps/web/e2e/seed_synthetic.py` (population SYNTHETIC), API sur
 `apps/web/vite.design-preview.config.ts` (fichier de travail, proxy `/api` →
 8001). La pile réelle (`vertex`, 8000/4173) n'est pas touchée.
 
-## 4. Décisions de design
+## 4. Décisions de design (mission 1, appliquées sur Options)
 
-_(à compléter au fil de l'implémentation — voir §6)_
+Quatre analyses (KPI, Interface, UI UX, Impeccable) ont convergé sur l'ordre de
+lecture et divergé sur trois points, tranchés ainsi :
+
+1. **Ordre de lecture** : résumé → dominante → détail (`DASHBOARD_COMPOSITION.md`).
+   La bande de synthèse (snapshot + spot + deux hypothèses) ouvre la planche, la
+   chaîne suit en deuxième rangée. Impeccable proposait la chaîne en premier ;
+   KPI proposait une synthèse de six chiffres : retenu une bande courte PUIS la
+   dominante.
+2. **Catalogue inchangé** : quinze modules, six absences, mêmes `data-module` et
+   `data-testid` (les e2e comptent les modules et lisent ces accroches). Les
+   absences sont regroupées en bas et compactées, jamais retirées (article 17).
+3. **Densité de carte** : le rang `quiet` de `Card` est inerte sur une planche
+   (battu par le bloc `.vx-board > [data-module] > .vx-card`). Plutôt que de le
+   ressusciter — ce qui changerait toutes les pages d'un coup — un attribut de
+   composition `data-density="compact"` est posé par la page, cellule par
+   cellule (règle `.vx-main [data-module][data-density='compact'] > .vx-card`).
+4. **Grille à douze colonnes** pour Options : les cartes n'ont plus toutes la même
+   largeur ; les aires nommées restent la source de placement (porte e2e « aire
+   obtenue »).
+5. **Sélecteur de sous-jacent** : plié derrière le courant (`<details>` natif),
+   déplié sans sous-jacent ; une panne réseau est rendue comme un état, jamais
+   comme une couverture vide.
+6. **Chaîne** : statut de quote une fois par côté (forme + texte : CROSSED corail
+   plein, STALE ambre pointillé), `colgroup` de largeurs, `aria-pressed` à la
+   place d'un faux `aria-haspopup="dialog"`, squelette de table au chargement,
+   valeur exacte au survol ET dans « Détail » (dit dans la légende).
+7. **Sourire d'IV** : tracé dans la boîte mesurée (ResizeObserver), rapport
+   d'aspect préservé : un point est un disque.
+8. **Refusé** : nouvelle dépendance (TanStack, Radix), moteur graphique sur les
+   valeurs simples, jauge/anneau sur une valeur non servie, calcul client (mid,
+   spread, ATM, jours à l'expiration), format « virgule vs point » unifié sans
+   décision produit, réordonnancement du catalogue.
 
 ## 5. Avancement
 
@@ -82,6 +113,52 @@ _(à compléter au fil de l'implémentation — voir §6)_
 - [ ] Généralisation Marchés / Portefeuille / Analyse / Risques
 - [ ] Tests, revue finale Impeccable, captures après
 
-## 6. Points restant à traiter
+## 6. Points restant à traiter (issus des analyses, non exécutés)
 
-_(à compléter)_
+- Playwright sur ce poste (navigateur, `python3`, ports) : les portes de mise en
+  page ont été rejouées par mesure JavaScript dans le navigateur intégré, pas par
+  la suite e2e.
+- Persistance de la sélection (groupe, colonnes) dans l'URL (`useSearchParams`).
+- Focus perdu quand un refetch SSE démonte l'inspecteur de contrat.
+- Horodatages ISO bruts partout (`formatInTimeZone` existe dans `calendarView.ts`).
+- Deux matériaux de carte (rayon 20 + `shadow-panel` sur cinq planches, rayon 14 sur
+  sept) et deux couleurs de focus : décision de système, hors d'un lot de page.
+- Format des nombres (chaîne servie avec point vs virgule française) : décision
+  produit à prendre avant toute unification.
+
+## 7. Mission 2 — audit total et optimisation par lots (2026-09-05, soir)
+
+Branche : `agent/vertex-total-audit-ultimate-polish` (créée depuis
+`refonte/ui-widgets-20260905`, elle-même sur `main` = `0b82eb2`). Aucun merge.
+
+### 7.1 Sécurité Git relevée avant modification
+
+- HEAD `0b82eb2`, aucun worktree secondaire, aucune stash ; 15 fichiers modifiés et
+  9 non suivis, tous issus de la mission 1 (Options) — commités en cinq commits
+  bornés (`2f63931` skills, `f27d402` portes Windows, `b89ce75` Options,
+  `e622319` Portefeuille, `3381104` doc).
+- Branches distantes d'autres agents préservées (`agent/*`, `claude/*`,
+  `codex/*`, `lot/*`) ; PR #75 ouverte non touchée.
+- `origin` pointe sur `Mendestrading21/Vertex-2` (renommage GitHub du dépôt
+  `Vertex-1.0-Beta-` ; l'ancienne URL redirige). `.claude/rules/repository-role.md`
+  nomme encore l'ancien nom : à mettre à jour dans un lot de gouvernance.
+
+### 7.2 Mesures de référence (avant les lots de la mission 2)
+
+Build de production (`pnpm build`, Vite 8 / rolldown, 3,3 s) :
+
+| Chunk | Minifié | gzip | Chargement |
+|---|---|---|---|
+| `index` (shell, router, react-query, widgets) | 323 kB | 97 kB | initial |
+| `index.css` | 202 kB | 29 kB | initial |
+| `echartsLoader` | 609 kB | 205 kB | paresseux, par route |
+| `lightweightChartsLoader` | 164 kB | 53 kB | paresseux (Analyse, Graphiques) |
+| `decisionApi` (partagé par les pages paresseuses) | 141 kB | 46 kB | paresseux |
+| pages (10 chunks) | 24–69 kB | 7–18 kB | paresseux |
+
+Les moteurs graphiques ne sont pas dans le bundle initial. Onze routes sur douze
+sont chargées paresseusement (`app/routes.tsx`).
+
+Tests : typecheck 0 erreur, Biome 0 erreur, Vitest 1 176 verts (5 tests de
+composition rouges sous charge complète, verts relancés seuls : course
+préexistante documentée par la PR #75), Playwright non exécutable sur ce poste.
