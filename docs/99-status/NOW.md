@@ -4,7 +4,20 @@
 phase: alimentation_reelle_et_refonte_ui
 lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
 branch: agent/vertex-total-audit-ultimate-polish
-status: pr_76_ouverte_ci_7_sur_7_verte_revue_complete_faite_aucun_merge
+status: pr_76_ouverte_ci_verte_worker_reaper_livre_aucun_merge
+tour_de_mise_en_place_2026_09_06:
+  - "908f502 : le worker récupère les baux expirés avant chaque réclamation
+     (18 lignes IN_PROGRESS trouvées bloquées sur la base réelle depuis le
+     redémarrage de la veille ; reprises et traitées en DONE après redémarrage
+     du worker à 13:32) ; neuf dettes de la porte de mise en page retirées,
+     cliquet 10 → 1 ; ADR-006 complété"
+  - "Pile live vérifiée : TWS 7496 joignable, boucle d'ingestion connectée
+     (historique OK, dépêches en timeout un dimanche), API 8000, web 4173
+     reconstruit avec l'infobulle, outbox 0 en attente, dernière observation
+     2026-09-04 (vendredi)"
+  - "Second moteur (session « Vertex 1 », dépôt Desktop/Vertex 1, donneur
+     Flask) : 15 commits ce matin sur ui/refonte-dashboards, PR #867 ; aucun
+     commit d'un autre moteur sur Vertex-2 aujourd'hui"
 vague2_suite_2026_09_06:
   - "e9563f1 : infobulle unique (components/Tooltip.tsx, placement borné,
      clavier, aria-describedby), mesures V2-7 (tables natives : 80 ms à 240

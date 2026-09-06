@@ -85,7 +85,7 @@ const DETTE_CARTE: ReadonlyArray<{
     route: '/markets',
     module: 'market-map',
     nature:
-      'HAUTEUR FANTÔME : la table des marchés défile dans sa propre région (560 px), mais ses en-têtes collants font remonter sa hauteur dans le scrollHeight de la carte — rien n'est coupé à l'écran',
+      'HAUTEUR FANTÔME : la table des marchés défile dans sa propre région (560 px), mais ses en-têtes collants font remonter sa hauteur dans le scrollHeight de la carte — rien n’est coupé à l’écran',
     lot: 'V4',
   },
   /*

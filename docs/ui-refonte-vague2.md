@@ -134,3 +134,9 @@ sur Marchés et sur la chaîne (`.vx-markets-table-scroll[tabindex]`,
 Cinquième exécution, `e9563f1` (infobulle unique, mesures) : **7 jobs sur 7
 verts** (run 34028650506). Revue complète du logiciel sur la pile live :
 `docs/VERTEX_FINAL_REPORT.md` §2 ter.
+
+Tour de mise en place (`908f502`) : neuf dettes de la porte « le contenu
+tient dans sa carte » retirées après mesure à 0 px aux trois largeurs
+(population SYNTHETIC et réelle), cliquet ramené à 1 ; hors UI, le worker
+récupère désormais les baux expirés avant chaque réclamation (défaut trouvé
+sur la base réelle pendant la revue).
