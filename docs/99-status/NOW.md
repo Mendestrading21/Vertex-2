@@ -4,7 +4,19 @@
 phase: alimentation_reelle_et_refonte_ui
 lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
 branch: agent/vertex-total-audit-ultimate-polish
-status: pr_76_ouverte_ci_7_sur_7_verte_aucun_merge
+status: pr_76_ouverte_ci_7_sur_7_verte_revue_complete_faite_aucun_merge
+vague2_suite_2026_09_06:
+  - "e9563f1 : infobulle unique (components/Tooltip.tsx, placement borné,
+     clavier, aria-describedby), mesures V2-7 (tables natives : 80 ms à 240
+     lignes, virtualisation non proposée) et V2-12 (172 872 octets gzip
+     initiaux, moteurs de graphiques hors chargement initial) ; CI 7/7
+     (run 34028650506)"
+  - "Revue complète sur la pile live (57 instruments réels) : 15 routes × 3
+     largeurs, zéro débordement coupé hors dette V4 market-map, zéro texte
+     suspect, zéro vocabulaire d'ordre ; rapport §2 ter de
+     docs/VERTEX_FINAL_REPORT.md. Restent sans données servies sur ce poste :
+     chaîne d'options (collecteur inactif), portefeuille et risques (aucun
+     portefeuille déclaré)"
 ci_2026_09_06:
   - "PR #76 (agent/vertex-total-audit-ultimate-polish → main, base 0b82eb2) :
      run 34021031911 sur c3cdb7d, 7 jobs sur 7 verts, e2e 834 parcours. Quatre

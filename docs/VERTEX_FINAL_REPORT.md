@@ -95,6 +95,52 @@ format produit, et la planche Options sans sous-jacent qui perdait ses aires
 nommées. **CI 7 jobs sur 7 verte sur `c3cdb7d`** (run 34021031911) ; PR #76
 prête pour relecture humaine, aucun merge.
 
+## 2 ter. Revue complète du logiciel (après-midi du 6 septembre)
+
+Demande : « teste le logiciel complet pour qu'il fonctionne et que tout
+s'affiche correctement, chaque carte ». Méthode : la pile LIVE de ce poste
+(API 8000, interface 4173 servie depuis le build du jour, base réelle :
+57 instruments, dépêches IBKR, aucun snapshot de chaîne d'options), chaque
+route CHARGÉE à 1280×800, 1440×900 et 1600×1000 (un chargement par largeur,
+pas un redimensionnement : le volet de test est masqué et n'exécute pas les
+`ResizeObserver`), et pour chaque cellule `[data-module]` : débordement
+(`scrollWidth − clientWidth`, `scrollHeight − clientHeight`) et coupe
+(`overflow` non défilant), texte suspect (`undefined`, `NaN`, `null`,
+`[object Object]`), cellule vide, vocabulaire d'ordre, console, puis une
+capture haute à 1440.
+
+| Route | Modules | Débordement coupé (3 largeurs) | États servis | Note |
+|---|---|---|---|---|
+| `/today` | 12 | aucun | 3 `empty` (prochain catalyseur, portefeuille manuel, calendrier) | file d'attention 12 dépêches réelles ; « Buy » présent = titre IBD cité, pas une commande |
+| `/opportunities` | 14 | aucun | 8 `ready`, 6 absences | classement 57 candidats |
+| `/analysis` (sans instrument) | 0 | — | — | liste des 57 instruments, aucune planche |
+| `/analysis/AAPL` | 19 | aucun | 2 `empty` (financials, catalyseurs à venir) | chandelier, OHLCV, indicateurs, preuves, pairs, verdict |
+| `/options` (sans sous-jacent) | 15 | aucun | 9 `empty` | aires nommées honorées, Spot/Taux/Dividende 168 px |
+| `/options/AAPL` | 0 | — | — | « Aucun snapshot de chaîne publié pour AAPL — raison serveur : no snapshot published » |
+| `/simulator` | 14 | aucun | 5 absences | saisie manuelle + paramètres de base |
+| `/calendar` | 13 | aucun | 8 `empty` | agenda + contrôles de vue + fuseau |
+| `/markets` | 13 | aucun en largeur ; `market-map` signale une hauteur (dette V4 : artefact des en-têtes collants, la table défile dans sa région de 560 px) | 3 `ready` | carte sectorielle 57 instruments, canevas 717 / 860 / 997 px selon la largeur |
+| `/charts` (sans instrument) | 5 | aucun | 5 absences | — |
+| `/charts/AAPL` | 12 | aucun | 7 `ready` | chandelier, volume, RSI, MACD, comparaison |
+| `/portfolio` | 18 | aucun | 1 `ready`, 2 `empty`, 8 absences | portefeuille vide : saisie manuelle et import CSV disponibles |
+| `/risks` | 19 | aucun | 7 `empty`, 12 absences | dépend d'un portefeuille déclaré |
+| `/catalysts` | 17 | aucun | 1 `ready`, 8 `empty`, 6 absences | file de revue, frise |
+| `/sources-reports` | 17 | aucun | 7 `ready`, 9 absences | registre 14 sondes, santé des composants |
+
+Console : aucune erreur JavaScript ; les seules entrées sont des `404` sur
+`POST /api/v1/ai/explain`, contrat typé `NO_SNAPSHOT_FOR_SUBJECT` que le
+panneau IA affiche en toutes lettres (« Aucun snapshot publié pour ce
+sujet ») — attendu tant qu'aucun snapshot n'existe pour le sujet.
+Aucun texte suspect, aucune cellule vide, aucun vocabulaire d'ordre dans
+l'interface. Défilement horizontal de page : 0 px partout.
+
+Ce que la revue ne prouve pas : le redimensionnement en direct des canevas
+ECharts (le volet de test est masqué, les `ResizeObserver` n'y sont pas
+livrés — les composants en ont un et la CI e2e charge chaque largeur) ; les
+pages Options, Risques et Portefeuille avec des données servies (aucune
+chaîne collectée, aucun portefeuille déclaré sur ce poste) — elles sont
+couvertes par la population SYNTHETIC de la CI.
+
 ## 3. Commits de la nuit (branche, aucun merge)
 
 Mission 1 et 2 : voir `docs/ui-refonte-vertex.md` §7.3 (dix-neuf commits, de

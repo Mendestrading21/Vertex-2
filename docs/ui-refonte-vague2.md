@@ -130,3 +130,7 @@ donc pas proposé. Ce qui reste du lot V2-7 sans virtualisation : tri/filtre
 servis, en-tête collant, clavier et région défilante bornée — déjà en place
 sur Marchés et sur la chaîne (`.vx-markets-table-scroll[tabindex]`,
 `.vx-chain-table-scroll[tabindex]`).
+
+Cinquième exécution, `e9563f1` (infobulle unique, mesures) : **7 jobs sur 7
+verts** (run 34028650506). Revue complète du logiciel sur la pile live :
+`docs/VERTEX_FINAL_REPORT.md` §2 ter.
