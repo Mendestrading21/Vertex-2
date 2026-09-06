@@ -89,7 +89,11 @@ d'état de donnée sur toutes les cartes (`LiveDataIndicator`, dix états, jamai
 (`12'845.20`, `+2.48%`, `−0.72%`), un seul en-tête d'inspecteur sur sept
 pages, vingt-six pieds de carte ramenés à une ligne courte. Correctifs CI :
 coalescence par remplacement (ordre prérequis → dépendant rétabli), porte
-« rôle du dépôt » sur le nom renommé, skills vendus hors lint.
+« rôle du dépôt » sur le nom renommé, skills vendus hors lint, puis quatre
+tours Playwright (17 → 9 → 3 → 0 rouges) : nombres atomiques, attentes au
+format produit, et la planche Options sans sous-jacent qui perdait ses aires
+nommées. **CI 7 jobs sur 7 verte sur `c3cdb7d`** (run 34021031911) ; PR #76
+prête pour relecture humaine, aucun merge.
 
 ## 3. Commits de la nuit (branche, aucun merge)
 

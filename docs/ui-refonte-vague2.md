@@ -85,3 +85,23 @@ viewport, tous traités (`983dda4`, `4039f79`, `79111c8`) :
   portés par le panneau entier ;
 - attentes des parcours mises au format produit (`e2e/format.ts`) et au nom
   accessible « Inspecteur — <sujet> » ; témoin hors ligne désambiguïsé.
+
+Deuxième et troisième exécutions (`c0b799f`, `03a2c01`) : 9 puis 3 rouges,
+tous sur la porte « le contenu tient dans sa carte » de `/options`, aux trois
+largeurs (Spot 18 px, Taux et Dividende 35 px à 1280). Le diagnostic a pris
+deux tours parce que la planche mesurée n'était pas celle regardée : la porte
+visite `/options` **sans sous-jacent**, où la planche rend des `Widget` en
+état `empty`. Là, les aires nommées de `.vx-options-grid` (dans `global.css`)
+perdaient, à spécificité égale, contre les spans du socle
+`.vx-w2[data-size]` importés après : Spot, Taux et Dividende tombaient à une
+colonne (76 px, 34 px de corps) et « Aucun snapshot publié » débordait.
+Correction `c3cdb7d` : les aires déménagent dans `widgets.css` (même motif
+que Marchés au lot P1 et Opportunités au lot P2d) et la planche vide garde la
+densité compacte des cinq mêmes modules qu'en planche servie. Le tour
+précédent (`03a2c01`) reste utile : dans une cellule compacte, unité, note,
+pied et `code` se replient mot à mot et la cellule défile plutôt que de
+couper si une police de secours élargit encore un segment.
+
+Quatrième exécution, `c3cdb7d` : **7 jobs sur 7 verts** (run 34021031911 ;
+e2e 834 parcours, trois viewports, axe). PR #76 à jour, relecture et fusion
+humaines.

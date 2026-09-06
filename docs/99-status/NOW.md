@@ -4,7 +4,14 @@
 phase: alimentation_reelle_et_refonte_ui
 lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
 branch: agent/vertex-total-audit-ultimate-polish
-status: branche_locale_non_poussee_aucun_merge_rapport_final_ecrit
+status: pr_76_ouverte_ci_7_sur_7_verte_aucun_merge
+ci_2026_09_06:
+  - "PR #76 (agent/vertex-total-audit-ultimate-polish → main, base 0b82eb2) :
+     run 34021031911 sur c3cdb7d, 7 jobs sur 7 verts, e2e 834 parcours. Quatre
+     tours pour les e2e (17 → 9 → 3 → 0) ; dernier défaut : sans sous-jacent,
+     la planche Options rend des Widget et les aires nommées de global.css
+     perdaient contre les spans de widgets.css — aires déménagées (c3cdb7d).
+     Journal : docs/ui-refonte-vague2.md. Fusion : humaine, squash."
 nuit_agent_2026_09_05_06:
   - "base main = 0b82eb2 ; 22 commits bornés sur la branche, aucun merge, aucun
      force-push, aucun secret. Rapport : docs/VERTEX_FINAL_REPORT.md ; suivi UI :
