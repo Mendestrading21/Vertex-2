@@ -1456,11 +1456,20 @@
   display: grid;
   grid-template-areas:
     'main main main main main main main main main main main main'
-    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : les superpositions (1 014 px, deux tables)
-       prennent deux rangées ; volume (324) et indicateurs servis (601)
-       s'empilent au centre, la comparaison (736) à droite : 36 % → 11 %. */
-    'overlays overlays overlays overlays volume volume volume volume comparison comparison comparison comparison'
-    'overlays overlays overlays overlays indicators indicators indicators indicators comparison comparison comparison comparison'
+    /* PASSE 3 (2026-09-06, mesure 1280/1440/1600, population REAL).
+       CE QUI N'ALLAIT PAS. Les superpositions tenaient quatre colonnes,
+       soit 301 px : leurs trois figures — moyenne simple, exponentielle,
+       bandes de Bollinger — s'y empilaient sur 1 052 px de haut. Tout ce qui
+       partageait leur rangée creusait alors un trou : volume 381, comparaison
+       362. La composition précédente le masquait en étirant la comparaison
+       sur deux rangées — un cadre de 1 052 px dont 725 étaient vides.
+       CE QUE FAIT CELLE-CI. Les superpositions passent à huit colonnes
+       (~620 px) : `.vx-charts-figures` y range ses figures CÔTE À CÔTE, et
+       le module perd les deux tiers de sa hauteur. Le volume l'accompagne sur
+       la même rangée ; indicateurs servis et comparaison forment la suivante.
+       Deux rangées équilibrées, aucune carte étirée sur du vide. */
+    'overlays overlays overlays overlays overlays overlays overlays overlays volume volume volume volume'
+    'indicators indicators indicators indicators comparison comparison comparison comparison comparison comparison comparison comparison'
     'rsi rsi rsi rsi rsi rsi macd macd macd macd macd macd'
     'sync sync sync sync selected selected alerts alerts layouts layouts saved saved';
   grid-template-columns: repeat(12, minmax(0, 1fr));
