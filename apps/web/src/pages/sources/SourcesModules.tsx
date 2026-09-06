@@ -202,16 +202,26 @@ export function ExportsModule({ state }: { readonly state: ModuleState }) {
       state={state}
       footer={<>dérivé d’un snapshot publié, rien de généré ici</>}
     >
+      {/*
+        UNE ROUTE EXPOSÉE N'EST PAS UN FICHIER DISPONIBLE. Cette carte listait
+        trois « exports servis » ; deux répondent 404 tant qu'aucun snapshot de
+        performance n'est publié, ce qui est le cas par défaut. Le catalogue des
+        capacités ne publie pas cette présence, et y brancher un appel serait un
+        changement plus lourd que le défaut : on dit donc ce qu'on sait — la
+        route existe, et à quelle condition elle rend un fichier.
+      */}
       <ul className="vx-inspector-list" data-testid="src-exports">
         <li>
           Journal du registre manuel (CSV) — <code>GET /api/v1/portfolio/export</code> · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
         <li>
           Points quotidiens de performance (CSV) — <code>GET /api/v1/performance/{'{portfolio_id}'}/export</code> ·{' '}
-          <Link to="/portfolio">depuis Portefeuille</Link>
+          route exposée ; le fichier n’existe que si un snapshot de performance est publié,
+          sinon <code>404</code> · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
         <li>
-          Manifeste d’audit de performance (JSON : méthodes, versions, hashes) — même route · <Link to="/portfolio">depuis Portefeuille</Link>
+          Manifeste d’audit de performance (JSON : méthodes, versions, hashes) — même route,
+          même condition · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
       </ul>
     </Widget>

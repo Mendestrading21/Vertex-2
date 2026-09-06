@@ -126,6 +126,19 @@ function MarketsFrame({
     () => allEntries.filter((entry) => visibleGroups.has(entry.group)),
     [allEntries, visibleGroups],
   );
+  /** Les deux séances servies, nommées seulement si TOUS les instruments s'accordent. */
+  const joursServis = useMemo(() => {
+    const jours = new Set(allEntries.map((entry) => entry.ticker.trading_day));
+    const veilles = new Set(allEntries.map((entry) => entry.ticker.previous_trading_day));
+    if (jours.size !== 1 || veilles.size !== 1) {
+      return null;
+    }
+    const [jour] = [...jours];
+    const [veille] = [...veilles];
+    return jour === undefined || veille === undefined
+      ? null
+      : `clôtures du ${veille} et du ${jour}`;
+  }, [allEntries]);
 
   function toggleGroup(group: SignGroup): void {
     setVisibleGroups((previous) => {
@@ -197,7 +210,16 @@ function MarketsFrame({
         </div>
         <div>
           <dt>Période</dt>
-          <dd>2 clôtures journalières consécutives · UTC (stockage)</dd>
+          {/*
+            LA PÉRIODE NOMME LES SÉANCES, PAS LEUR NOMBRE. « 2 clôtures
+            consécutives » ne disait pas LESQUELLES : la carte montrait le
+            4 septembre sous un `as_of` du 6, et rien ne les reliait.
+            `trading_day` et `previous_trading_day` sont servis PAR INSTRUMENT
+            (contrat `MarketsTicker`) : on ne les nomme que si les 57 tombent
+            d'accord. Dès que deux places divergent, on retombe sur le compte —
+            inventer un jour commun serait une dérivation interdite ici.
+          */}
+          <dd>{joursServis ?? '2 clôtures journalières consécutives'} · UTC (stockage)</dd>
         </div>
         <div>
           <dt>Source</dt>

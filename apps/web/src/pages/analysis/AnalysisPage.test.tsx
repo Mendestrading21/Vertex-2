@@ -344,7 +344,15 @@ describe('Page Analyse — états', () => {
     await renderAnalysis('/analysis/AAPL');
 
     await screen.findByText('Données différées');
-    expect(screen.getByText('DONNÉES RETARDÉES')).toBeDefined();
+    /*
+      DEUX FOIS, ET C'EST VOULU : la nature est dite par la PAGE (son bandeau)
+      et par la COQUILLE (la barre de contexte, qui lit la même tête depuis
+      qu'elle sait la nommer pour Analyse). C'était déjà le cas sur Marchés et
+      Aujourd'hui. L'assertion vise donc la planche, pas le document entier.
+    */
+    const planche = screen.getByRole('main');
+    expect(within(planche).getByText('DONNÉES RETARDÉES')).toBeDefined();
+    expect(screen.getAllByText('DONNÉES RETARDÉES').length).toBe(2);
     expect(screen.getByText(/Population DELAYED publiée par le worker/)).toBeDefined();
     expect(screen.getByRole('table', { name: /OHLCV/ })).toBeDefined();
   });

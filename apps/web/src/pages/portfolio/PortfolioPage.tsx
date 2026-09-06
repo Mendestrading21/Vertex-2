@@ -146,6 +146,7 @@ function ConcentrationModule({
       title={module.title}
       titleId="vx-pf-concentration-title"
       state={state}
+      {...(reason === null ? {} : { stateDetail: reason })}
       action={view === null ? undefined : <StatusChip label={`${view.blocks.length} devise(s) publiée(s)`} tone="neutral" />}
       footer={<>poids et Herfindahl publiés par le worker</>}
     >

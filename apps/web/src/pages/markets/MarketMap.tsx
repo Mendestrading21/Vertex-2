@@ -129,17 +129,17 @@ export function MarketMap({ sectors, visibleGroups, description, onSelect }: Mar
               fontSize: 11,
               color: cssToken('--vx-text-muted'),
             },
-            tooltip: {
-              backgroundColor: cssToken('--vx-surface-2'),
-              borderColor: cssToken('--vx-border'),
-              borderWidth: 1,
-              padding: [6, 10],
-              textStyle: {
-                color: cssToken('--vx-text'),
-                fontFamily: cssToken('--vx-font-mono'),
-                fontSize: 11,
-              },
-            },
+            /*
+              PAS D'INFOBULLE. Celle du moteur affichait la VALEUR de la tuile,
+              c'est-à-dire le poids global, en nombre nu : ni unité, ni libellé,
+              et sur un nœud de secteur une SOMME calculée par le navigateur —
+              une valeur que le serveur n'a jamais publiée. Le lecteur pouvait
+              la prendre pour le rendement, qui est la couleur.
+              Chaque tuile porte déjà son ticker et son rendement, la légende
+              porte l'unité, et la table sous la figure porte les cinq colonnes
+              servies. Rien n'est retiré de l'écran ; une lecture fausse l'est.
+            */
+            tooltip: { show: false },
             series: [
               {
                 type: 'treemap',
