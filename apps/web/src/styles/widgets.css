@@ -1185,8 +1185,16 @@
     'coverage coverage coverage coverage drawdown drawdown drawdown drawdown concentration concentration concentration concentration'
     'correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations'
     'extremes extremes extremes extremes alignment alignment alignment alignment discards discards discards discards'
-    'score score var var benchrel benchrel vol vol liquidity liquidity turnover turnover'
-    'stress stress factors factors budget budget radar radar register register alerts alerts';
+    /* PASSE 3 (2026-09-07, mesure 1280) : QUATRE par rangée, plus six.
+       À six, chaque carte tenait 141 px à 1440 et 120 px à 1280 — « Score de
+       risque » sur deux lignes, « CONTRAT SERVEUR ABSENT » sur trois, « rien
+       ne collecte cette donnée » sur trois, et des bas de cartes en dents de
+       scie. La régularité, qui EST le message de ce bloc, ne se lisait plus.
+       À quatre (trois colonnes, ~220 px à 1280), le titre tient sur une
+       ligne et la phrase sur deux. Le catalogue et l'ordre sont inchangés. */
+    'score score score var var var benchrel benchrel benchrel vol vol vol'
+    'liquidity liquidity liquidity turnover turnover turnover stress stress stress factors factors factors'
+    'budget budget budget radar radar radar register register register alerts alerts alerts';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
@@ -1471,7 +1479,12 @@
     'overlays overlays overlays overlays overlays overlays overlays overlays volume volume volume volume'
     'indicators indicators indicators indicators comparison comparison comparison comparison comparison comparison comparison comparison'
     'rsi rsi rsi rsi rsi rsi macd macd macd macd macd macd'
-    'sync sync sync sync selected selected alerts alerts layouts layouts saved saved';
+    /* PASSE 3 (2026-09-07, mesure 1280) : quatre puis une, plutôt que cinq
+       de front. Les quatre dernières tenaient 145 px à 1440 et 124 à 1280 —
+       « Études sauvegardées » sur deux lignes, « arbitrage d'autorité
+       financière requis » sur quatre. */
+    'sync sync sync selected selected selected alerts alerts alerts layouts layouts layouts'
+    'saved saved saved . . . . . . . . .';
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
@@ -1986,7 +1999,12 @@
     'ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking'
     'profile profile profile profile provenance provenance provenance provenance quality quality quality quality'
     'profile profile profile profile provenance provenance provenance provenance exclusions exclusions exclusions exclusions'
-    'score score bias bias return return scatter scatter factors factors activity activity';
+    /* PASSE 3 (2026-09-07, mesure 1280) : les six absences passent de une
+       rangée de six à deux rangées de trois. Même raison que sur Risques —
+       à 141 px (1440) et 120 px (1280), « Score contre rendement » et
+       « Contribution des facteurs » se lisaient sur trois lignes chacun. */
+    'score score score score bias bias bias bias return return return return'
+    'scatter scatter scatter scatter factors factors factors factors activity activity activity activity';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 

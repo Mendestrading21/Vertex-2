@@ -8094,7 +8094,11 @@ label {
        face à elle : 38 % → 1 % de vide. */
     'exposure exposure exposure exposure exposure exposure review review review review review review'
     'orphans orphans orphans orphans orphans orphans review review review review review review'
-    'impact impact confidence confidence surprises surprises consensus consensus history history alerts alerts';
+    /* PASSE 3 (2026-09-07, mesure 1280) : six absences sur deux rangées de
+       trois. À six de front elles tenaient 197 px à 1440 et 168 à 1280, et
+       « Historique des surprises » s'y lisait sur trois lignes. */
+    'impact impact impact impact confidence confidence confidence confidence surprises surprises surprises surprises'
+    'consensus consensus consensus consensus history history history history alerts alerts alerts alerts';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
