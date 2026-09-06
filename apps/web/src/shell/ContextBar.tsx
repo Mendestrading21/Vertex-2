@@ -4,7 +4,7 @@ import { Link, useMatches } from 'react-router-dom';
 import { sessionStore } from '../api/client.ts';
 import type { SessionState } from '../api/client.ts';
 import { sseLinkStore } from '../api/events.ts';
-import { isKnownResource, useSnapshotMeta } from '../api/hooks.ts';
+import { isKnownResource, queryKeyForResource, useSnapshotMeta } from '../api/hooks.ts';
 import type { PageDef } from '../app/pages.ts';
 import { useWorkspace } from '../app/workspace.tsx';
 import { LiveBadge } from '../components/widgets/LiveBadge.tsx';
@@ -74,11 +74,38 @@ export function ContextBar({ onOpenSearch }: ContextBarProps) {
     pageMatch !== undefined && isPageHandle(pageMatch.handle) ? pageMatch.handle.page : null;
   const title = page === null ? 'Page introuvable' : page.title;
   const live = page?.live ?? null;
-  const meta = useSnapshotMeta(live === null ? NO_RESOURCE_KEY : live.queryKey);
-  // « Suivie » veut dire : le flux signale RÉELLEMENT cette tête aujourd'hui.
-  const tracked = live?.resource !== null && live?.resource !== undefined
-    ? isKnownResource(live.resource)
-    : false;
+  const instrument =
+    typeof pageMatch?.params?.instrument === 'string' ? pageMatch.params.instrument : null;
+  /*
+    LA TÊTE DE LA PAGE, MÊME QUAND ELLE DÉPEND DE L'URL.
+
+    Analyse et Graphiques lisent une tête PAR INSTRUMENT (`analysis/<ticker>`)
+    que la coquille ne peut pas nommer d'avance : leur `live` est `null`, et la
+    barre affichait donc « SANS SIGNAL », « âge non publié » et « NATURE NON
+    DÉCLARÉE » sur des pages dont la tête EST publiée — 57 en base. Le
+    paramètre de route donne l'instrument ; la clé se construit avec la même
+    fonction que la page elle-même, donc c'est bien le MÊME cache qui est lu,
+    jamais une requête de plus.
+  */
+  const suivie =
+    live?.resource ??
+    (page?.liveResourcePrefix !== undefined && instrument !== null
+      ? `${page.liveResourcePrefix}${instrument}`
+      : null);
+  const meta = useSnapshotMeta(
+    live !== null ? live.queryKey : suivie !== null ? queryKeyForResource(suivie) : NO_RESOURCE_KEY,
+  );
+  /*
+    « SUIVIE » VEUT DIRE : le flux signale RÉELLEMENT cette tête aujourd'hui.
+
+    Certaines pages ont une tête PAR INSTRUMENT (`analysis/<ticker>`) que la
+    coquille ne peut pas nommer d'avance : leur `live` est `null`, et le badge
+    affichait donc « SANS SIGNAL » sur Analyse et Graphiques alors que le flux
+    suit ces têtes par préfixe — 57 sont publiées en base. Le paramètre de
+    route donne l'instrument ; la question posée reste la même, et la réponse
+    vient toujours de `isKnownResource`, jamais d'une supposition.
+  */
+  const tracked = suivie === null ? false : isKnownResource(suivie);
   /*
     REFONTE UI 2026-09-05 — LE CONTEXTE DE TRAVAIL DEVIENT VISIBLE.
 

@@ -651,6 +651,13 @@ body {
   color: var(--vx-text-muted);
 }
 
+/* La séance de CHAQUE cours, servie par ticker : discrète, jamais absente. */
+.vx-ticker-day {
+  color: var(--vx-text-muted);
+  font-size: var(--vx-font-size-micro);
+  white-space: nowrap;
+}
+
 /* Vert/rouge : sens financier uniquement. Le signe est déjà DANS la chaîne
    du serveur, donc la couleur ne porte jamais l'information seule. */
 .vx-ticker-return {

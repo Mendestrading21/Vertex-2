@@ -265,6 +265,16 @@ export function ShellTicker() {
                   `.claude/rules/frontend.md`.
                 */}
                 <span className="vx-ticker-return">{displayPercent(entry.ticker.return_1d_pct)}</span>
+                {/*
+                  CHAQUE COURS PORTE SA SÉANCE. Le bandeau affichait des
+                  clôtures du 4 septembre sous une horloge du 6 : rien ne
+                  disait de quel jour venait le prix. `trading_day` est servi
+                  PAR TICKER (contrat `MarketsTicker`) — on le date donc item
+                  par item, jamais par une légende de bande, qui supposerait un
+                  jour commun aux 57 instruments et serait une dérivation
+                  interdite côté interface.
+                */}
+                <span className="vx-ticker-day">clôture {entry.ticker.trading_day}</span>
               </li>
             ))}
           </ul>
