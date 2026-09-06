@@ -21,6 +21,29 @@ Arrêt : `~/.vertex/stop-vertex.ps1` (ou `Arreter-Vertex.cmd`). Le miroir de
 travail `~/.vertex/app` est resynchronisé depuis `VERTEX_SRC` à chaque
 démarrage (robocopy /MIR, hors `.git`, `node_modules`, `.venv`, `dist`).
 
+### 1 ter. CHIEN DE GARDE — un service mort ne passe plus inaperçu (2026-09-06)
+
+Le 2026-09-06 à 21:21, l'API s'est arrêtée **sans une ligne d'erreur** : son
+journal s'achève sur « Uvicorn running », le port était libre, et personne ne
+l'a vu pendant une heure. Sur un poste laissé en marche, un service mort est
+indiscernable d'un service qui n'a rien à dire.
+
+`~/.vertex/watchdog.ps1` vérifie toutes les 60 s que chaque service répond
+RÉELLEMENT — port en écoute, et pour l'API une réponse à `/api/v1/health` —
+puis relance celui qui manque avec son propre script. Journal :
+`~/.vertex/logs/watchdog.log`, PID dans `~/.vertex/run/watchdog.json`.
+
+Trois refus délibérés :
+
+| Refus | Raison |
+|---|---|
+| Il ne relance JAMAIS PostgreSQL | une base qui tombe est un incident à comprendre, pas à masquer |
+| Il abandonne après 3 relances d'un même service | une boucle de redémarrage cache la panne au lieu de la montrer |
+| Il n'invente aucun état | ce qu'il ne peut pas vérifier, il l'écrit |
+
+Vérifié en le mettant à l'épreuve : API tuée volontairement à 21:23:5x,
+détectée à 21:24:06, relevée et répondant à 21:24:10.
+
 ### 1 bis. Mode DIRECT — regarder le travail en cours (2026-09-06)
 
 Un seul fichier à ouvrir : **`Vertex.cmd` sur le Bureau**. Il démarre la pile
