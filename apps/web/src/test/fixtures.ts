@@ -110,7 +110,8 @@ export function makeAttentionItem(index: number, overrides: Partial<AttentionIte
     title: `[SYNTHETIC] Élément d'attention ${index}`,
     sources: ['synthetic-dev'],
     rights: ['SYNTHETIC'],
-    relevance_reasons: ['SOURCE_TIER', 'FRESHNESS'],
+    // Jetons du vocabulaire réel de `vertex_core.fusion.relevance`.
+    relevance_reasons: ['WATCHLIST', 'NOVELTY'],
     synthetic: true,
     provenance: {
       cluster_id: `syn-cluster-${index}`,

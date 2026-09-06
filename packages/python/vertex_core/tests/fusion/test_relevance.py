@@ -230,9 +230,27 @@ class TestLexicographicRanking:
             "ACTIVE_THESIS_OR_ALERT",
         )
 
-    def test_freshness_reason_when_nothing_else_applies(self):
+    def test_no_positive_factor_is_stated_plainly_when_nothing_applies(self):
         ranking = rank_items([make_input("a")], as_of=AS_OF)
-        assert ranking.ranked[0].relevance_reasons == ("FRESHNESS",)
+        assert ranking.ranked[0].relevance_reasons == ("NO_POSITIVE_FACTOR",)
+
+    def test_no_reason_claims_freshness_nobody_measured(self):
+        """The former ``FRESHNESS`` filler is gone, and it does not come back.
+
+        Mesuré sur la file d'attention en direct (2026-09-06) : le badge
+        était posé sur les quinze lignes, y compris sur des dépêches vieilles
+        de plusieurs jours, sans qu'aucun âge ne soit lu. Une seule ligne de
+        garde suffit à empêcher le retour du jeton de remplissage.
+        """
+        vieux = make_input("vieux", published_at=AS_OF - timedelta(days=3))
+        classe = rank_items([vieux], as_of=AS_OF).ranked[0]
+        assert "FRESHNESS" not in classe.relevance_reasons
+        assert classe.subscores.age_seconds == 3 * 86400
+
+    def test_a_single_factor_is_not_padded(self):
+        """Un facteur applicable ne s'accompagne plus d'un remplissage."""
+        ranking = rank_items([make_input("a", watchlist=True)], as_of=AS_OF)
+        assert ranking.ranked[0].relevance_reasons == ("WATCHLIST",)
 
     def test_unknown_penalty_code_rejected(self):
         with pytest.raises(ValidationError, match="unknown penalty codes"):
