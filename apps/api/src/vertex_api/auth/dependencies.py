@@ -22,6 +22,17 @@ sans session TOUT ce qui atteint la boucle locale de cette machine lit le
 portefeuille et les analyses. Sur un poste personnel c'est une decision
 legitime de son proprietaire ; sur une machine partagee ce serait une faille.
 
+CE QUE LE CONTOURNEMENT OUVRE AUSSI, ET QUI N'ETAIT PAS DIT ICI (mesure sur la
+pile en direct le 2026-09-06) : il ne rend pas seulement les routes de LECTURE
+accessibles. Les routes MUTANTES le deviennent au meme titre — l'ecriture au
+journal comptable du portefeuille, la revision d'une these — et la garde CSRF
+qui protege les methodes non sures tombe avec la session, puisqu'elle
+s'appuie sur elle. Concretement, une page ouverte dans le navigateur de ce
+poste peut ecrire dans le portefeuille sans qu'aucun jeton ne soit presente.
+C'est le prix reel du drapeau, et il se paie a l'ecriture autant qu'a la
+lecture. Retirer la ligne de ``vertex.env`` et redemarrer suffit a tout
+refermer ; c'est la premiere chose a faire avant toute exposition reseau.
+
 En dehors de ce drapeau, rien n'a change : aucun en-tete, aucun cookie,
 aucune autre configuration ne fait aboutir cette dependance sans une ligne de
 session vivante en base. La valeur PAR DEFAUT reste fermee — une

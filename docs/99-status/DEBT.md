@@ -896,4 +896,14 @@ pour la première, l'acceptation de perdre la relecture d'un état passé.
   compteur de base modifié (lecture seule prouvée avant/après). Sa grille de
   scénarios publie en revanche dix-sept chiffres significatifs — la précision
   du float64 du modèle, honnête mais non déclarée comme précision de
-  publication.
+  publication. **VÉRIFIÉ, PAS UN DÉFAUT DE DOCTRINE** : le registre déclare
+  que le BSM tourne en float64 avec tolérances, et que seul le payoff à
+  l'échéance est en `Decimal` exact ; la cellule traverse la frontière en
+  CHAÎNE, pas en flottant JSON. Ce qui manque est la précision de PUBLICATION,
+  à déclarer avec le contrat de la grille — pas un arrondi à décider dans le
+  code de l'API.
+
+- Le contournement d'authentification local (`VERTEX_AUTH_OPEN_LOCAL=1`) ne
+  disait, dans son propre module, que le coût en LECTURE. Il ouvre aussi les
+  routes mutantes et fait tomber la garde CSRF avec la session. Le paragraphe
+  du module le dit désormais en toutes lettres, avec le geste qui referme.
