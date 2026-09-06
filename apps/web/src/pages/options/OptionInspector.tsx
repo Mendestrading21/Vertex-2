@@ -79,7 +79,7 @@ export function OptionInspector({
   const titleId = useId();
   const transferNoteId = useId();
   const navigate = useNavigate();
-  const [sheetNode, setSheetNode] = useState<HTMLDivElement | null>(null);
+  const [sheetNode, setSheetNode] = useState<HTMLElement | null>(null);
 
   /**
    * Le focus entre dans le panneau dès que son nœud existe.
@@ -90,8 +90,13 @@ export function OptionInspector({
    * c'est le défaut rencontré en convertissant Aujourd'hui.
    */
   const attacherPanneau = useCallback((node: HTMLDivElement | null) => {
-    setSheetNode(node);
-    node?.querySelector<HTMLElement>('button')?.focus();
+    // REFONTE VAGUE 2 — le bouton « Fermer » vit dans l'en-tête commun de
+    // `InspectorPanel`, hors de la feuille : le focus entrant et l'écoute
+    // d'Échap se posent sur le PANNEAU entier, sinon Échap depuis « Fermer »
+    // ne serait jamais entendu.
+    const root = node?.closest<HTMLElement>('.vx-inspector-panel') ?? node;
+    setSheetNode(root);
+    root?.querySelector<HTMLElement>('button')?.focus();
   }, []);
 
   /**

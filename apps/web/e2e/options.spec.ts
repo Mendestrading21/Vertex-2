@@ -241,7 +241,8 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
     expect(sorti).toBe(true);
 
     // CONSERVÉ : Échap referme le panneau.
-    await inspector.getByRole('button', { name: 'Fermer' }).focus();
+    // « Fermer » vit dans l'en-tête commun du panneau, au-dessus de la feuille.
+    await page.locator('.vx-inspector-panel').getByRole('button', { name: 'Fermer' }).focus();
     await page.keyboard.press('Escape');
     await expect(inspector).toHaveCount(0);
   });
