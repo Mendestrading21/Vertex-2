@@ -9,6 +9,7 @@
  * projets de viewport rejouent ce fichier sur la même base (journal
  * append-only), aucun compte absolu ne serait honnête.
  */
+import { displayNumber } from './format.ts';
 import type { APIResponse, Page } from '@playwright/test';
 
 import { expect, expectNoSeriousAxeViolations, screenshotPath, test } from './fixtures.ts';
@@ -64,7 +65,7 @@ test.describe('Page Portefeuille — valorisation réelle', () => {
         await expect(summary).toContainText(String(unrealized['total_unrealized']));
       }
       if (concentration['status'] === 'OK') {
-        await expect(summary).toContainText(String(concentration['total_value']));
+        await expect(summary).toContainText(displayNumber(String(concentration['total_value'])));
       }
     }
 

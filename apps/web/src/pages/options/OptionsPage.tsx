@@ -458,12 +458,25 @@ function OptionsBoard({
   */
   const [params, setParams] = useSearchParams();
   const groupParam = params.get('group');
+  const colsParam = params.get('cols');
   const firstKey = groups.length > 0 && groups[0] !== undefined ? groupKeyOf(groups[0]) : '';
-  const selectedKey =
+  const groupFromUrl =
     groupParam !== null && groups.some((group) => groupKeyOf(group) === groupParam)
       ? groupParam
       : firstKey;
-  const columns = chainColumnsFromParam(params.get('cols'));
+  // L'état local répond dans le MÊME rendu que le clic (une case cochée le
+  // reste sous le doigt) ; l'URL est écrite juste après et reste la vérité au
+  // rechargement : quand elle change de l'extérieur, l'état local la suit.
+  const [selectedKey, setSelectedKeyLocal] = useState<string>(groupFromUrl);
+  const [columns, setColumnsLocal] = useState<readonly string[]>(() =>
+    chainColumnsFromParam(colsParam),
+  );
+  useEffect(() => {
+    setSelectedKeyLocal(groupFromUrl);
+  }, [groupFromUrl]);
+  useEffect(() => {
+    setColumnsLocal(chainColumnsFromParam(colsParam));
+  }, [colsParam]);
   const updateParam = (key: string, value: string | null): void => {
     const next = new URLSearchParams(params);
     if (value === null) {
@@ -474,6 +487,7 @@ function OptionsBoard({
     setParams(next, { replace: true });
   };
   const setSelectedKey = (key: string): void => {
+    setSelectedKeyLocal(key);
     updateParam('group', key === firstKey ? null : key);
   };
   const [inspected, setInspected] = useState<InspectedContractSelection | null>(null);
@@ -523,6 +537,7 @@ function OptionsBoard({
           selected={selected}
           columns={columns}
           onColumnsChange={(next) => {
+            setColumnsLocal(next);
             updateParam('cols', chainColumnsToParam(next));
           }}
           onSelectGroup={(key) => {

@@ -82,6 +82,14 @@
   border-top-color: var(--vx-warning-soft);
 }
 
+.vx-w2-meta > * {
+  /* Un instant ISO de 27 caractères ou un badge d'état ne doit jamais sortir
+     d'une carte compacte (porte e2e « le contenu tient dans sa carte »,
+     mesurée à 1280 en CI avec les polices de secours). */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .vx-w2-skeleton {
   height: var(--vx-space-16);
   border-radius: var(--vx-radius-6);
@@ -107,6 +115,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--vx-space-8);
+  min-width: 0;
   /* 13 px : plancher AA du système typographique. Les 10/11 px hérités de
      `global.css` sont une dette, pas un canon (revue C0, point A4). */
   font-size: var(--vx-font-size-meta);
@@ -3753,15 +3762,18 @@
    abrégée, c'est une information fausse. Mesuré sur Risques : un Herfindahl
    servi à vingt-huit chiffres écrasait sa carte. */
 .vx-metric-number {
-  /* REFONTE VAGUE 2 — UN NOMBRE N'EST JAMAIS TRONQUÉ. La borne « 14ch +
-     ellipse » coupait « 22 » en « 2… » dans une colonne étroite de Marchés
-     (mesuré 2026-09-06) : un nombre tronqué est un nombre faux, pire qu'un
-     débordement. Une chaîne servie longue (Herfindahl à vingt-huit chiffres)
-     se REPLIE désormais dans la cellule, entière et lisible ; le `title`
-     garde la valeur d'un seul tenant. */
-  display: inline;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  /* REFONTE VAGUE 2 — un segment de mesure reste ATOMIQUE (porte e2e
+     `unbroken-measure` : jamais un nombre ou un instant sur deux lignes) et
+     n'est jamais coupé par le manque de place de sa colonne : la borne de
+     rendu est de 14ch, valeur entière dans le `title`. La colonne trop
+     étroite qui coupait « 22 » en « 2… » (santé des marchés) est corrigée à
+     la source, par une base de 88 px et une taille compacte. */
+  display: inline-block;
+  overflow: hidden;
+  max-width: 14ch;
+  vertical-align: bottom;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 

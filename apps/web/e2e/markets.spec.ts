@@ -5,6 +5,7 @@
  * simulé par interruption des routes /api.
  */
 import { expect, expectNoSeriousAxeViolations, screenshotPath, test } from './fixtures.ts';
+import { displayNumber, displayPercent } from './format.ts';
 
 interface ApiTicker {
   ticker: string;
@@ -26,8 +27,9 @@ interface ApiOverview {
   coverage: { expected: number; covered: number; discarded: number } | null;
 }
 
+
 function fr(value: string): string {
-  return value.replace('.', ',');
+  return displayNumber(value);
 }
 
 test.describe('Page Marchés — MarketMap + table équivalente + breadth', () => {
@@ -64,9 +66,9 @@ test.describe('Page Marchés — MarketMap + table équivalente + breadth', () =
       expect(text).toContain(
         `${fr(ticker.last_close)}${ticker.currency !== null ? ` ${ticker.currency}` : ''}`,
       );
-      expect(text).toContain(`${fr(ticker.return_1d_pct)} %`);
-      expect(text).toContain(`${fr(ticker.weight_in_sector_pct)} %`);
-      expect(text).toContain(`${fr(ticker.weight_global_pct)} %`);
+      expect(text).toContain(displayPercent(ticker.return_1d_pct));
+      expect(text).toContain(displayPercent(ticker.weight_in_sector_pct));
+      expect(text).toContain(displayPercent(ticker.weight_global_pct));
       expect(text).toContain(ticker.quality);
     }
 
@@ -145,12 +147,12 @@ test.describe('Page Marchés — MarketMap + table équivalente + breadth', () =
     await page.goto('/markets');
     await expect(page.locator('.vx-marketmap-canvas canvas')).toBeVisible({ timeout: 15_000 });
     // Par défaut : la vérité du snapshot.
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Carte des marchés');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Carte des marchés');
 
     const bouton = page.getByRole('button', { name: `Inspecter ${premier.ticker}` });
     await bouton.focus();
     await page.keyboard.press('Enter');
-    await expect(page.locator('.vx-inspector-heading')).toHaveText(`Inspecteur — ${premier.ticker}`);
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', `Inspecteur — ${premier.ticker}`);
     const faits = page.getByTestId('markets-instrument-facts');
     await expect(faits).toContainText(fr(premier.last_close));
     await expect(faits).toContainText(`${fr(premier.return_1d_pct)} %`);
@@ -161,7 +163,7 @@ test.describe('Page Marchés — MarketMap + table équivalente + breadth', () =
 
     // Fermer rend l'inspecteur par défaut.
     await page.getByRole('button', { name: 'Fermer' }).click();
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Carte des marchés');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Carte des marchés');
   });
 
   test('axe : zéro violation critique/sérieuse + capture', async ({ page }, testInfo) => {
