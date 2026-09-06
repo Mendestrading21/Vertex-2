@@ -56,11 +56,14 @@ moins de 5 s, sans rechargement (miroir synchronisé en 3 s, HMR immédiat).
 | Entitlements (Sources & Rapports) | `tools/probe_entitlements.py` | 71 | au démarrage | `capabilities/global` daté du jour |
 
 **La pause est fixe, la cadence ne l'est pas.** `Start-Sleep` intervient APRÈS
-les collecteurs : la période réelle est « durée de la passe + pause ». Mesuré
-le 2026-09-06, marché fermé : historique 36 s, dépêches environ 30 minutes
-(délais côté fournisseur), pause 30 minutes, soit une passe toutes les
-58 minutes environ. Un jour de séance, les dépêches répondent et la passe est
-plus courte.
+les collecteurs : la période réelle est « durée de la passe + pause », et
+c'est l'étape dépêches qui la fait varier. Trois passes mesurées le
+2026-09-06, marché fermé : historique 34 à 36 s à chaque fois, dépêches
+31 min, puis 30 min, puis **87 min** (490 délais dépassés côté fournisseur sur
+456 appels). Avec la pause de 30 min, la période réelle est donc allée de
+60 à 120 minutes dans la même journée. Ne pas conclure à une panne sur une
+passe longue : lire le compteur `muets` du résumé, qui dit combien d'appels
+sont revenus vides.
 
 **`erreurs=0` ne veut pas dire « tout est arrivé ».** `reqHistoricalNewsAsync`
 n'échoue pas quand le fournisseur ne répond pas : il rend une liste vide, donc
