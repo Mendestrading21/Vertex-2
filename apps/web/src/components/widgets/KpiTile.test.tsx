@@ -19,7 +19,7 @@ describe('KpiTile — la tuile de mesure', () => {
     );
     const tile = screen.getByTestId('kpi-tile');
     expect(tile.getAttribute('data-tone')).toBe('macro');
-    expect(screen.getByTestId('kpi-tile-value').textContent).toBe('12184.20');
+    expect(screen.getByTestId('kpi-tile-value').textContent).toBe("12'184.20");
     expect(screen.getByTestId('kpi-tile-unit').textContent).toBe('CHF');
     expect(tile.textContent).toContain('Valorisation');
     expect(screen.getByTestId('glyph')).toBeTruthy();

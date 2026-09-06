@@ -8,7 +8,7 @@ import { opportunitiesFrameStateOf } from '../../pages/opportunities/opportuniti
 import { FreshnessBadge } from '../FreshnessBadge.tsx';
 import { Sparkline } from '../markets/Sparkline.tsx';
 import type { FlatTicker } from '../markets/marketsView.ts';
-import { GROUP_LABELS_FR, frDecimal, signSymbolOf } from '../markets/marketsView.ts';
+import { GROUP_LABELS_FR, displayNumber, displayPercent, signSymbolOf } from '../markets/marketsView.ts';
 import { MODULE_STATE_LABELS, moduleStateOf } from '../moduleState.ts';
 import { StatusChip } from './StatusChip.tsx';
 
@@ -74,11 +74,11 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
 
       <div className="vx-iw-price-row">
         <span className="vx-iw-price">
-          {frDecimal(ticker.last_close)}
+          {displayNumber(ticker.last_close)}
           <span className="vx-iw-currency"> {ticker.currency ?? 'devise non publiée'}</span>
         </span>
         <span className="vx-iw-delta" data-sign={entry.group}>
-          <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {frDecimal(ticker.return_1d_pct)} %
+          <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {displayPercent(ticker.return_1d_pct)}
           <span className="vx-visually-hidden"> ({GROUP_LABELS_FR[entry.group]}, rendement 1 j)</span>
         </span>
       </div>
@@ -91,7 +91,7 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
           {previousClose === '' ? (
             <span data-absent="true">non publiée</span>
           ) : (
-            frDecimal(previousClose)
+            displayNumber(previousClose)
           )}
         </span>
         <span>

@@ -1,6 +1,6 @@
 import type { MarketsOverview } from '../../api/client.ts';
 import type { FlatTicker } from '../../components/markets/marketsView.ts';
-import { GROUP_LABELS_FR, frDecimal, signSymbolOf } from '../../components/markets/marketsView.ts';
+import { GROUP_LABELS_FR, displayNumber, displayPercent, signSymbolOf } from '../../components/markets/marketsView.ts';
 import { InspectorPanel } from '../../shell/inspector.tsx';
 import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
@@ -50,14 +50,14 @@ export function InstrumentInspector({
         <div>
           <dt>Dernière clôture</dt>
           <dd>
-            <span className="vx-inspector-value">{frDecimal(ticker.last_close)}</span>{' '}
+            <span className="vx-inspector-value">{displayNumber(ticker.last_close)}</span>{' '}
             <span className="vx-inspector-unit">{publishedOr(ticker.currency)}</span> · {ticker.trading_day}
           </dd>
         </div>
         <div>
           <dt>Clôture précédente</dt>
           <dd>
-            <span className="vx-inspector-value">{frDecimal(ticker.previous_close)}</span>{' '}
+            <span className="vx-inspector-value">{displayNumber(ticker.previous_close)}</span>{' '}
             <span className="vx-inspector-unit">{publishedOr(ticker.currency)}</span> ·{' '}
             {ticker.previous_trading_day}
           </dd>
@@ -66,7 +66,7 @@ export function InstrumentInspector({
           <dt>Rendement 1 j</dt>
           <dd data-sign={entry.group}>
             <span aria-hidden="true">{signSymbolOf(entry.group)}</span>{' '}
-            <span className="vx-inspector-value">{frDecimal(ticker.return_1d_pct)} %</span>{' '}
+            <span className="vx-inspector-value">{displayPercent(ticker.return_1d_pct)}</span>{' '}
             <span className="vx-visually-hidden">({GROUP_LABELS_FR[entry.group]})</span>
             <span className="vx-inspector-unit"> (ratio {ticker.return_1d})</span>
           </dd>
@@ -74,7 +74,7 @@ export function InstrumentInspector({
         <div>
           <dt>Poids</dt>
           <dd>
-            secteur {frDecimal(ticker.weight_in_sector_pct)} % · global {frDecimal(ticker.weight_global_pct)} %
+            secteur {displayPercent(ticker.weight_in_sector_pct)} · global {displayPercent(ticker.weight_global_pct)}
           </dd>
         </div>
         <div>

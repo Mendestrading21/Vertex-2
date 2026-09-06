@@ -1,7 +1,7 @@
 import type { SimulationPreviewResponse } from '../../api/client.ts';
 import { Card } from '../../components/Card.tsx';
 import { Metric } from '../../components/Metric.tsx';
-import { frDecimal } from '../../components/markets/marketsView.ts';
+import { displayNumber } from '../../components/markets/marketsView.ts';
 import { PayoffChart } from './PayoffChart.tsx';
 import { simulatorModule } from './simulatorModules.ts';
 import { signGroupOfText } from '../../components/widgets/sign.ts';
@@ -129,13 +129,13 @@ export function KpiModule({ result }: { readonly result: SimulationPreviewRespon
           <div className="vx-metrics-row">
             <Metric
               label="Gain max sur la grille"
-              value={frDecimal(result.max_gain_on_grid.pnl)}
+              value={displayNumber(result.max_gain_on_grid.pnl)}
               sign={signOf(result.max_gain_on_grid.pnl)}
               note={`à spot ${result.max_gain_on_grid.at_spot}`}
             />
             <Metric
               label="Perte max sur la grille"
-              value={frDecimal(result.max_loss_on_grid.pnl)}
+              value={displayNumber(result.max_loss_on_grid.pnl)}
               sign={signOf(result.max_loss_on_grid.pnl)}
               note={`à spot ${result.max_loss_on_grid.at_spot}`}
             />

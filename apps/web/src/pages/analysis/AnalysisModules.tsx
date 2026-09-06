@@ -11,7 +11,7 @@ import { ModuleStatus } from '../../components/ModuleStatus.tsx';
 import { AgendaLine } from '../../components/calendar/AgendaLine.tsx';
 import { Sparkline } from '../../components/markets/Sparkline.tsx';
 import type { FlatTicker } from '../../components/markets/marketsView.ts';
-import { GROUP_LABELS_FR, flattenTickers, frDecimal, signSymbolOf } from '../../components/markets/marketsView.ts';
+import { GROUP_LABELS_FR, flattenTickers, displayNumber, displayPercent, signSymbolOf } from '../../components/markets/marketsView.ts';
 import { moduleShowsContent, moduleStateOf } from '../../components/moduleState.ts';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { ArcGauge } from '../../components/widgets/ArcGauge.tsx';
@@ -100,7 +100,7 @@ export function InstrumentHeaderModule({
       <div className="vx-ih-price-row">
         {bars !== null && bars.lastClose !== null ? (
           <span className="vx-ih-price" data-testid="instrument-header-price">
-            {frDecimal(bars.lastClose)}
+            {displayNumber(bars.lastClose)}
             <span className="vx-iw-currency"> {bars.currency ?? 'devise non publiée'}</span>
           </span>
         ) : (
@@ -112,7 +112,7 @@ export function InstrumentHeaderModule({
           </span>
         ) : (
           <span className="vx-iw-delta" data-sign={entry.group} data-testid="instrument-header-delta">
-            <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {frDecimal(entry.ticker.return_1d_pct)} %
+            <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {displayPercent(entry.ticker.return_1d_pct)}
             <span className="vx-visually-hidden"> ({GROUP_LABELS_FR[entry.group]}, rendement 1 j)</span>
           </span>
         )}
@@ -433,7 +433,7 @@ export function PeersModule({ instrument }: { readonly instrument: string }) {
                 <Link className="vx-sector-chip" to={`/analysis/${encodeURIComponent(peer.ticker.ticker)}`}>
                   <code>{peer.ticker.ticker}</code>
                   <span className="vx-sector-return">
-                    <span aria-hidden="true">{signSymbolOf(peer.group)}</span> {frDecimal(peer.ticker.return_1d_pct)} %
+                    <span aria-hidden="true">{signSymbolOf(peer.group)}</span> {displayPercent(peer.ticker.return_1d_pct)}
                   </span>
                 </Link>
               </li>

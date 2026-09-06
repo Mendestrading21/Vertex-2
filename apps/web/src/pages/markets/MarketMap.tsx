@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { MarketsSector } from '../../api/client.ts';
 import type { EChartsInstance } from '../../charts/echartsLoader.ts';
 import type { SignGroup } from '../../components/markets/marketsView.ts';
-import { flattenTickers, frDecimal, geometryNumber } from '../../components/markets/marketsView.ts';
+import { flattenTickers, displayPercent, geometryNumber } from '../../components/markets/marketsView.ts';
 import { SIGNED_SCALES, signedStep } from '../../design/signedScale.ts';
 import { cssToken } from '../../charts/theme.ts';
 
@@ -73,7 +73,7 @@ function buildTreemapData(
             color: cran === null ? absente : cssToken(`--vx-${cran.token}`),
           },
           label: {
-            formatter: `${entry.ticker.ticker}\n${frDecimal(entry.ticker.return_1d_pct)} %`,
+            formatter: `${entry.ticker.ticker}\n${displayPercent(entry.ticker.return_1d_pct)}`,
           },
           };
         })

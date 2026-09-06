@@ -1,3 +1,5 @@
+import { formatServedNumber } from '../number.ts';
+
 /**
  * UN NOMBRE SERVI — verbatim, borné au rendu, entier au survol.
  *
@@ -44,7 +46,7 @@ export function ServedNumber({ value, maxChars = 12, className }: ServedNumberPr
       // fenêtre, donc de rien de fiable.
       title={value}
     >
-      {value}
+      {formatServedNumber(value)}
     </code>
   );
 }

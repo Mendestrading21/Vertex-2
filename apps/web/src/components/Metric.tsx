@@ -1,3 +1,4 @@
+import { formatServedNumber } from './number.ts';
 import type { ReactNode } from 'react';
 
 /**
@@ -71,7 +72,7 @@ export function Metric({
             une information abrégée, c'est une information fausse.
           */}
           <span className="vx-metric-number" title={value}>
-            {value}
+            {formatServedNumber(value)}
           </span>
           {unit === undefined ? null : <span className="vx-metric-unit"> {unit}</span>}
         </span>

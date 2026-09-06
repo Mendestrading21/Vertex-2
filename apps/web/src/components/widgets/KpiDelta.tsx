@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../number.ts';
 import { GROUP_LABELS_FR, signSymbolOf } from '../markets/marketsView.ts';
 import type { SignGroup } from '../markets/marketsView.ts';
 
@@ -32,7 +33,7 @@ export function KpiDelta({ value, sign, period, absentLabel }: KpiDeltaProps) {
       {value === null ? (
         <span data-absent="true">{absentLabel ?? 'variation non publiée'}</span>
       ) : (
-        <span>{value}</span>
+        <span title={value}>{formatServedNumber(value)}</span>
       )}
       {value !== null && effectif === null ? (
         <span data-absent="true">signe non publié</span>

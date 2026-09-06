@@ -7,7 +7,7 @@ import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx
 import { Metric } from '../../components/Metric.tsx';
 import { ModuleStatus } from '../../components/ModuleStatus.tsx';
 import { Sparkline } from '../../components/markets/Sparkline.tsx';
-import { flattenTickers, frDecimal } from '../../components/markets/marketsView.ts';
+import { flattenTickers, displayNumber } from '../../components/markets/marketsView.ts';
 import { moduleShowsContent, moduleStateOf } from '../../components/moduleState.ts';
 import { IvSmile } from '../../components/options/IvSmile.tsx';
 import { InstrumentTile } from '../../components/widgets/InstrumentTile.tsx';
@@ -271,7 +271,7 @@ export function SpotModule({ data }: { readonly data: OptionChainResponse }) {
       <Metric
         label="Spot"
         labelHidden
-        value={spot === null || spot.value === null ? null : frDecimal(spot.value)}
+        value={spot === null || spot.value === null ? null : displayNumber(spot.value)}
         {...(spot?.currency === null || spot?.currency === undefined ? {} : { unit: spot.currency })}
         absentLabel="Spot non publié"
         testId="options-spot"
@@ -300,7 +300,7 @@ export function RateModule({ data }: { readonly data: OptionChainResponse }) {
       <Metric
         label="Taux annualisé"
         labelHidden
-        value={rate === null ? null : frDecimal(rate)}
+        value={rate === null ? null : displayNumber(rate)}
         note="décimal annualisé"
         testId="options-rate"
       />
@@ -321,7 +321,7 @@ export function DividendModule({ data }: { readonly data: OptionChainResponse })
       <Metric
         label="Rendement de dividende"
         labelHidden
-        value={dividend === null ? null : frDecimal(dividend)}
+        value={dividend === null ? null : displayNumber(dividend)}
         note="décimal annualisé"
         testId="options-dividend"
       />

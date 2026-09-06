@@ -1,6 +1,6 @@
 import { FreshnessBadge } from '../components/FreshnessBadge.tsx';
 import { resolvePopulationNature } from '../components/SyntheticBanner.tsx';
-import { flattenTickers, frDecimal } from '../components/markets/marketsView.ts';
+import { flattenTickers, displayNumber, displayPercent } from '../components/markets/marketsView.ts';
 import { pageStateOf, useMarketsOverview } from '../api/hooks.ts';
 import type { PageDataState } from '../api/hooks.ts';
 
@@ -254,7 +254,7 @@ export function ShellTicker() {
               >
                 <span className="vx-ticker-symbol">{entry.ticker.ticker}</span>
                 <span className="vx-ticker-close">
-                  {frDecimal(entry.ticker.last_close)}
+                  {displayNumber(entry.ticker.last_close)}
                   {entry.ticker.currency !== null ? (
                     <span className="vx-ticker-currency"> {entry.ticker.currency}</span>
                   ) : null}
@@ -264,7 +264,7 @@ export function ShellTicker() {
                   la couleur n'est donc jamais le seul vecteur, comme l'exige
                   `.claude/rules/frontend.md`.
                 */}
-                <span className="vx-ticker-return">{frDecimal(entry.ticker.return_1d_pct)} %</span>
+                <span className="vx-ticker-return">{displayPercent(entry.ticker.return_1d_pct)}</span>
               </li>
             ))}
           </ul>

@@ -4,7 +4,8 @@ import { makeMarketsSectors, makeMarketsTicker } from '../../test/fixtures.ts';
 import {
   censusOfNature,
   flattenTickers,
-  frDecimal,
+  displayNumber,
+  displayPercent,
   geometryNumber,
   provenanceSentence,
   signGroupOf,
@@ -29,11 +30,12 @@ describe('flattenTickers', () => {
   });
 });
 
-describe('frDecimal — présentation française', () => {
+describe('displayNumber — format d’affichage du produit', () => {
   it('remplace le point décimal par une virgule sans toucher à la valeur', () => {
-    expect(frDecimal('+10.00')).toBe('+10,00');
-    expect(frDecimal('110.00')).toBe('110,00');
-    expect(frDecimal('50')).toBe('50');
+    expect(displayNumber('+10.00')).toBe('+10.00');
+    expect(displayNumber('-1250.5')).toBe("−1'250.5");
+    expect(displayNumber('50')).toBe('50');
+    expect(displayPercent('70.97')).toBe('70.97%');
   });
 });
 

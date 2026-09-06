@@ -62,7 +62,7 @@ describe('InstrumentTile', () => {
     const faits = screen.getByTestId('instrument-tile-facts');
     // Chaîne SERVIE, virgule française comme le reste de la tuile — jamais un
     // arrondi ni une conversion : seul le séparateur décimal est adapté.
-    expect(faits.textContent).toContain('12,10');
+    expect(faits.textContent).toContain('12.10');
     expect(faits.textContent).toContain('2026-09-02');
   });
 

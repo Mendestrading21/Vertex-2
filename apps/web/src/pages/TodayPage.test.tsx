@@ -1,3 +1,4 @@
+import { displayNumber, displayPercent } from '../components/markets/marketsView.ts';
 import { screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -182,7 +183,7 @@ describe("Page Aujourd'hui — la planche §1 est complète, servie ou déclaré
     await screen.findByRole('heading', { level: 2, name: "File d'attention" });
     const cellule = (id: string) => within(document.querySelector(`[data-module="${id}"]`) as HTMLElement);
     // Marché global : breadth « 50.0 » servie → « 50,0 % », et la conclusion verbatim.
-    expect(await cellule('global-market').findByText('50,0')).toBeDefined();
+    expect(await cellule('global-market').findByText('50.0')).toBeDefined();
     expect(cellule('global-market').getByTestId('today-market-conclusion').textContent).toContain(
       'breadth 50.0 %',
     );
@@ -270,8 +271,8 @@ describe("Page Aujourd'hui — instruments suivis (widgets servis)", () => {
     expect(widget.getByRole('link', { name: 'SYN-ENER-01' })).toBeDefined();
     // Chaînes serveur du snapshot Marchés, virgule française.
     const cotation = makeMarketsOverview().sectors[0]!.tickers[0]!;
-    expect(widget.getByText(cotation.last_close.replace('.', ','))).toBeDefined();
-    expect(widget.getByText(`${cotation.return_1d_pct.replace('.', ',')} %`)).toBeDefined();
+    expect(widget.getByText(displayNumber(cotation.last_close))).toBeDefined();
+    expect(widget.getByText(displayPercent(cotation.return_1d_pct))).toBeDefined();
     // La série vient du dossier : un tracé, une description, une fraîcheur servie.
     expect(await widget.findByTestId('spark-line')).toBeDefined();
     expect(widget.getByRole('img', { name: /clôtures publiées/ })).toBeDefined();

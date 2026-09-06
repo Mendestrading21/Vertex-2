@@ -2,7 +2,7 @@ import type { MarketsBreadth } from '../../api/client.ts';
 import { CensusBars } from '../../components/CensusBars.tsx';
 import { ArcGauge } from '../../components/widgets/ArcGauge.tsx';
 import { LinearGauge } from '../../components/widgets/LinearGauge.tsx';
-import { frDecimal } from '../../components/markets/marketsView.ts';
+import { displayNumber, displayPercent } from '../../components/markets/marketsView.ts';
 
 /**
  * BreadthPanel — les trois faits servis de la breadth, chacun dans sa forme.
@@ -79,8 +79,8 @@ export function BreadthPanel({ breadth }: { readonly breadth: MarketsBreadth }) 
         <p className="vx-breadth-invalid" role="status">
           <strong>Breadth non calculable</strong>
           <span>
-            Couverture {frDecimal(breadth.coverage_pct)} % sous le seuil requis de{' '}
-            {frDecimal(breadth.coverage_threshold_pct)} % (raison serveur :{' '}
+            Couverture {displayPercent(breadth.coverage_pct)} sous le seuil requis de{' '}
+            {displayPercent(breadth.coverage_threshold_pct)} (raison serveur :{' '}
             {breadth.reason ?? 'non fournie'}). Aucune valeur de remplacement.
           </span>
         </p>
@@ -89,7 +89,7 @@ export function BreadthPanel({ breadth }: { readonly breadth: MarketsBreadth }) 
         <ArcGauge
           label="Breadth"
           valuePct={breadth.value_pct}
-          valueText={breadth.value_pct === null ? null : frDecimal(breadth.value_pct)}
+          valueText={breadth.value_pct === null ? null : displayNumber(breadth.value_pct)}
           unit="%"
           boundsText={PCT_BOUNDS}
           thresholds={[]}
@@ -99,7 +99,7 @@ export function BreadthPanel({ breadth }: { readonly breadth: MarketsBreadth }) 
         <LinearGauge
           label="Couverture"
           valuePct={breadth.coverage_pct}
-          valueText={`${frDecimal(breadth.coverage_pct)} %`}
+          valueText={`${displayPercent(breadth.coverage_pct)}`}
           boundsText={PCT_BOUNDS}
           markers={[
             {
@@ -110,7 +110,7 @@ export function BreadthPanel({ breadth }: { readonly breadth: MarketsBreadth }) 
               // d'Aujourd'hui, carte de 200 px. Deux mesures servies, deux
               // textes, chacun à sa place sur la même échelle : le chiffre
               // n'est ni répété ni perdu.
-              label: `seuil exigé ${frDecimal(breadth.coverage_threshold_pct)} %`,
+              label: `seuil exigé ${displayPercent(breadth.coverage_threshold_pct)}`,
             },
           ]}
         />

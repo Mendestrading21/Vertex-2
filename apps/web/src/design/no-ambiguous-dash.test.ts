@@ -139,6 +139,11 @@ const ALLOWLIST: ReadonlyArray<{ readonly path: string; readonly reason: string 
       'motif servi en attribut. Sa légitimité est vérifiée par absence.test.tsx, ' +
       'pas par cette porte.',
   },
+  {
+    path: 'src/components/number.ts',
+    reason:
+      "SIGNE MOINS TYPOGRAPHIQUE (U+2212) posé devant un nombre servi négatif — jamais à la place d'une valeur absente. Décision produit de la refonte vague 2 (§9) : « −0.72% ». Le glyphe n'est écrit que par formatServedNumber, qui ne touche qu'une chaîne décimale servie et rend toute autre chaîne telle quelle.",
+  },
 ];
 
 interface Finding {

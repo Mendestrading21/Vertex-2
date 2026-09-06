@@ -84,9 +84,9 @@ describe('Page Options — composition (LOT-A5)', () => {
   it('spot, taux et dividende sont les chaînes PUBLIÉES du snapshot ; le budget et les références restent lisibles', async () => {
     servir();
     await renderOptions();
-    expect(screen.getByTestId('options-spot').textContent).toContain('102,50');
-    expect(screen.getByTestId('options-rate').textContent).toContain('0,02');
-    expect(screen.getByTestId('options-dividend').textContent).toContain('0,00');
+    expect(screen.getByTestId('options-spot').textContent).toContain('102.50');
+    expect(screen.getByTestId('options-rate').textContent).toContain('0.02');
+    expect(screen.getByTestId('options-dividend').textContent).toContain('0.00');
     expect(screen.getByTestId('chain-row-budget').textContent).toContain('plafond 240');
     expect(screen.getByTestId('chain-source-references').textContent).toContain('synthetic-dev:1234:oc0000');
   });

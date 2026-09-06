@@ -202,7 +202,7 @@ describe('Page Analyse — composition (LOT-A4)', () => {
     servir();
     await renderAnalysis();
     // `100.52` est `last_close` du dossier (3 barres) → virgule française.
-    expect(screen.getByTestId('instrument-header-price').textContent).toContain('100,52');
+    expect(screen.getByTestId('instrument-header-price').textContent).toContain('100.52');
     // Marchés publie SYN-TECH-01 avec un rendement 1 j : la pastille le relaie.
     const delta = await screen.findByTestId('instrument-header-delta');
     expect(delta.getAttribute('data-sign')).not.toBeNull();
