@@ -342,16 +342,19 @@ function MarketHealthModule({ data }: { readonly data: MarketsOverview }) {
       <div className="vx-metrics-row">
         <Metric
           label="Couverts"
+          size="compact"
           value={coverage === null ? null : `${coverage.covered}/${coverage.expected}`}
           {...(coverage !== null ? { note: `${coverage.received} reçus` } : {})}
         />
         <Metric
           label="Écartés"
+          size="compact"
           value={coverage === null ? null : String(coverage.discarded)}
           {...(coverage !== null ? { note: 'sans leurs deux clôtures' } : {})}
         />
         <Metric
           label="Rejets"
+          size="compact"
           value={coverage === null ? null : String(coverage.rejected_records.length)}
           {...(coverage !== null ? { note: 'observations refusées par les gates' } : {})}
         />

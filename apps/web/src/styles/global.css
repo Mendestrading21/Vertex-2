@@ -6355,11 +6355,14 @@ label {
    moitié de la carte vide. */
 .vx-markets-grid [data-module='market-health'] .vx-metrics-row {
   flex-direction: row;
-  gap: var(--vx-space-20);
+  gap: var(--vx-space-12) var(--vx-space-16);
 }
 
 .vx-markets-grid [data-module='market-health'] .vx-metric {
-  flex: 1 1 0;
+  /* Base de 88 px, pas 0 : à 1440 la carte fait 296 px et trois mesures à
+     base nulle tombaient à 57 px — « 22/24 » se coupait. Avec une base, la
+     rangée se replie (2 + 1) au lieu d'écraser les chiffres (mesuré, vague 2). */
+  flex: 1 1 88px;
   padding: 0;
 }
 

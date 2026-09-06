@@ -6,17 +6,19 @@ import type { LiveDataState } from './LiveDataIndicator.tsx';
 
 const TOUS: readonly LiveDataState[] = [
   'live',
+  'published',
   'delayed',
   'stale',
   'closed',
   'manual',
   'simulated',
+  'theoretical',
   'unavailable',
   'degraded',
 ];
 
 describe('LiveDataIndicator — le statut canonique des données', () => {
-  it('nomme chacun des huit états, sans jamais coder par la couleur seule', () => {
+  it('nomme chacun des dix états, sans jamais coder par la couleur seule', () => {
     for (const etat of TOUS) {
       const { unmount } = render(<LiveDataIndicator state={etat} ageSeconds={12} />);
       const pastille = screen.getByRole('status');
@@ -41,7 +43,14 @@ describe('LiveDataIndicator — le statut canonique des données', () => {
 
   it('distingue « décrit l’instant » de « ne le décrit plus » PAR LA FORME', () => {
     // Seconde vecteur, indépendant de la couleur : pastille pleine ou creuse.
-    const pleins: readonly LiveDataState[] = ['live', 'delayed', 'manual', 'simulated'];
+    const pleins: readonly LiveDataState[] = [
+      'live',
+      'published',
+      'delayed',
+      'manual',
+      'simulated',
+      'theoretical',
+    ];
     const creux: readonly LiveDataState[] = ['stale', 'closed', 'unavailable', 'degraded'];
     for (const etat of pleins) {
       const { unmount } = render(<LiveDataIndicator state={etat} ageSeconds={1} />);

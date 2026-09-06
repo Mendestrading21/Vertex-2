@@ -7,6 +7,7 @@ import { FreshnessBadge } from '../FreshnessBadge.tsx';
 import { ModuleStatus } from '../ModuleStatus.tsx';
 import { moduleShowsContent } from '../moduleState.ts';
 import type { ModuleState } from '../moduleState.ts';
+import { LiveDataIndicator, liveDataStateOf } from './LiveDataIndicator.tsx';
 import { StatusChip } from './StatusChip.tsx';
 
 /**
@@ -157,14 +158,39 @@ function useUpdatedFlag(version: number | string | null | undefined): boolean {
   return updated;
 }
 
-function WidgetMeta({ served }: { readonly served: WidgetServed | undefined }) {
+function WidgetMeta({
+  served,
+  state,
+}: {
+  readonly served: WidgetServed | undefined;
+  readonly state: ModuleState;
+}) {
   const asOf = served?.asOf ?? null;
   const ageSeconds = served?.ageSeconds;
   const version = served?.snapshotVersion ?? null;
   const population = served?.population ?? null;
+  /*
+    REFONTE VAGUE 2 — UN SEUL VOCABULAIRE D'ÉTAT DE DONNÉE. La ligne de méta
+    ouvre sur l'état canonique (`LiveDataIndicator`), dérivé des mêmes faits
+    servis que le reste de la ligne : `live` n'est possible qu'avec une
+    politique temps réel dans son budget, une clôture quotidienne dit
+    « PUBLIÉ », une population synthétique dit « SYNTHÉTIQUE ». La pastille de
+    nature brute ne reste que quand la nature n'est pas déclarée : là, le
+    vocabulaire ne peut rien affirmer et l'avertissement doit rester visible.
+  */
+  const liveState = liveDataStateOf({
+    moduleState: state,
+    population,
+    ageSeconds: ageSeconds ?? null,
+    budgetSeconds: served?.budgetSeconds ?? null,
+    policyKind: served?.policyKind ?? null,
+  });
 
   return (
     <p className="vx-w2-meta">
+      {liveState === null ? null : (
+        <LiveDataIndicator state={liveState} ageSeconds={ageSeconds ?? null} variant="compact" />
+      )}
       {ageSeconds === undefined ? (
         <span data-absent="true">âge non publié</span>
       ) : (
@@ -188,9 +214,7 @@ function WidgetMeta({ served }: { readonly served: WidgetServed | undefined }) {
       )}
       {population === null || population === '' ? (
         <StatusChip label="NATURE NON DÉCLARÉE" tone="warning" />
-      ) : (
-        <StatusChip label={population} tone="neutral" />
-      )}
+      ) : null}
     </p>
   );
 }
@@ -236,7 +260,7 @@ export function Widget({
             {conclusion === undefined || conclusion === null || conclusion === '' ? null : (
               <p className="vx-w2-conclusion">{conclusion}</p>
             )}
-            {served === undefined ? null : <WidgetMeta served={served} />}
+            {served === undefined ? null : <WidgetMeta served={served} state={state} />}
             {footer}
           </>
         }

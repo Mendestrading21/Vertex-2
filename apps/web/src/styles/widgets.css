@@ -3753,15 +3753,15 @@
    abrégée, c'est une information fausse. Mesuré sur Risques : un Herfindahl
    servi à vingt-huit chiffres écrasait sa carte. */
 .vx-metric-number {
-  display: inline-block;
-  overflow: hidden;
-  /* 14ch dépasse une colonne de 122 px (grille d'identité d'Analyse, cartes
-     de 216 px d'Aujourd'hui) : la borne est aussi celle de la cellule, et le
-     `title` garde la valeur entière (passe 2, mesuré). */
-  max-width: min(14ch, 100%);
-  vertical-align: bottom;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  /* REFONTE VAGUE 2 — UN NOMBRE N'EST JAMAIS TRONQUÉ. La borne « 14ch +
+     ellipse » coupait « 22 » en « 2… » dans une colonne étroite de Marchés
+     (mesuré 2026-09-06) : un nombre tronqué est un nombre faux, pire qu'un
+     débordement. Une chaîne servie longue (Herfindahl à vingt-huit chiffres)
+     se REPLIE désormais dans la cellule, entière et lisible ; le `title`
+     garde la valeur d'un seul tenant. */
+  display: inline;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 
