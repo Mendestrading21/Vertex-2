@@ -1343,6 +1343,25 @@
 .vx-markets-grid [data-module='rates-curve'] { grid-area: rates; }
 .vx-markets-grid [data-module='fx'] { grid-area: fx; }
 .vx-markets-grid [data-module='correlation'] { grid-area: correlation; }
+
+/* Planche §5 (Options) — même motif : ses aires vivent ici, après les spans du
+   socle, parce que la planche sans sous-jacent rend des `Widget`. Les aires
+   elles-mêmes (`grid-template-areas`) restent dans `global.css`. */
+.vx-options-grid [data-module='underlying'] { grid-area: underlying; }
+.vx-options-grid [data-module='identity-strip'] { grid-area: identity; }
+.vx-options-grid [data-module='spot'] { grid-area: spot; }
+.vx-options-grid [data-module='expected-move'] { grid-area: move; }
+.vx-options-grid [data-module='iv-reference'] { grid-area: ivref; }
+.vx-options-grid [data-module='iv-rank'] { grid-area: ivrank; }
+.vx-options-grid [data-module='dividend'] { grid-area: dividend; }
+.vx-options-grid [data-module='rate'] { grid-area: rate; }
+.vx-options-grid [data-module='vol-structure'] { grid-area: volstruct; }
+.vx-options-grid [data-module='underlying-series'] { grid-area: series; }
+.vx-options-grid [data-module='iv-smile'] { grid-area: smile; }
+.vx-options-grid [data-module='chain'] { grid-area: chain; }
+.vx-options-grid [data-module='strategy-builder'] { grid-area: builder; }
+.vx-options-grid [data-module='payoff-profile'] { grid-area: payoff; }
+.vx-options-grid [data-module='strategy-metrics'] { grid-area: metrics; }
 .vx-markets-grid [data-module='vol-structure'] { grid-area: volstruct; }
 .vx-markets-grid [data-module='discards'] { grid-area: discards; }
 

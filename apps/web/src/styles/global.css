@@ -7530,21 +7530,12 @@ label {
   }
 }
 
-.vx-options-grid [data-module='underlying'] { grid-area: underlying; }
-.vx-options-grid [data-module='identity-strip'] { grid-area: identity; }
-.vx-options-grid [data-module='spot'] { grid-area: spot; }
-.vx-options-grid [data-module='expected-move'] { grid-area: move; }
-.vx-options-grid [data-module='iv-reference'] { grid-area: ivref; }
-.vx-options-grid [data-module='iv-rank'] { grid-area: ivrank; }
-.vx-options-grid [data-module='dividend'] { grid-area: dividend; }
-.vx-options-grid [data-module='rate'] { grid-area: rate; }
-.vx-options-grid [data-module='vol-structure'] { grid-area: volstruct; }
-.vx-options-grid [data-module='underlying-series'] { grid-area: series; }
-.vx-options-grid [data-module='iv-smile'] { grid-area: smile; }
-.vx-options-grid [data-module='chain'] { grid-area: chain; }
-.vx-options-grid [data-module='strategy-builder'] { grid-area: builder; }
-.vx-options-grid [data-module='payoff-profile'] { grid-area: payoff; }
-.vx-options-grid [data-module='strategy-metrics'] { grid-area: metrics; }
+/* LOT V2 (2026-09-06) — LES AIRES DE CETTE PLANCHE ONT DÉMÉNAGÉ DANS
+   `widgets.css`, comme celles de Marchés et d'Opportunités. Sans sous-jacent,
+   la planche rend des `Widget` : les spans du socle (`.vx-w2[data-size]`), de
+   même spécificité et importés après, écrasaient `grid-area` — Spot, Taux et
+   Dividende tombaient à une colonne (76 px) et leur témoin d'état débordait.
+   Ne rien réintroduire ici. */
 
 /* À 1600 px la même composition tient : les douze colonnes s'élargissent, la
    synthèse reste une ligne et la dominante garde toute la largeur. Aucune

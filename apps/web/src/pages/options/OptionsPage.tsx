@@ -197,6 +197,16 @@ function AbsentOptionsModule({ id }: { readonly id: string }) {
  */
 const SANS_SELECTION = 'Aucun sous-jacent sélectionné — en choisir un ci-dessus.';
 
+/* Les mêmes modules qu'en planche servie gardent la densité compacte sans
+   sous-jacent : une composition, pas deux. */
+const COMPACT_MODULES: ReadonlySet<string> = new Set([
+  'identity-strip',
+  'spot',
+  'rate',
+  'dividend',
+  'underlying-series',
+]);
+
 function NoUnderlyingBoard() {
   return (
     <div className="vx-options-grid vx-board" data-testid="options-grid">
@@ -211,6 +221,7 @@ function NoUnderlyingBoard() {
             title={module.title}
             state="empty"
             footer={SANS_SELECTION}
+            {...(COMPACT_MODULES.has(module.id) ? { density: 'compact' } : {})}
           >
             {null}
           </Widget>
