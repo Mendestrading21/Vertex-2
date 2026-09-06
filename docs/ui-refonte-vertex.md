@@ -17,7 +17,7 @@ un `PROVENANCE.md` (source, commit, licence, adaptations) et sa licence amont.
 | KPI Dashboard Design | `.claude/skills/kpi-dashboard-design/` | wshobson/agents `a30778f8…` (2026-09-01) | MIT | hiérarchie synthèse → indicateurs → analyses → détails, regroupements, doublons |
 | Interface Design | `.claude/skills/interface-design/` | Dammyjay93/interface-design `2f9be320…` (2026-06-20) | MIT | anatomie et proportions des cartes, densité, typographie, cascade CSS |
 | UI UX Pro Max | `.claude/skills/ui-ux-pro-max/` | nextlevelbuilder/ui-ux-pro-max-skill `f3ac1952…` (2026-09-03) | MIT | tableaux, filtres, clavier, états, responsive desktop ; outil `scripts/search.py` (Python pur, CSV locaux) |
-| Impeccable | `.claude/skills/impeccable/` + `.claude/agents/impeccable-*.md` | pbakaus/impeccable `4bee58d8…` (2026-09-05), skill 4.2.0 | Apache-2.0 | critique indépendante, `layout`, `harden`, `clarify`, `polish` par LECTURE des playbooks — aucune invocation native du moteur (`scripts/impeccable` non exécuté, aucun téléchargement) |
+| Impeccable | `.claude/skills/impeccable/` + `.claude/agents/impeccable-*.md` | pbakaus/impeccable `4bee58d8…` (2026-09-05), skill 4.2.0 | Apache-2.0 | critique indépendante, `layout`, `harden`, `clarify`, `polish` par LECTURE des playbooks — aucune invocation native du moteur ; le dossier `scripts/` amont (launcher téléchargeant un binaire) n'est pas vendu, retiré le 2026-09-06 pour les portes secrets et frontière financière |
 
 Skills internes lus intégralement : `vertex-titanium-ledger` (SKILL.md, références
 canonical-visual, component-system, charts, pages ; capture canonique et planche

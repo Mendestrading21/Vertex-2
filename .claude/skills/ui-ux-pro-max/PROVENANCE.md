@@ -2,7 +2,7 @@
 
 - Source : https://github.com/nextlevelbuilder/ui-ux-pro-max-skill — `.claude/skills/ui-ux-pro-max/`
 - Commit épinglé : `f3ac195224eac1eb0dfe1a3059c2a6add78ffbe3` (2026-09-03)
-- Licence : MIT — copie dans `LICENSE.upstream`
+- Licence : MIT — copie dans `LICENSE.upstream.md`
 - Fichiers copiés : `SKILL.md`, `references/`, `scripts/` (hors `scripts/tests/`), `data/` (verbatim)
 - Scripts examinés avant usage : Python 3 pur, lecture de CSV locaux, aucun accès réseau,
   aucun sous-processus. Installé le 2026-09-05 pour la refonte UI, au niveau projet.

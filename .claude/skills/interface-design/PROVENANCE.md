@@ -2,7 +2,7 @@
 
 - Source : https://github.com/Dammyjay93/interface-design — `.claude/skills/interface-design/`
 - Commit épinglé : `2f9be3206855bcb2d1d0af262c8bae25cba6658d` (2026-06-20)
-- Licence : MIT — copie dans `LICENSE.upstream`
+- Licence : MIT — copie dans `LICENSE.upstream.md`
 - Fichiers copiés : `SKILL.md`, `agents/openai.yaml` (verbatim)
 - Installé le 2026-09-05 pour la refonte UI (`docs/ui-refonte-vertex.md`), au niveau projet uniquement.
 
