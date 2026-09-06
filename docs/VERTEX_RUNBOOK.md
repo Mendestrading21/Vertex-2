@@ -65,6 +65,16 @@ c'est l'étape dépêches qui la fait varier. Trois passes mesurées le
 passe longue : lire le compteur `muets` du résumé, qui dit combien d'appels
 sont revenus vides.
 
+**NE JAMAIS suivre ces journaux avec `tail -F` sur ce poste.** Le `tail` de
+Git pour Windows ouvre le fichier SANS autoriser l'écriture concurrente :
+tant qu'il tourne, `Add-Content` échoue pour tout le monde, et la boucle perd
+silencieusement ses lignes `->` et `<-`. Diagnostiqué le 2026-09-06 : une
+surveillance posée à 14:58 a fait disparaître le journal de la boucle à partir
+de 16:21, ce qui donnait l'image d'une boucle bloquée. Pire, arrêter la tâche
+qui portait le `tail` ne tue pas le `tail` lui-même : il survit en orphelin et
+garde le verrou. Pour suivre un journal ici : le relire périodiquement
+(`cat` puis comparaison avec ce qui a déjà été vu), jamais le tenir ouvert.
+
 **Une passe sans ligne `<-` n'est pas une passe bloquée.** Le collecteur
 redirige sa sortie vers le MÊME fichier que la boucle : à l'instant où il se
 termine, `Add-Content` peut échouer en violation de partage et la ligne est
