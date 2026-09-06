@@ -283,8 +283,9 @@ justifie un ADR à ce stade :
 - Playwright (portes de mise en page, a11y axe, quatre projets) à rejouer sur
   un poste équipé avant fusion ; les mesures ci-dessus en sont un substitut,
   pas une preuve e2e.
-- `apps/web/vite.design-preview.config.ts` (proxy `/api` → 8001) est un fichier
-  de travail non suivi ; ne pas le commiter.
+- `apps/web/vite.design-preview.config.ts` (proxy `/api` → 8001) est la
+  configuration de prévisualisation design, suivie dans Git depuis `c0b799f`
+  (aucun secret) ; `vite.config.ts` reste la référence de build.
 - `StatusBadge` (capacités de source, six statuts avec glyphe) et `StatusChip`
   (badge générique) restent deux composants : ils portent deux contrats
   différents, l'unification demanderait un ADR de vocabulaire.
