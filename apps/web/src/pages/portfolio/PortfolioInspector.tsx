@@ -79,16 +79,13 @@ export function PositionInspector({
   const facts = transactions.filter((entry) => tickerOf(entry) === lot.ticker);
   const corrections = facts.filter((entry) => entry.compensates !== null || entry.compensated_by !== null);
   return (
-    <InspectorPanel subject={lot.ticker}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">
-          lot <code>{lot.lotId}</code> <span className="vx-badge vx-badge-synthetic">MARQUE SYNTHÉTIQUE</span>
-        </p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
-
+    <InspectorPanel
+      subject={lot.ticker}
+      note={
+        <>lot <code>{lot.lotId}</code> <span className="vx-badge vx-badge-synthetic">MARQUE SYNTHÉTIQUE</span></>
+      }
+      onClose={onClose}
+    >
       <SnapshotFacts
         testId="pf-lot-facts"
         facts={[

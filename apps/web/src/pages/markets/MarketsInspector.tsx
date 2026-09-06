@@ -36,16 +36,14 @@ export function InstrumentInspector({
 }) {
   const ticker = entry.ticker;
   return (
-    <InspectorPanel subject={ticker.ticker}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">
-          {entry.sectorLabel}
-          {ticker.synthetic ? <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span> : null}
-        </p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
+    <InspectorPanel
+      subject={ticker.ticker}
+      note={
+        <>{entry.sectorLabel}
+          {ticker.synthetic ? <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span> : null}</>
+      }
+      onClose={onClose}
+    >
       <dl className="vx-inspector-facts" data-testid="markets-instrument-facts">
         <div>
           <dt>Dernière clôture</dt>

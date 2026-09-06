@@ -17,16 +17,13 @@ import { InspectorPanel } from '../../shell/inspector.tsx';
 
 export function CapabilityInspector({ entry, onClose }: { readonly entry: CapabilityEntry; readonly onClose: () => void }) {
   return (
-    <InspectorPanel subject={entry.capability_id}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">
-          <StatusBadge status={entry.tested_status} />
-        </p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
-
+    <InspectorPanel
+      subject={entry.capability_id}
+      note={
+        <StatusBadge status={entry.tested_status} />
+      }
+      onClose={onClose}
+    >
       <SnapshotFacts
         testId="src-capability-facts"
         facts={[

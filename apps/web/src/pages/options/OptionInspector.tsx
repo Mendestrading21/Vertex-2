@@ -166,20 +166,16 @@ export function OptionInspector({
       subject={`${contract.right ?? 'sens non publié'} ${
         contract.strike ?? 'strike non publié'
       } · ${contract.expiration} · ${contract.trading_class}`}
+      onClose={onClose}
     >
       <div ref={attacherPanneau} className="vx-sheet" data-testid="option-inspector">
-        <div className="vx-sheet-head">
-          {/* Le sujet est déjà rendu par l'inspecteur : ce titre reste pour
-              `aria-labelledby` sans doubler visuellement l'en-tête. */}
-          <h3 id={titleId} className="vx-visually-hidden">
-            {contract.right ?? 'sens non publié'} {contract.strike ?? 'strike non publié'} ·{' '}
-            {contract.expiration} ·{' '}
-            {contract.trading_class}
-          </h3>
-          <button type="button" className="vx-sheet-close" onClick={onClose}>
-            Fermer
-          </button>
-        </div>
+        {/* Le sujet est déjà rendu par l'inspecteur : ce titre reste pour
+            `aria-labelledby` sans doubler visuellement l'en-tête. */}
+        <h3 id={titleId} className="vx-visually-hidden">
+          {contract.right ?? 'sens non publié'} {contract.strike ?? 'strike non publié'} ·{' '}
+          {contract.expiration} ·{' '}
+          {contract.trading_class}
+        </h3>
       {contract.synthetic ? <p className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</p> : null}
 
       <h3>Identité du contrat</h3>

@@ -66,8 +66,19 @@ export interface InspectorPanelProps {
   /**
    * Titre du panneau. Le contrat canonique montre « Inspecteur — <sujet> » :
    * le sujet est le nom de l'élément sélectionné, jamais un libellé générique.
+   * Le nom ACCESSIBLE garde la forme complète ; à l'écran, « Inspecteur » est
+   * le kicker et le sujet le titre — un seul en-tête, pas deux.
    */
   readonly subject: string;
+  /**
+   * REFONTE VAGUE 2 — UN SEUL EN-TÊTE POUR NEUF INSPECTEURS. Chaque page
+   * réécrivait son bloc « note + bouton Fermer » (`vx-sheet-head`) ; la note
+   * (secteur, statut, lot, nature) et la fermeture sont désormais des props :
+   * même structure, même position du bouton, même focus, sur toutes les pages.
+   */
+  readonly note?: React.ReactNode;
+  /** Présent ⇒ le bouton « Fermer » est rendu dans l'en-tête, jamais ailleurs. */
+  readonly onClose?: () => void;
   readonly children: React.ReactNode;
 }
 
@@ -75,7 +86,7 @@ export interface InspectorPanelProps {
  * Monte un panneau dans l'inspecteur du shell. À rendre par la PAGE, pas par
  * le shell : c'est la page qui sait ce qu'elle a de sélectionné.
  */
-export function InspectorPanel({ subject, children }: InspectorPanelProps) {
+export function InspectorPanel({ subject, note, onClose, children }: InspectorPanelProps) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
   // Une page peut monter PLUSIEURS panneaux (un dossier ouvert, une
   // explication). Un identifiant fixe les rendrait tous porteurs du même
@@ -101,9 +112,22 @@ export function InspectorPanel({ subject, children }: InspectorPanelProps) {
 
   return createPortal(
     <section className="vx-inspector-panel" aria-labelledby={titleId}>
-      <h2 id={titleId} className="vx-inspector-heading">
-        Inspecteur — {subject}
-      </h2>
+      <header className="vx-inspector-head">
+        <div className="vx-inspector-head-text">
+          <p className="vx-inspector-kicker" aria-hidden="true">
+            Inspecteur
+          </p>
+          <h2 id={titleId} className="vx-inspector-heading" aria-label={`Inspecteur — ${subject}`}>
+            {subject}
+          </h2>
+          {note === undefined ? null : <p className="vx-inspector-note">{note}</p>}
+        </div>
+        {onClose === undefined ? null : (
+          <button type="button" className="vx-sheet-close" onClick={onClose}>
+            Fermer
+          </button>
+        )}
+      </header>
       {children}
     </section>,
     slot,

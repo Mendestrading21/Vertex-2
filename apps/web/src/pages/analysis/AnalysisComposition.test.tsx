@@ -288,6 +288,8 @@ describe('Page Analyse — composition (LOT-A4)', () => {
     expect(facts.textContent).toContain('INSUFFICIENT_DATA');
     expect(facts.textContent).toContain('non publiée'); // thèse, invalidation
     const titres = screen.getAllByRole('heading', { level: 2, name: /^Inspecteur — / });
-    expect(titres[0]?.textContent).toBe('Inspecteur — Dossier SYN-TECH-01');
+    // Le nom accessible garde la forme canonique ; à l'écran, le sujet seul.
+    expect(titres[0]?.getAttribute('aria-label')).toBe('Inspecteur — Dossier SYN-TECH-01');
+    expect(titres[0]?.textContent).toBe('Dossier SYN-TECH-01');
   });
 });

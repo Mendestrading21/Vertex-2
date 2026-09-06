@@ -42,18 +42,15 @@ export function CandidateInspector({
 }) {
   const facts = contradictory ? disqualifyingFacts(candidate) : [];
   return (
-    <InspectorPanel subject={candidate.ticker}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">
-          {candidate.sector ?? 'secteur non publié'}
+    <InspectorPanel
+      subject={candidate.ticker}
+      note={
+        <>{candidate.sector ?? 'secteur non publié'}
           {candidate.synthetic ? <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span> : null}
-          {contradictory ? <span className="vx-badge vx-badge-warning">SNAPSHOT INCOHÉRENT</span> : null}
-        </p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
-
+          {contradictory ? <span className="vx-badge vx-badge-warning">SNAPSHOT INCOHÉRENT</span> : null}</>
+      }
+      onClose={onClose}
+    >
       <SnapshotFacts
         testId="opp-candidate-facts"
         facts={[

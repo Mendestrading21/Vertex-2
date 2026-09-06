@@ -6274,9 +6274,47 @@ label {
 }
 
 .vx-inspector-heading {
+  margin: 0;
+  font-size: var(--vx-font-size-title);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+/* REFONTE VAGUE 2 — l'en-tête unique de l'inspecteur : kicker « Inspecteur »,
+   sujet en titre, note (secteur, statut, lot, nature) et le bouton Fermer à
+   droite, alignés en haut. Le filet de séparation vit ici, plus sur le titre. */
+.vx-inspector-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--vx-space-12);
   margin-bottom: var(--vx-space-16);
   padding-bottom: var(--vx-space-12);
   border-bottom: 1px solid var(--vx-border-soft);
+}
+
+.vx-inspector-head-text {
+  display: grid;
+  gap: var(--vx-space-4);
+  min-width: 0;
+}
+
+.vx-inspector-kicker {
+  margin: 0;
+  color: var(--vx-titanium);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-font-size-micro);
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.vx-inspector-head .vx-inspector-note {
+  margin: 0;
+}
+
+.vx-inspector-head .vx-sheet-close {
+  flex: 0 0 auto;
 }
 
 .vx-inspector-facts {
