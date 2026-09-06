@@ -8367,3 +8367,52 @@ label {
   white-space: normal;
   overflow-wrap: anywhere;
 }
+
+/* ---- Infobulle unique (refonte vague 2, V2-2b) ------------------------
+   Une surface, un rayon, une police, un placement borné à l'écran — voir
+   `components/Tooltip.tsx`. Le déclencheur reste inline pour ne rien changer
+   à la composition qui l'héberge ; la bulle est en `fixed`, positionnée en
+   JavaScript depuis les rectangles mesurés. */
+.vx-tip {
+  position: relative;
+}
+
+/* Dans un en-tête de colonne, la zone de survol est TOUT le contenu de la
+   cellule, pas seulement les glyphes du texte replié sur deux lignes. */
+th > .vx-tip {
+  display: block;
+}
+
+.vx-tip[tabindex]:focus-visible {
+  border-radius: var(--vx-radius-6);
+  outline-offset: 1px;
+}
+
+.vx-tip-bubble {
+  position: fixed;
+  z-index: var(--vx-z-popover);
+  max-width: 320px;
+  padding: var(--vx-space-8) var(--vx-space-12);
+  border: 1px solid var(--vx-border-strong);
+  border-radius: var(--vx-radius-6);
+  background: var(--vx-surface-3);
+  color: var(--vx-text);
+  font: 400 var(--vx-font-size-meta) / 1.45 var(--vx-font-sans);
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  box-shadow: var(--vx-shadow-glass), var(--vx-shadow-inset);
+  pointer-events: none;
+  animation: vx-tip-in var(--vx-motion-140) ease-out;
+}
+
+@keyframes vx-tip-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

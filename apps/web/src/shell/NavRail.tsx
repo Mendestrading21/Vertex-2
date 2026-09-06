@@ -1,10 +1,34 @@
 import { useRef } from 'react';
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { NAV_GROUPS } from '../app/pages.ts';
+import { Tooltip } from '../components/Tooltip.tsx';
 import { BrandMark } from './BrandMark.tsx';
 import { NavGlyph } from './NavGlyph.tsx';
+
+/**
+ * Rail replié : le nom de la page n'est plus imprimé, il s'affiche en
+ * infobulle au survol ou au focus du lien (le lien garde son `aria-label`).
+ * Rail déplié : rien à ajouter, le libellé est écrit.
+ */
+function RailTip({
+  collapsed,
+  title,
+  children,
+}: {
+  readonly collapsed: boolean;
+  readonly title: string;
+  readonly children: ReactNode;
+}) {
+  return collapsed ? (
+    <Tooltip content={title} placement="right">
+      {children}
+    </Tooltip>
+  ) : (
+    children
+  );
+}
 
 export interface NavRailProps {
   readonly collapsed: boolean;
@@ -97,11 +121,11 @@ export function NavRail({ collapsed, onToggle }: NavRailProps) {
           <ul className="vx-rail-list">
             {group.pages.map((page) => (
               <li key={page.key}>
+                <RailTip collapsed={collapsed} title={page.title}>
                 <NavLink
                   to={page.navPath}
                   className="vx-rail-link"
                   aria-label={page.title}
-                  title={collapsed ? page.title : undefined}
                   data-rail-focusable=""
                 >
                   <span className="vx-rail-link-short" aria-hidden="true">
@@ -113,6 +137,7 @@ export function NavRail({ collapsed, onToggle }: NavRailProps) {
                     </span>
                   )}
                 </NavLink>
+                </RailTip>
               </li>
             ))}
           </ul>

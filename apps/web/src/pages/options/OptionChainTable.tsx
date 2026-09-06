@@ -2,6 +2,7 @@ import { Fragment, useCallback, useId, useMemo, useState } from 'react';
 
 import type { OptionChainContract, OptionChainExpiration } from '../../api/client.ts';
 import { AbsentCell } from '../../components/absence.tsx';
+import { Tooltip } from '../../components/Tooltip.tsx';
 import {
   CHAIN_COLUMNS,
   CHAIN_COLUMNS_DEFAULT,
@@ -214,7 +215,8 @@ function ColumnPicker({
             {CHAIN_COLUMNS.filter((colonne) => colonne.group === groupe).map((colonne) => {
               const cochee = selection.includes(colonne.key);
               return (
-                <label className="vx-chain-column-option" key={colonne.key} title={colonne.definition}>
+                <Tooltip content={colonne.definition} placement="bottom" key={colonne.key}>
+                  <label className="vx-chain-column-option">
                   <input
                     type="checkbox"
                     checked={cochee}
@@ -227,7 +229,8 @@ function ColumnPicker({
                   />
                   <span>{colonne.label}</span>
                   <span className="vx-chain-column-unit">{colonne.unit}</span>
-                </label>
+                  </label>
+                </Tooltip>
               );
             })}
           </fieldset>
@@ -386,18 +389,22 @@ export function OptionChainTable({
             </tr>
             <tr>
               {colonnes.map((colonne) => (
-                <th scope="col" key={`call-${colonne.key}`} title={colonne.definition}>
-                  {colonne.label}
-                  <span className="vx-chain-head-unit">{colonne.unit}</span>
+                <th scope="col" key={`call-${colonne.key}`}>
+                  <Tooltip content={colonne.definition} placement="bottom" tabbable>
+                    {colonne.label}
+                    <span className="vx-chain-head-unit">{colonne.unit}</span>
+                  </Tooltip>
                 </th>
               ))}
               <th scope="col">
                 <span className="vx-visually-hidden">Inspecter (call)</span>
               </th>
               {colonnes.map((colonne) => (
-                <th scope="col" key={`put-${colonne.key}`} title={colonne.definition}>
-                  {colonne.label}
-                  <span className="vx-chain-head-unit">{colonne.unit}</span>
+                <th scope="col" key={`put-${colonne.key}`}>
+                  <Tooltip content={colonne.definition} placement="bottom" tabbable>
+                    {colonne.label}
+                    <span className="vx-chain-head-unit">{colonne.unit}</span>
+                  </Tooltip>
                 </th>
               ))}
               <th scope="col">

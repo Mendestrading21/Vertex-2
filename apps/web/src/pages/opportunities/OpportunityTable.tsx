@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 
 import { POPULATION_NATURES, resolvePopulationNature } from '../../components/SyntheticBanner.tsx';
 import { AbsentCell } from '../../components/absence.tsx';
+import { Tooltip } from '../../components/Tooltip.tsx';
 import type { PopulationTone } from '../../components/SyntheticBanner.tsx';
 import { EXCLUSION_KIND_LABELS, disqualifyingFacts } from './opportunitiesView.ts';
 import type { CandidateView } from './opportunitiesView.ts';
@@ -71,12 +72,12 @@ function PopulationCell({ candidate }: { readonly candidate: CandidateView }) {
       ? raw.slice(0, MAX_ECHOED_LABEL) + (raw.length > MAX_ECHOED_LABEL ? '…' : '')
       : null;
   return (
+    <Tooltip content={nature.detail}>
     <span
       className="vx-opp-population"
       data-vx-population-cell=""
       data-vx-nature={key}
       data-vx-tone={nature.tone}
-      title={nature.detail}
     >
       {/*
         TROIS ÉNONCÉS, ET CHACUN EST DÉFENDU PAR UN TEST — la redondance est
@@ -99,6 +100,7 @@ function PopulationCell({ candidate }: { readonly candidate: CandidateView }) {
         <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span>
       ) : null}
     </span>
+    </Tooltip>
   );
 }
 
@@ -184,7 +186,7 @@ function ListCell({
   }
   const [premier, ...reste] = items;
   return (
-    <span className="vx-opp-list" title={items.join(' · ')}>
+    <Tooltip content={items.join(' · ')} className="vx-opp-list">
       <code>{premier}</code>
       {reste.length === 0 ? null : (
         <>
@@ -193,7 +195,7 @@ function ListCell({
           <span className="vx-visually-hidden">{`, et aussi : ${reste.join(', ')}`}</span>
         </>
       )}
-    </span>
+    </Tooltip>
   );
 }
 

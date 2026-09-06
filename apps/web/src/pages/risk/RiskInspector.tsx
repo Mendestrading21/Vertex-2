@@ -35,9 +35,7 @@ export function InstrumentInspector({
   return (
     <InspectorPanel
       subject={ticker}
-      note={
-        <>{row?.label ?? ticker}</>
-      }
+      note={row?.label ?? ticker}
       onClose={onClose}
     >
       <SnapshotFacts

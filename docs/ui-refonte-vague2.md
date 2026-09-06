@@ -62,7 +62,10 @@ aucun merge.
 | V2-3 cartes à niveaux | reformulé | — | `Card.rank` (dominant / default / quiet) + `data-density` tiennent lieu de niveaux ; huit composants divergents refusés |
 | V2-5 système de graphiques | en place | — | `ChartFrame`, `SparkFigure`, `MicroBars`, `MicroRange`, `CellGrid`, `MarketMap`, `ArcGauge`, `LinearGauge`, `BulletMetric`, `RingShares`, `MultiSeriesArea`, matrice de corrélation ; thème unique `charts/theme.ts` ; cinq primitives livrées non encore adoptées par une page (`BulletMetric`, `ChartFrame`, `MicroBars`, `MicroRange`, `MiniHeatStrip`) — conservées, hors bundle par tree-shaking |
 | V2-11 mouvement | déjà en place | — | tokens `--vx-motion-90/140/180/220/600`, `prefers-reduced-motion` ramène tout à 0 ms, deux durées brutes seulement (0 ms) |
-| V2-7, V2-9, V2-12 | à faire | — | voir plan ci-dessus ; V2-9 dépend de la chaîne données « indices » |
+| V2-2b infobulle unique | fait | (ce lot) | `components/Tooltip.tsx` : une surface, un rayon, une police, placement borné à l'écran (`positionTooltip`, fonction pure testée : côté demandé → côté opposé → ramené dans l'écran), `role="tooltip"` + `aria-describedby`, ouverture au survol et au focus de tout descendant, `tabbable` pour un déclencheur non focusable, Échap ferme sans quitter le déclencheur, défilement/redimensionnement replacent ; posée sur les en-têtes et les options de colonnes de la chaîne, la nature et la liste des faits d'Opportunités, le rail replié. `title` reste sur les cellules denses (une provenance par cellule doublerait le DOM), sur le glyphe d'absence (redondance testée) et sur la valeur entière des nombres tronqués |
+| V2-7 tableaux — mesure | mesuré, virtualisation refusée | — | voir « Mesures V2-7 » ci-dessous : à 240 lignes (plafond servi) la chaîne tient dans le budget d'interaction ; aucune table produit n'atteint 10 000 lignes |
+| V2-12 performance — mesure | mesuré | — | chargement initial 172 872 octets gzip (budget 300 Ko), 5 fichiers, ECharts et Lightweight Charts hors chargement initial (`tools/measure_web_bundle.py`) ; cinq primitives non adoptées conservées (hors bundle) |
+| V2-9 | à faire | — | dépend de la chaîne données « indices » |
 
 Mesures inchangées depuis la vague 1 (rangées ≤ 28 % de vide aux trois
 viewports) ; Vitest 124 fichiers / 1 180 verts, tsc 0, Biome 0 après chaque
@@ -105,3 +108,25 @@ couper si une police de secours élargit encore un segment.
 Quatrième exécution, `c3cdb7d` : **7 jobs sur 7 verts** (run 34021031911 ;
 e2e 834 parcours, trois viewports, axe). PR #76 à jour, relecture et fusion
 humaines.
+
+### Mesures V2-7 — coût DOM des tables natives (Chromium, 1280×800, SYNTHETIC)
+
+Méthode : la table servie est clonée hors écran avec N lignes (répétition des
+lignes réelles), insérée, puis mesurée (`getBoundingClientRect`) — le coût
+inclut la construction du DOM et la mise en page, pas la réconciliation
+React. Une mesure par taille, sans moyenne.
+
+| Table | Lignes servies | 240 lignes | 1 000 lignes | 10 000 lignes |
+|---|---|---|---|---|
+| Chaîne d'options (11 cellules/ligne) | 13 → 40 ms | 80 ms | 343 ms | 4 758 ms |
+| Marchés (7 cellules/ligne) | 22 → 4 ms | 42 ms | 170 ms | 2 402 ms |
+
+Lecture : le plafond servi de la chaîne est 240 lignes (`row budget`,
+tronquées comptées) et l'univers Marchés compte 57 instruments ; aux tailles
+que le produit sert réellement, la table native reste sous le budget INP de
+200 ms. À 10 000 lignes, seule une virtualisation tiendrait — mais aucune
+table de Vertex 1.0 Beta n'y arrive, et un ADR TanStack Table/Virtual n'est
+donc pas proposé. Ce qui reste du lot V2-7 sans virtualisation : tri/filtre
+servis, en-tête collant, clavier et région défilante bornée — déjà en place
+sur Marchés et sur la chaîne (`.vx-markets-table-scroll[tabindex]`,
+`.vx-chain-table-scroll[tabindex]`).

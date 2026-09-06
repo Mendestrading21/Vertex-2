@@ -101,7 +101,6 @@ const INTERMEDIAIRES = /^--vx-(?:macro|option|warning|positive|negative|silver)-
  */
 const DETTE_V1: ReadonlyArray<{ readonly variable: string; readonly lot: string }> = [
   { variable: '--vx-z-base', lot: 'V3b' },
-  { variable: '--vx-z-popover', lot: 'V3b' },
   { variable: '--vx-z-sheet', lot: 'V3b' },
   { variable: '--vx-page-accent-soft', lot: 'V6' },
   { variable: '--vx-page-accent-gradient-start', lot: 'V6' },
