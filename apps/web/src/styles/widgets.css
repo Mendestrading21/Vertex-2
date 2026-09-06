@@ -2649,7 +2649,16 @@
    sans `max-width` il aurait écarté les badges d'état vers le bord, et sans
    `flex: 1` il se serait collé au titre en laissant un vide au milieu. */
 .vx-palette-trigger {
-  flex: 0 1 320px;
+  /*
+    LE CHAMP DE RECHERCHE CÈDE EN PREMIER. Quand la barre manque de place,
+    trois choses peuvent céder : le fil d'Ariane (qui dit OÙ ON EST), le
+    groupe d'état à droite (qui dit CE QUE VAUT LA DONNÉE), et ce déclencheur
+    — dont le libellé n'est qu'une invite, et qui garde son raccourci ⌘K
+    visible même très étroit. C'est donc lui qui rétrécit, avec un facteur de
+    compression élevé : mesuré à 1280, sans cela l'état de session tombait
+    sur une seconde ligne pendant que ce champ gardait 284 de ses 320 px.
+  */
+  flex: 0 8 320px;
   justify-content: space-between;
   max-width: 320px;
   display: inline-flex;

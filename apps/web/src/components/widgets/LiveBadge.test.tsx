@@ -69,13 +69,14 @@ describe('liveBadgeDecision — table de décision pure', () => {
   it('lien ouvert : SIGNAL ACTIF • publié il y a N — la donnée est « publiée », pas « cotée »', () => {
     const decision = liveBadgeDecision(BASE);
     /*
-      « À LA LECTURE » QUALIFIE L'ÂGE, ET LA BARRE NE GROSSIT PAS POUR AUTANT.
-      « il y a 4 s » seul devient faux dès que l'onglet dort : l'âge est celui
-      de la LECTURE, pas de l'instant présent. Répéter en plus l'instant
-      absolu — que cette même barre publie déjà à sa droite — imposait au
-      shell un plancher de 850 px et faisait défiler la page à 1024.
+      FORME COURTE, ET C'EST UNE DÉCISION MESURÉE. Deux variantes plus riches
+      ont été essayées le 2026-09-06 — instant absolu en tête, puis « à la
+      lecture ». Les deux répétaient ce que la barre publie déjà à sa droite
+      et ce que l'inspecteur écrit en toutes lettres, et les deux coûtaient
+      850 px de méta : défilement horizontal à 1024, fil d'Ariane tronqué à
+      1280. Le badge dit l'âge SERVI, une fois.
     */
-    expect(decision.label).toBe('SIGNAL ACTIF • publié il y a 4 s à la lecture');
+    expect(decision.label).toBe('SIGNAL ACTIF • publié il y a 4 s');
     expect(decision.live).toBe('open');
     // Aucune teinte pour l'état du lien (revue C0, point B2).
     expect(decision.tone).toBe('neutral');

@@ -711,11 +711,24 @@ body {
   -webkit-backdrop-filter: blur(var(--vx-space-16));
 }
 
+/* LE NOM DE LA PAGE NE S'ABRÈGE PAS AUX LARGEURS DE RELEASE. Mesuré à 1280 :
+   le fil d'Ariane cédait cinq pixels et « Aujourd'hui » devenait
+   « Aujourd'… » — le repère qui dit OÙ ON EST, tronqué pour laisser au champ
+   de recherche voisin 274 de ses 320 px. Les noms des douze pages sont
+   courts et connus ; c'est le champ qui cède (facteur 8). Sous 1280,
+   l'ellipse reprend son rôle plutôt que de faire défiler la page. */
 .vx-contextbar-title {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: var(--vx-space-12);
   min-width: 0;
+}
+
+@media (max-width: 1279px) {
+  .vx-contextbar-title {
+    flex: 0 1 auto;
+  }
 }
 
 .vx-contextbar-app {
@@ -754,12 +767,43 @@ body {
 */
 .vx-contextbar-meta {
   display: flex;
-  flex: 0 1 auto;
+  /*
+    `1 1 auto` ET NON `0 1 auto`. Avec `justify-content: space-between` sur la
+    barre, un groupe qui ne grandit pas reçoit EXACTEMENT sa largeur de
+    contenu — et la moindre fraction de pixel le fait alors passer à la
+    ligne. Mesuré à 1440 : 530 px de badge + 12 de gouttière + 129 de session
+    = 671, pour une boîte de 671,0 ; l'état de session tombait sur une
+    seconde ligne alors qu'il restait 140 px libres dans la barre. En
+    grandissant, le groupe absorbe l'espace restant et ne se replie que
+    lorsque la place manque VRAIMENT.
+  */
+  /* `1 0 auto` : le groupe GRANDIT avec la place disponible mais ne se laisse
+     jamais comprimer aux largeurs de release — sinon flexbox lui retire les
+     quelques pixels qui suffisent à faire passer l'état de session sous le
+     badge, pendant que le champ de recherche voisin garde les siens. Céder,
+     c'est le rôle de ce champ (facteur 8) et du fil d'Ariane (ellipse). */
+  flex: 1 0 auto;
   min-width: 0;
   align-items: center;
   justify-content: flex-end;
   gap: var(--vx-space-8) var(--vx-space-12);
-  flex-wrap: wrap;
+  /* Sur les viewports de release (1280, 1440, 1600), le groupe tient sur une
+     ligne dès lors que le champ de recherche cède avant lui — c'est ce que
+     règle son facteur de compression. Le repli n'a donc pas à y être
+     possible : autorisé partout, la répartition en flexbox le déclenchait
+     dès 1280 alors qu'il restait 140 px libres, et l'état de session tombait
+     sous le badge sans raison. */
+  flex-wrap: nowrap;
+}
+
+/* Sous le plus petit viewport de release, la place manque pour de bon : le
+   groupe se replie plutôt que de faire défiler la page. C'est le contrôle de
+   dégradation laptop 1024×768, pas une cible mobile. */
+@media (max-width: 1279px) {
+  .vx-contextbar-meta {
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+  }
 }
 
 .vx-contextbar-status {

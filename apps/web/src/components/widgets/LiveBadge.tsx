@@ -67,25 +67,29 @@ const NEVER_ACTIVE = new Set(['SYNTHETIC', 'DEMO', 'SIMULATED', 'THEORETICAL']);
  * peut PAS devenir faux : l'instant de publication, servi avec la réponse.
  */
 /*
-  « À LA LECTURE », ET RIEN DE PLUS.
-  L'âge servi est celui de l'instant où la donnée a été LUE, pas de l'instant
-  présent : dans un onglet endormi, « publié il y a 4 s » devient faux sans
-  que rien ne change à l'écran. La qualification le dit.
+  CE QUE CE BADGE DIT, ET CE QU'IL LAISSE DIRE AILLEURS.
 
-  L'INSTANT ABSOLU N'EST PAS RÉPÉTÉ ICI. Il l'a été un temps — et cette barre
-  a alors imposé au shell une largeur minimale de 850 px, mesurée le
-  2026-09-06 : le contrôle de dégradation 1024×768 tombait sur Aujourd'hui,
-  Marchés et Sources & Rapports, la page défilant horizontalement. La même
-  barre publie déjà l'instant servi à sa droite, et l'inspecteur le redonne
-  avec sa version : le répéter coûtait un plancher de mise en page pour zéro
-  information nouvelle.
+  Âge servi : « publié il y a 4 s », et rien de plus. Deux formulations plus
+  riches ont été essayées puis mesurées le 2026-09-06 — l'instant absolu en
+  tête, puis la qualification « à la lecture ». Les deux disent vrai, et les
+  deux le disent une seconde fois : la même barre publie déjà l'instant servi
+  à sa droite, et l'inspecteur écrit « âge publié par le serveur » avec sa
+  version. Ce doublon coûtait de la largeur là où elle manque — barre à
+  850 px de méta, défilement horizontal à 1024, fil d'Ariane tronqué et état
+  de session rejeté sur une seconde ligne à 1280. Le badge garde donc la
+  forme courte.
+
+  Âge NON servi : le badge dit l'instant publié s'il en existe un. Il n'en
+  dérive aucun âge — soustraire l'horloge du navigateur d'un instant serveur
+  fabriquerait une fraîcheur que personne n'a publiée. Sans âge ni instant,
+  il n'y a rien à dire, et il le dit.
 */
 function freshnessOf(meta: SnapshotMeta): string {
   if (meta.ageSeconds === null) {
     const instant = servedClockOf(meta.asOf);
     return instant === null ? 'âge non publié' : `publié ${instant}`;
   }
-  return `publié ${formatAge(meta.ageSeconds)} à la lecture`;
+  return `publié ${formatAge(meta.ageSeconds)}`;
 }
 
 export function liveBadgeDecision(input: LiveBadgeInput): LiveDecision {
