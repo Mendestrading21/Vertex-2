@@ -1,4 +1,4 @@
-import { useEffect, useId, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useId, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 /**
@@ -77,7 +77,10 @@ export interface InspectorPanelProps {
    * même structure, même position du bouton, même focus, sur toutes les pages.
    */
   readonly note?: React.ReactNode;
-  /** Présent ⇒ le bouton « Fermer » est rendu dans l'en-tête, jamais ailleurs. */
+  /**
+   * Présent ⇒ le bouton « Fermer » est rendu dans l'en-tête, jamais ailleurs,
+   * ET `Échap` referme depuis n'importe quel élément du panneau.
+   */
   readonly onClose?: () => void;
   readonly children: React.ReactNode;
 }
@@ -88,10 +91,15 @@ export interface InspectorPanelProps {
  */
 export function InspectorPanel({ subject, note, onClose, children }: InspectorPanelProps) {
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [panneau, setPanneau] = useState<HTMLElement | null>(null);
   // Une page peut monter PLUSIEURS panneaux (un dossier ouvert, une
   // explication). Un identifiant fixe les rendrait tous porteurs du même
   // `id`, ce qu'axe refuse et ce qui casserait `aria-labelledby`.
   const titleId = useId();
+
+  const attacherPanneau = useCallback((node: HTMLElement | null) => {
+    setPanneau(node);
+  }, []);
 
   useEffect(() => {
     mountedPanels += 1;
@@ -106,12 +114,47 @@ export function InspectorPanel({ subject, note, onClose, children }: InspectorPa
     };
   }, []);
 
+  /*
+    ÉCHAP FERME, SUR TOUTES LES PAGES (vague 2, tour de mise en place).
+    Mesuré sur la pile en direct le 2026-09-06 : `Échap` ne refermait que
+    l'inspecteur d'Options, qui portait son propre écouteur ; sur Marchés,
+    Risques, Portefeuille et les six autres, la même touche ne faisait rien.
+    Une seule touche, un seul comportement : l'écouteur vit ici, avec le
+    bouton « Fermer », et les deux répondent à la même prop.
+
+    Écouteur NATIF sur le nœud plutôt que `onKeyDown` sur la section : sans
+    `role="dialog"` — et ce panneau n'en est pas un, il ne piège pas le focus
+    et ne masque pas la page — la règle d'accessibilité du linter refuse, à
+    juste titre, un gestionnaire clavier sur un élément statique.
+
+    PORTÉE VOLONTAIREMENT ÉTROITE : l'écouteur est posé sur le panneau, donc
+    `Échap` ne referme que si le focus est DANS l'inspecteur. Depuis la table,
+    la touche reste disponible pour ce que l'utilisateur regarde vraiment
+    (palette, infobulle) ; on ne confisque jamais une touche globalement.
+  */
+  useEffect(() => {
+    if (panneau === null || onClose === undefined) {
+      return;
+    }
+    function onKeyDown(event: KeyboardEvent): void {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        fermer();
+      }
+    }
+    const fermer = onClose;
+    panneau.addEventListener('keydown', onKeyDown);
+    return () => {
+      panneau.removeEventListener('keydown', onKeyDown);
+    };
+  }, [panneau, onClose]);
+
   if (slot === null) {
     return null;
   }
 
   return createPortal(
-    <section className="vx-inspector-panel" aria-labelledby={titleId}>
+    <section ref={attacherPanneau} className="vx-inspector-panel" aria-labelledby={titleId}>
       <header className="vx-inspector-head">
         <div className="vx-inspector-head-text">
           <p className="vx-inspector-kicker" aria-hidden="true">

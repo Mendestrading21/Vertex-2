@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import type { OptionChainContract } from '../../api/client.ts';
@@ -79,8 +79,6 @@ export function OptionInspector({
   const titleId = useId();
   const transferNoteId = useId();
   const navigate = useNavigate();
-  const [sheetNode, setSheetNode] = useState<HTMLElement | null>(null);
-
   /**
    * Le focus entre dans le panneau dès que son nœud existe.
    *
@@ -91,37 +89,14 @@ export function OptionInspector({
    */
   const attacherPanneau = useCallback((node: HTMLDivElement | null) => {
     // REFONTE VAGUE 2 — le bouton « Fermer » vit dans l'en-tête commun de
-    // `InspectorPanel`, hors de la feuille : le focus entrant et l'écoute
-    // d'Échap se posent sur le PANNEAU entier, sinon Échap depuis « Fermer »
-    // ne serait jamais entendu.
+    // `InspectorPanel`, hors de la feuille : le focus entrant se pose sur le
+    // PANNEAU entier, pour atteindre « Fermer » en premier.
     const root = node?.closest<HTMLElement>('.vx-inspector-panel') ?? node;
-    setSheetNode(root);
     root?.querySelector<HTMLElement>('button')?.focus();
   }, []);
 
-  /**
-   * `Échap` referme depuis n'importe quel élément du panneau.
-   *
-   * Écouteur NATIF sur le nœud plutôt que `onKeyDown` sur le conteneur :
-   * sans `role="dialog"`, ce conteneur est un élément statique, et la règle
-   * d'accessibilité du linter refuse — à juste titre — d'y accrocher un
-   * gestionnaire clavier.
-   */
-  useEffect(() => {
-    if (sheetNode === null) {
-      return;
-    }
-    function onKeyDown(event: KeyboardEvent): void {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onClose();
-      }
-    }
-    sheetNode.addEventListener('keydown', onKeyDown);
-    return () => {
-      sheetNode.removeEventListener('keydown', onKeyDown);
-    };
-  }, [sheetNode, onClose]);
+  // `Échap` est entendu par `InspectorPanel` : un seul écouteur pour les neuf
+  // inspecteurs, posé avec le bouton « Fermer » qu'il double au clavier.
 
   const quote = quoteViewOf(contract);
   const iv = ivViewOf(contract);
