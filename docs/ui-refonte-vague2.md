@@ -67,3 +67,21 @@ aucun merge.
 Mesures inchangées depuis la vague 1 (rangées ≤ 28 % de vide aux trois
 viewports) ; Vitest 124 fichiers / 1 180 verts, tsc 0, Biome 0 après chaque
 lot.
+
+### Retour de la CI e2e (Chromium, trois viewports, axe) — 2026-09-06
+
+Première exécution Playwright de la branche : 17 parcours rouges par
+viewport, tous traités (`983dda4`, `4039f79`, `79111c8`) :
+
+- `unbroken-measure` : le repli des nombres introduit au lot 1 coupait un
+  instant et un Herfindahl sur deux lignes → segment de mesure de nouveau
+  atomique (nowrap, 14ch, valeur entière dans le `title`), la colonne trop
+  étroite corrigée à la source ;
+- « le contenu tient dans sa carte » sur /options à 1280 : les segments de la
+  ligne de méta (instant ISO, badge d'état) peuvent se replier ;
+- Options : la case de colonne cochée changeait d'état un rendu trop tard
+  (état dérivé de l'URL seule) → miroir local synchrone, l'URL reste la vérité ;
+  « Fermer » ayant rejoint l'en-tête commun, le focus entrant et Échap sont
+  portés par le panneau entier ;
+- attentes des parcours mises au format produit (`e2e/format.ts`) et au nom
+  accessible « Inspecteur — <sujet> » ; témoin hors ligne désambiguïsé.
