@@ -3653,3 +3653,27 @@ l'arrêt le stoppe en premier et lui seul.
   `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne. Le comportement
   fail-closed est correct ; la mise en page de cette page reste couverte par les
   seules mesures CI sur population `SYNTHETIC`.
+
+### Suite de la nuit — trois pages recomposées, une dette de carte fermée
+
+- **`market-map` : hauteur fantôme supprimée, porte rendue.** Le cadre
+  déclarait 4 310 px de contenu pour 1 577 px de boîte alors que la table de
+  3 441 px défile dans sa propre région bornée à 560 px. Rien n'était coupé à
+  l'écran ; le prix était de mesure, la dette faisant taire la porte « le
+  contenu tient dans sa carte » sur ce module. `contain: paint` sur le
+  conteneur défilant ramène le fantôme à zéro. **`DETTE_CARTE_MAX` passe de 1
+  à 0 : plus aucune dette de carte.** CI verte sur ce retrait.
+- **Marchés.** La carte sectorielle tenait huit colonnes et les instruments
+  suivis un rail de quatre où les tuiles s'empilaient : 626 px de nuage de
+  puces face à 1 591 px de rail. Chacune prend sa rangée entière. Page :
+  5 230 → 4 597 (1280), 4 054 (1440), 3 870 px (1600).
+- **Analyse.** Les risques déclarés tenaient 220 px et leur liste de gates s'y
+  étirait sur 722 px — la rangée trouée déclarée de la page, 37 % à 1280. Six
+  colonnes, un gate par ligne, et la queue se réordonne en rangées de trois
+  puis de deux. Mesure : 220×722 → 456×374.
+
+Après ces trois passes, la réplique locale des deux portes de mise en page ne
+trouve **aucune carte qui coupe son contenu** et **une seule rangée trouée**
+sur les onze planches (`/catalysts`, dette déclarée de 2), aux trois largeurs
+de release. Toutes les figures peignent : les canvas mesurés « vides » sont
+les couches de curseur de Lightweight Charts, transparentes par construction.
