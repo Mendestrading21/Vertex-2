@@ -44,14 +44,18 @@ def test_burst_leaves_one_pending_job(db_session: Session) -> None:
     ]
     db_session.commit()
 
-    assert all(outcome.enqueued is False for outcome in outcomes)
-    assert {outcome.message_id for outcome in outcomes} == {first.message_id}
+    # Every enqueue SUPERSEDES the pending duplicate: one waiting row, always
+    # the latest, so the job runs after every prerequisite enqueued before it.
+    assert all(outcome.enqueued is True for outcome in outcomes)
+    assert all(len(outcome.superseded) == 1 for outcome in outcomes)
+    assert outcomes[0].superseded == (first.message_id,)
+    ids = [outcome.message_id for outcome in outcomes]
+    assert ids == sorted(ids) and ids[0] > first.message_id
     assert _count(db_session) == 1
     row = db_session.execute(select(OutboxMessage)).scalar_one()
+    assert row.id == ids[-1]
     assert row.payload[COALESCE_KEY_FIELD] == KEY
-    # The waiting job keeps the payload of the FIRST observation: the
-    # handler recomputes from the table, the payload is a trace only.
-    assert row.payload["event_id"] == "e1"
+    assert row.payload["event_id"] == "e501"
 
 
 def test_distinct_keys_and_topics_are_not_merged(db_session: Session) -> None:
@@ -85,12 +89,12 @@ def test_in_progress_job_never_absorbs_a_new_observation(db_session: Session) ->
     db_session.commit()
     third = enqueue_outbox_coalesced(db_session, TOPIC, {"event_id": "e3"}, coalesce_key=KEY)
     db_session.commit()
-    assert third.enqueued is False
-    assert third.message_id == second.message_id
+    assert third.superseded == (second.message_id,)
+    assert third.message_id > second.message_id
     statuses = dict(db_session.execute(select(OutboxMessage.id, OutboxMessage.status)).all())
     assert statuses == {
         first.message_id: OutboxStatus.DONE.value,
-        second.message_id: OutboxStatus.PENDING.value,
+        third.message_id: OutboxStatus.PENDING.value,
     }
 
 
@@ -113,3 +117,22 @@ def test_claim_order_and_payload_shape_are_unchanged(db_session: Session) -> Non
     claimed = claim_outbox_batch(db_session, [TOPIC], 10, 60, now=T0)
     assert len(claimed) == 1
     assert claimed[0].payload == {"event_id": "e1", COALESCE_KEY_FIELD: KEY}
+
+
+def test_superseding_moves_the_dependent_job_after_its_prerequisite(
+    db_session: Session,
+) -> None:
+    """The measured CI defect: a funnel job pending since an early envelope
+    must not be claimed before a calendar job enqueued by a later envelope."""
+    funnel = enqueue_outbox_coalesced(db_session, "funnel.refresh", {"n": 1}, coalesce_key=KEY)
+    db_session.commit()
+    # A later envelope: prerequisite first, then the funnel again.
+    calendar = enqueue_outbox(db_session, "calendar.ingested", {"n": 2})
+    again = enqueue_outbox_coalesced(db_session, "funnel.refresh", {"n": 2}, coalesce_key=KEY)
+    db_session.commit()
+    assert again.superseded == (funnel.message_id,)
+    claimed = claim_outbox_batch(
+        db_session, ["funnel.refresh", "calendar.ingested"], 10, 60, now=T0
+    )
+    assert [message.topic for message in claimed] == ["calendar.ingested", "funnel.refresh"]
+    assert [message.id for message in claimed] == [calendar, again.message_id]

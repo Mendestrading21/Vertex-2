@@ -115,12 +115,15 @@ carry it and are never coalesced."""
 class CoalescedEnqueue:
     """Outcome of :func:`enqueue_outbox_coalesced`.
 
-    ``enqueued`` is ``False`` when a PENDING message with the same topic and
-    key already existed: ``message_id`` is then that message's id.
+    ``message_id`` is the id of the message now waiting at the tail of the
+    queue; ``superseded`` lists the ids of the PENDING duplicates it replaced
+    (empty when none existed). ``enqueued`` is always ``True``: a row was
+    written in every case — kept for callers that count writes.
     """
 
     message_id: int
     enqueued: bool
+    superseded: tuple[int, ...] = ()
 
 
 def enqueue_outbox_coalesced(
@@ -135,7 +138,16 @@ def enqueue_outbox_coalesced(
     recomputes from the WHOLE table and ignores the message payload. A batch
     of five hundred quotes only needs one recompute after the last one.
 
-    RULE. At most one PENDING, unleased message per ``(topic, coalesce_key)``.
+    RULE. At most one PENDING, unleased message per ``(topic, coalesce_key)``,
+    and it is always the LAST one enqueued: an existing pending duplicate is
+    SUPERSEDED (deleted, then re-enqueued at the tail of the queue) rather
+    than kept. Messages are claimed in id order, so a dependent job (the
+    opportunities funnel reads the calendar and analysis snapshots) always
+    runs after the prerequisite jobs enqueued before it in the same
+    transaction. Keeping the old row let a job pending since an earlier
+    envelope run BEFORE a prerequisite enqueued later — measured in CI on
+    2026-09-06: opportunities computed without the calendar, every candidate
+    INSUFFICIENT_DATA.
     A message that is already IN_PROGRESS (or FAILED and waiting for its
     retry) never absorbs a new job: its handler may have read the table
     before this transaction's row became visible, so a fresh PENDING message
@@ -154,26 +166,36 @@ def enqueue_outbox_coalesced(
     """
     topic = require_non_empty_str("topic", topic)
     coalesce_key = require_non_empty_str("coalesce_key", coalesce_key)
-    existing = session.execute(
-        select(OutboxMessage.id)
-        .where(
-            OutboxMessage.topic == topic,
-            OutboxMessage.status == OutboxStatus.PENDING.value,
-            OutboxMessage.lease_until.is_(None),
-            OutboxMessage.payload[COALESCE_KEY_FIELD].astext == coalesce_key,
+    existing = (
+        session.execute(
+            select(OutboxMessage)
+            .where(
+                OutboxMessage.topic == topic,
+                OutboxMessage.status == OutboxStatus.PENDING.value,
+                OutboxMessage.lease_until.is_(None),
+                OutboxMessage.payload[COALESCE_KEY_FIELD].astext == coalesce_key,
+            )
+            .order_by(OutboxMessage.id)
+            .with_for_update()
         )
-        .order_by(OutboxMessage.id)
-        .limit(1)
-        .with_for_update()
-    ).scalar_one_or_none()
-    if existing is not None:
-        return CoalescedEnqueue(message_id=int(existing), enqueued=False)
+        .scalars()
+        .all()
+    )
+    superseded = tuple(int(row.id) for row in existing)
+    for row in existing:
+        session.delete(row)
+    if existing:
+        session.flush()
     encoded = to_jsonb_object("payload", payload)
     if not isinstance(encoded, dict):
         raise ValidationFailedError("payload: a coalesced message needs an object payload")
     merged = dict(encoded)
     merged[COALESCE_KEY_FIELD] = coalesce_key
-    return CoalescedEnqueue(message_id=enqueue_outbox(session, topic, merged), enqueued=True)
+    return CoalescedEnqueue(
+        message_id=enqueue_outbox(session, topic, merged),
+        enqueued=True,
+        superseded=superseded,
+    )
 
 
 def claim_outbox_batch(

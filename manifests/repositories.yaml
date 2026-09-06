@@ -13,10 +13,10 @@ repositories:
     allowed_operations: [status, log, show, diff, grep, test_in_isolated_copy]
     forbidden_operations: [edit, commit, push, merge, rebase, reset, clean]
   target:
-    full_name: Mendestrading21/Vertex-1.0-Beta-
-    remote_https: https://github.com/Mendestrading21/Vertex-1.0-Beta-.git
+    full_name: Mendestrading21/Vertex-2  # renommé le 2026-09-05, ex Vertex-1.0-Beta-
+    remote_https: https://github.com/Mendestrading21/Vertex-2.git
     local_path_env: VERTEX_BETA_ROOT
-    observed_local_path_example: /home/user/Vertex-1.0-Beta-
+    observed_local_path_example: /home/user/Vertex-2
     branch_observed: claude/vertex-connection-kgkntr
     initial_state: README_ONLY
     access_mode: WRITE_BY_EXPLICIT_LOT
