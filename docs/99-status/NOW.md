@@ -22,8 +22,9 @@ corrections_du_2026_09_06_apres_midi:
      republiée à 16:51 ; résumé des dépêches « muets=225 » sur 456 appels à
      17:14 ; 57 enveloppes brutes écrites sous identité stable
      (ibkr:bars:<con_id>:<taille>:<série>:<rth>:<premier>:<dernier>) contre
-     1 026 lignes historiques pour 59 contenus. Reste à voir : la passe de
-     17:45 doit en insérer zéro."
+     1 026 lignes historiques pour 59 contenus. PREUVE FINALE à 17:45 : la
+     passe suivante a inséré 0 enveloppe brute et reconnu 57 doublons de plus
+     (14 419 → 14 476). La réécriture perpétuelle est arrêtée."
   - "PIÈGE DE POSTE : ne jamais suivre les journaux avec `tail -F` ici. Le
      tail de Git pour Windows bloque l'écriture concurrente ; il a fait
      disparaître le journal de la boucle d'ingestion entre 16:21 et 17:14, et
