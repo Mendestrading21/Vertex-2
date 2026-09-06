@@ -1,13 +1,14 @@
 import { useRef, useState } from 'react';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { useWorkspace } from '../../app/workspace.tsx';
 
 import type { OptionChainContract, OptionChainExpiration, OptionChainResponse } from '../../api/client.ts';
 import { pageStateOf, useMarketsOverview, useOptionChain } from '../../api/hooks.ts';
 import { AbsentModule } from '../../components/AbsentModule.tsx';
+import { chainColumnsFromParam, chainColumnsToParam } from './chainColumns.ts';
 import { AuthRequiredNotice } from '../../components/AuthRequiredNotice.tsx';
 import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
 import type { DataState } from '../../components/DataStateBoundary.tsx';
@@ -239,6 +240,8 @@ function ChainFrame({
   onSelectGroup,
   onInspect,
   selectedConId,
+  columns,
+  onColumnsChange,
 }: {
   readonly data: OptionChainResponse;
   readonly state: DataState;
@@ -249,6 +252,9 @@ function ChainFrame({
   readonly onInspect: (contract: OptionChainContract, trigger: HTMLElement | null) => void;
   /** Contrat inspecté, pour que sa ligne se distingue dans la chaîne. */
   readonly selectedConId: number | null;
+  /** Colonnes affichées, possédées par l'URL (voir `OptionsBoard`). */
+  readonly columns: readonly string[];
+  readonly onColumnsChange: (next: readonly string[]) => void;
 }) {
   const budget = rowBudgetOf(data);
   const asOf = data.as_of;
@@ -389,6 +395,8 @@ function ChainFrame({
             >
               <OptionChainTable
                 group={selected}
+                columns={columns}
+                onColumnsChange={onColumnsChange}
                 selectedConId={selectedConId}
                 spotValue={spotViewOf(data)?.value ?? null}
                 spotObservedAt={spotViewOf(data)?.observedAt ?? null}
@@ -441,9 +449,33 @@ function OptionsBoard({
   readonly underlying: string;
 }) {
   const groups = data.expirations;
-  const [selectedKey, setSelectedKey] = useState<string>(() =>
-    groups.length > 0 && groups[0] !== undefined ? groupKeyOf(groups[0]) : '',
-  );
+  /*
+    REFONTE VAGUE 2 — LE GROUPE ET LES COLONNES VIVENT DANS L'URL. Un
+    rechargement, un lien partagé ou un retour depuis le Simulateur retrouvent
+    la même chaîne : `?group=<échéance·classe>&cols=bid,ask,iv`. Une valeur
+    d'URL qui ne correspond à aucun groupe publié est ignorée (premier groupe),
+    jamais inventée ; la sélection par défaut n'écrit rien dans l'URL.
+  */
+  const [params, setParams] = useSearchParams();
+  const groupParam = params.get('group');
+  const firstKey = groups.length > 0 && groups[0] !== undefined ? groupKeyOf(groups[0]) : '';
+  const selectedKey =
+    groupParam !== null && groups.some((group) => groupKeyOf(group) === groupParam)
+      ? groupParam
+      : firstKey;
+  const columns = chainColumnsFromParam(params.get('cols'));
+  const updateParam = (key: string, value: string | null): void => {
+    const next = new URLSearchParams(params);
+    if (value === null) {
+      next.delete(key);
+    } else {
+      next.set(key, value);
+    }
+    setParams(next, { replace: true });
+  };
+  const setSelectedKey = (key: string): void => {
+    updateParam('group', key === firstKey ? null : key);
+  };
   const [inspected, setInspected] = useState<InspectedContractSelection | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
@@ -489,6 +521,10 @@ function OptionsBoard({
           underlying={underlying}
           groups={groups}
           selected={selected}
+          columns={columns}
+          onColumnsChange={(next) => {
+            updateParam('cols', chainColumnsToParam(next));
+          }}
           onSelectGroup={(key) => {
             // L'inspecteur porte un contrat du groupe courant. Le conserver
             // après une bascule ferait juger cet ancien contrat avec la qualité

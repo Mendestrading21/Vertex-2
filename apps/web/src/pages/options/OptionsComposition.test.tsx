@@ -126,3 +126,20 @@ describe('Page Options — composition (LOT-A5)', () => {
     expect(await screen.findByTestId('options-snapshot-facts')).toBeDefined();
   });
 });
+
+describe('Page Options — sélection dans l’URL (vague 2)', () => {
+  it('lit les colonnes depuis `?cols=` et retombe sur la sélection par défaut sinon', async () => {
+    servir();
+    renderApp('/options/SYN-TECH-01?cols=bid,iv,inconnue');
+    await screen.findByRole('heading', { level: 2, name: "Chaîne d'options — SYN-TECH-01" });
+    expect(await screen.findByText(/Colonnes affichées : 2 sur/)).toBeDefined();
+  });
+
+  it('un groupe inconnu dans `?group=` est ignoré : le premier groupe publié reste affiché', async () => {
+    servir();
+    renderApp('/options/SYN-TECH-01?group=2099-01-01%C2%B7XXX');
+    await screen.findByRole('heading', { level: 2, name: "Chaîne d'options — SYN-TECH-01" });
+    const pressed = document.querySelector('[data-testid="chain-group"][aria-pressed="true"]');
+    expect(pressed).not.toBeNull();
+  });
+});

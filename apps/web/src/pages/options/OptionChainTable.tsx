@@ -54,6 +54,13 @@ export interface OptionChainTableProps {
   /** Spot SERVI, verbatim, pour le repère. `null` = aucun repère tracé. */
   readonly spotValue?: string | null;
   readonly spotObservedAt?: string | null;
+  /**
+   * Sélection de colonnes CONTRÔLÉE par la page (persistée dans l'URL). Sans
+   * ces deux props, la table garde un état local — les tests unitaires la
+   * rendent hors routeur.
+   */
+  readonly columns?: readonly string[];
+  readonly onColumnsChange?: (next: readonly string[]) => void;
 }
 
 /**
@@ -259,20 +266,31 @@ export function OptionChainTable({
   selectedConId = null,
   spotValue = null,
   spotObservedAt = null,
+  columns,
+  onColumnsChange,
 }: OptionChainTableProps) {
-  const [selection, setSelection] = useState<readonly string[]>(CHAIN_COLUMNS_DEFAULT);
+  const [localSelection, setLocalSelection] = useState<readonly string[]>(CHAIN_COLUMNS_DEFAULT);
+  const selection = columns ?? localSelection;
   const absentId = useId();
 
-  const basculer = useCallback((key: string) => {
-    setSelection((precedent) => {
-      if (precedent.includes(key)) {
-        // On ne descend jamais sous une colonne : une chaîne sans aucune valeur
-        // n'est plus une chaîne.
-        return precedent.length === 1 ? precedent : precedent.filter((k) => k !== key);
+  const basculer = useCallback(
+    (key: string) => {
+      const suivant = (precedent: readonly string[]): readonly string[] => {
+        if (precedent.includes(key)) {
+          // On ne descend jamais sous une colonne : une chaîne sans aucune valeur
+          // n'est plus une chaîne.
+          return precedent.length === 1 ? precedent : precedent.filter((k) => k !== key);
+        }
+        return precedent.length >= CHAIN_COLUMNS_MAX ? precedent : [...precedent, key];
+      };
+      if (columns !== undefined && onColumnsChange !== undefined) {
+        onColumnsChange(suivant(columns));
+        return;
       }
-      return precedent.length >= CHAIN_COLUMNS_MAX ? precedent : [...precedent, key];
-    });
-  }, []);
+      setLocalSelection(suivant);
+    },
+    [columns, onColumnsChange],
+  );
 
   // L'ordre des colonnes suit le vocabulaire, jamais l'ordre de cochage : la
   // chaîne doit avoir la même forme d'une session à l'autre.
