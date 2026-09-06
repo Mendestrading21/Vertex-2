@@ -840,20 +840,25 @@ dessein, donc republie même quand le contenu ne change pas.
 
 ### Cinq finitions retenues, aucune urgente
 
-- Le résumé de collecte de dépêches affiche `erreurs=0` alors que 272 des 456
-  appels fournisseur d'un cycle ont expiré sans rien rendre : il manque un
-  compteur « muets » distinct dans `tools/run_edge_news.py`.
+- ~~Le résumé de collecte de dépêches affiche `erreurs=0`~~ — **CORRIGÉ** :
+  `tools/run_edge_news.py` compte `muets`, les appels rendus sans aucune
+  dépêche (`INSUFFICIENT_DATA`).
 - Les enveloppes brutes `ibkr.bars/1` sont réinsérées à chaque cycle (969
   lignes pour 59 contenus distincts) : l'identité de l'enveloppe est un
   `uuid4` là où les deux dérivées ont déjà une identité déterministe.
-- La boucle d'ingestion annonce « toutes les 30 min » alors que la pause de
-  30 min s'ajoute à la durée des collecteurs : cadence réelle ≈ 58 min. Le
-  libellé est à corriger, pas le comportement.
-- Aucun en-tête de sécurité HTTP sur l'API ni sur l'interface, et `/docs`,
-  `/redoc`, `/openapi.json` sont servis sans session. Sans effet tant que tout
-  est en boucle locale ; bloquant le jour d'une exposition.
-- Le badge `FRESHNESS` de la file d'attention est un jeton de remplissage :
-  `_relevance_reasons` l'ajoute sans jamais consulter un âge.
+- ~~La boucle d'ingestion annonce « toutes les 30 min »~~ — **CORRIGÉ** : le
+  libellé de `ingest-loop.ps1` et le runbook disent « pause », avec la mesure
+  (une passe toutes les 58 min environ un dimanche).
+- ~~Aucun en-tête de sécurité HTTP sur l'API~~ — **CORRIGÉ** : un middleware
+  pose `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` et
+  `Content-Security-Policy: frame-ancestors 'none'` sur chaque réponse, refus
+  fail-closed compris (cinq tests). RESTE OUVERT côté interface (le serveur
+  qui sert le build n'en pose aucun) et pour `/docs`, `/redoc`,
+  `/openapi.json` servis sans session : sans effet en boucle locale,
+  à trancher avant toute exposition.
+- ~~Le badge `FRESHNESS` de la file d'attention est un jeton de remplissage~~ —
+  **CORRIGÉ** : `relevance_reasons` ne nomme que les facteurs appliqués, et
+  `NO_POSITIVE_FACTOR` quand aucun ne l'est (trois tests).
 
 ### Deux faits que le balayage n'avait pas vus, et que la critique a mesurés
 
