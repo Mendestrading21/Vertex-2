@@ -183,11 +183,19 @@ function TodayBoard({
       <ModuleCell id="next-catalyst" density="compact">
         <NextCatalystModule />
       </ModuleCell>
-      <ModuleCell id="manual-portfolio" density="compact">
-        <ManualPortfolioModule />
-      </ModuleCell>
+      {/*
+        L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE. La planche pose les
+        opportunités sur toute la hauteur de la colonne de droite, et le
+        portefeuille manuel SOUS le prochain catalyseur, au milieu : l'œil
+        rencontre donc les opportunités avant le portefeuille. Mesuré le
+        2026-09-07, le document disait l'inverse — un lecteur au clavier
+        atteignait le portefeuille avant une carte placée au-dessus de lui.
+      */}
       <ModuleCell id="opportunities" density="compact">
         <OpportunitiesModule />
+      </ModuleCell>
+      <ModuleCell id="manual-portfolio" density="compact">
+        <ManualPortfolioModule />
       </ModuleCell>
 
       <ModuleCell id="attention" className="vx-today-cell vx-today-primary">

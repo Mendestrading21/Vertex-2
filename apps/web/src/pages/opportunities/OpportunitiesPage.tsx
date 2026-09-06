@@ -324,11 +324,21 @@ function OpportunitiesBoard({
 
         <RankingModule data={data} view={view} selected={selected} onInspect={setSelected} />
 
-        <ExclusionsModule view={view} servedState={etatServi} />
         <ProfileModule view={view} servedState={etatServi} />
         <CalendarRefModule view={view} servedState={etatServi} />
 
         <LimitationsModule view={view} servedState={etatServi} />
+        {/*
+          L'ORDRE DU DOM EST L'ORDRE DU CLAVIER : il doit suivre l'ordre où
+          l'œil rencontre les cartes. Mesuré le 2026-09-07 : les raisons
+          d'exclusion venaient QUATRIÈMES dans le document et se lisaient
+          SEPTIÈMES à l'écran — la planche les place sous les limites
+          publiées, dans la colonne de droite. Un lecteur au clavier les
+          atteignait donc avant trois cartes situées au-dessus d'elles.
+          La composition ne bouge pas ; c'est le document qui rejoint ce
+          qu'elle montre.
+        */}
+        <ExclusionsModule view={view} servedState={etatServi} />
         <AbsentOpportunitiesModule id="mean-score" />
         <AbsentOpportunitiesModule id="global-bias" />
         <AbsentOpportunitiesModule id="expected-return" />

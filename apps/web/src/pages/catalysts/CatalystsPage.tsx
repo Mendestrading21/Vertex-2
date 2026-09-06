@@ -245,14 +245,19 @@ function CatalystsBoard({
         <CategorySplitModule selection={selection} state={moduleState} />
         <SourcesFreshnessModule selection={selection} state={moduleState} />
 
-        {/* EXPOSITION : le registre touché et les thèses sans événement. */}
+        {/* EXPOSITION et REVUE : le registre touché, la file en bande à sa
+            droite, puis les thèses sans événement.
+            L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE : la revue occupe la
+            colonne de droite sur deux rangées, donc l'œil la rencontre avant
+            les thèses orphelines placées sous l'exposition. Mesuré le
+            2026-09-07, le document donnait l'inverse. */}
         <PortfolioExposureModule selection={selection} state={moduleState} />
-        <OrphanThesesModule theses={selection === null ? null : selection.thesesWithoutCatalyst} state={moduleState} />
 
-        {/* REVUE : la file et le formulaire de thèse, en bande. */}
         <ModuleCell id="review" size={catalystsModule('review').size}>
           <ReviewQueueSection />
         </ModuleCell>
+
+        <OrphanThesesModule theses={selection === null ? null : selection.thesesWithoutCatalyst} state={moduleState} />
 
         {/* ABSENCES, regroupées : leur régularité est le message. */}
         <AbsentCatalystsModule id="mean-impact" />

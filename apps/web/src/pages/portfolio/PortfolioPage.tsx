@@ -239,16 +239,21 @@ function PortfolioBoard({
           <PerformanceSection />
         </ModuleCell>
 
-        {/* JOURNAL et SAISIE : les faits déclarés, puis les deux façons d'en
-            déclarer un nouveau. */}
-        <ModuleCell id="ledger">
-          <LedgerPanel transactions={data.transactions} onCompensated={onWrite} />
-        </ModuleCell>
+        {/* SAISIE et JOURNAL : les deux façons de déclarer un fait, puis les
+            faits déjà déclarés.
+            L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE : la planche pose le
+            formulaire à gauche, l'import à sa droite et le journal SOUS
+            l'import. Mesuré le 2026-09-07, le document donnait le journal en
+            premier — un lecteur au clavier l'atteignait avant deux cartes
+            placées au-dessus de lui. */}
         <ModuleCell id="record-transaction">
           <TransactionForm onRecorded={onWrite} />
         </ModuleCell>
         <ModuleCell id="csv-import">
           <CsvImportPanel onImported={onWrite} />
+        </ModuleCell>
+        <ModuleCell id="ledger">
+          <LedgerPanel transactions={data.transactions} onCompensated={onWrite} />
         </ModuleCell>
 
         {/* Les absences, regroupées : leur régularité est le message. */}

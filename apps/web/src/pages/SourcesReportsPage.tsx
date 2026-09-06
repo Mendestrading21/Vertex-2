@@ -136,8 +136,11 @@ function SourcesBoard({ data, state }: { readonly data: SystemCapabilities; read
           <HealthPanel health={data.health} />
         </ModuleCell>
         <VersionsModule health={data.health} state={state} />
-        <UnknownProbesModule data={data} state={state} />
+        {/* L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE : les exports sont posés
+            au-dessus des sondes hors manifeste. Mesuré le 2026-09-07, le
+            document les donnait après. */}
         <ExportsModule state={state} />
+        <UnknownProbesModule data={data} state={state} />
 
         {/* ABSENCES : neuf motifs fermés, regroupés. */}
         <AbsentSourcesModule id="global-health" />

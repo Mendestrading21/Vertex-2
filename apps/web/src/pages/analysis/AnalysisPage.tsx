@@ -356,6 +356,24 @@ function AnalysisBoard({
         <ModuleCell id="oscillators">
           <OscillatorsModule indicators={data.indicators} />
         </ModuleCell>
+        {/*
+          L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE. Les preuves ferment la
+          rangée des indicateurs et des oscillateurs ; les scénarios et les
+          faits officiels ouvrent la suivante. Mesuré le 2026-09-07, le
+          document donnait scénarios et financiers AVANT des preuves placées
+          au-dessus d'eux : un lecteur au clavier descendait puis remontait.
+        */}
+        <ModuleCell id="evidence">
+          <Card
+            rank="quiet"
+            kicker="Calculé"
+            title={analysisModule('evidence').title}
+            titleId="vx-analysis-evidence-title"
+            footer={<>clusters dédoublonnés par le worker, aucune pertinence inventée</>}
+          >
+            <EvidenceRail evidence={evidence} />
+          </Card>
+        </ModuleCell>
         <ModuleCell id="scenarios">
           <Card
             rank="quiet"
@@ -371,17 +389,6 @@ function AnalysisBoard({
         {/* Faits : ce qui est publié ou observé, sans jugement. */}
         <ModuleCell id="financials">
           <FinancialsModule instrument={instrument} />
-        </ModuleCell>
-        <ModuleCell id="evidence">
-          <Card
-            rank="quiet"
-            kicker="Calculé"
-            title={analysisModule('evidence').title}
-            titleId="vx-analysis-evidence-title"
-            footer={<>clusters dédoublonnés par le worker, aucune pertinence inventée</>}
-          >
-            <EvidenceRail evidence={evidence} />
-          </Card>
         </ModuleCell>
         <ModuleCell id="peers" density="compact">
           <PeersModule instrument={instrument} />

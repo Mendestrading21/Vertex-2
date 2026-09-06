@@ -430,9 +430,16 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
               onWindow={setFenetre}
             />
 
-            <VolumeModule bars={bars} servedState={etatServi} />
-
+            {/*
+              L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE. La planche pose les
+              superpositions à gauche et le volume à droite de la même
+              rangée ; le document les donnait dans l'ordre inverse, et un
+              lecteur au clavier atteignait le volume avant la carte placée à
+              sa gauche. Mesuré le 2026-09-07 sur les trois largeurs.
+            */}
             <OverlaysModule indicators={data.indicators} servedState={etatServi} />
+
+            <VolumeModule bars={bars} servedState={etatServi} />
 
             {/* Des mesures ponctuelles, pas une figure : carte compacte. */}
             <Widget
@@ -457,14 +464,16 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
               )}
             </Widget>
 
-            <RsiModule indicators={data.indicators} servedState={etatServi} />
-            <MacdModule indicators={data.indicators} servedState={etatServi} />
-
+            {/* Même règle : la comparaison partage sa rangée avec les
+                indicateurs servis, AVANT la rangée RSI / MACD. */}
             <ComparisonModule
               servedState={etatServi}
               comparison={comparisonViewOf(data.indicators)}
               instrument={instrument}
             />
+
+            <RsiModule indicators={data.indicators} servedState={etatServi} />
+            <MacdModule indicators={data.indicators} servedState={etatServi} />
 
             <AbsentChartsModules />
           </div>
