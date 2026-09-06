@@ -499,7 +499,15 @@ export function indicatorBlockOf(
     };
   }
 
-  const unit = texteOuNull(bloc['unit']);
+  /*
+    L'UNITÉ AFFICHÉE EST CELLE QUE LE SERVEUR PUBLIE POUR L'ÉCRAN.
+    `unit` est un jeton machine — la légende d'axe affichait « price », sans
+    devise. Le worker publie désormais `display_unit` quand il connaît la
+    devise des barres ; l'interface la préfère et retombe VERBATIM sur `unit`
+    sinon. Aucune traduction en dur ici : joindre l'unité d'un indicateur à la
+    devise d'un autre bloc serait une dérivation que le moteur n'a pas signée.
+  */
+  const unit = texteOuNull(bloc['display_unit']) ?? texteOuNull(bloc['unit']);
   if (unit === null) {
     return { kind: 'unreadable', id };
   }
