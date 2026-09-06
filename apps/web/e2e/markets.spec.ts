@@ -156,7 +156,7 @@ test.describe('Page Marchés — MarketMap + table équivalente + breadth', () =
     const faits = page.getByTestId('markets-instrument-facts');
     await expect(faits).toContainText(fr(premier.last_close));
     await expect(faits).toContainText(displayPercent(premier.return_1d_pct));
-    await expect(faits).toContainText(`${fr(premier.weight_global_pct)} %`);
+    await expect(faits).toContainText(displayPercent(premier.weight_global_pct));
     await expect(faits).toContainText(premier.quality);
     await expect(page.getByTestId('markets-instrument-lineage')).toContainText('market.simple_return');
     await expect(bouton).toHaveAttribute('aria-pressed', 'true');

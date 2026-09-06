@@ -306,7 +306,7 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
     await page.goto(`/options/${UNDERLYING}`);
     // Deux témoins honnêtes de l'état hors ligne coexistent (le sélecteur de
     // sous-jacent et le cadre de la chaîne) : c'est le cadre qui est vérifié.
-    const boundary = page.locator('[data-state="offline"]').filter({ hasText: 'Hors ligne' }).first();
+    const boundary = page.getByRole('status').filter({ hasText: 'Hors ligne' }).first();
     await expect(boundary).toBeVisible();
     await expect(boundary).toContainText('Hors ligne');
     await expect(page.getByRole('table')).toHaveCount(0);

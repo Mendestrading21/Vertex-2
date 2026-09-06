@@ -8358,3 +8358,21 @@ label {
 .vx-main [data-module][data-density='compact'] .vx-metric-number {
   max-width: min(14ch, 100%);
 }
+
+/* Dans une carte compacte (115 px à 1280 avec l'inspecteur ouvert), l'unité
+   et la note se replient mot à mot ; et si une police de secours plus large
+   (CI Linux) fait encore déborder un segment, la cellule DÉFILE au lieu de
+   couper : le contenu reste atteignable, ce que la porte de mise en page
+   exige. */
+.vx-main [data-module][data-density='compact'] {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.vx-main [data-module][data-density='compact'] .vx-metric-unit,
+.vx-main [data-module][data-density='compact'] .vx-metric-note,
+.vx-main [data-module][data-density='compact'] .vx-card-footer,
+.vx-main [data-module][data-density='compact'] code {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
