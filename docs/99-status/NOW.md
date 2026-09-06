@@ -3681,6 +3681,16 @@ l'arrêt le stoppe en premier et lui seul.
   chaque ligne — jamais traduite en ticker, aucun instantané servi ne publiant
   cette correspondance.
 
+- **L'ordre du document ne suivait pas l'ordre de lecture sur sept pages.**
+  Une sonde compare, planche par planche, l'ordre du DOM à l'ordre où l'œil
+  rencontre les cartes (haut d'abord, puis gauche) : vingt-et-un modules
+  divergeaient, jusqu'à trois positions d'écart. L'ordre du document EST
+  l'ordre du clavier — un lecteur qui tabule descendait puis remontait sans
+  que rien à l'écran l'explique. Les règles du projet posent que « l'ordre de
+  lecture est celui du DOM » : c'est donc le document qui a rejoint la
+  composition, sans qu'aucune aire nommée, taille ni catalogue ne bouge. Les
+  onze planches rendent la même image qu'avant. **11 sur 11 alignées.**
+
 Après ces trois passes, la réplique locale des deux portes de mise en page ne
 trouve **aucune carte qui coupe son contenu** et **une seule rangée trouée**
 sur les onze planches (`/catalysts`, dette déclarée de 2), aux trois largeurs
