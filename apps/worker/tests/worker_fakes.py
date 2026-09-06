@@ -83,10 +83,18 @@ class FakeGateway:
         self.fail_status: str = OutboxStatus.FAILED.value
         self.lease_error_on_ack: set[int] = set()
         self.lease_error_on_fail: set[int] = set()
+        # Scripted reaper results, one per run_once; ``0`` once exhausted.
+        self.reap_results: list[int] = []
+        self.reap_calls: list[dict[str, Any]] = []
+
+    def reap(self, session, *, now, max_attempts):
+        self.reap_calls.append({"now": now, "max_attempts": max_attempts, "session": session})
+        return self.reap_results.pop(0) if self.reap_results else 0
 
     def claim(self, session, topics, limit, lease_seconds, now):
         self.claim_calls.append(
             {
+                "session": session,
                 "topics": tuple(topics),
                 "limit": limit,
                 "lease_seconds": lease_seconds,

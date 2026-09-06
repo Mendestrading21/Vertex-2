@@ -17,6 +17,7 @@ from worker_fakes import (
 )
 
 from vertex_persistence.enums import OutboxStatus
+from vertex_persistence.repository.outbox import DEFAULT_MAX_ATTEMPTS
 from vertex_worker.errors import HandlerError
 from vertex_worker.registry import HandlerRegistry
 from vertex_worker.runner import WorkerRunner, WorkerStats
@@ -55,6 +56,25 @@ class TestDispatch:
         assert stats == WorkerStats(
             batches=1, claimed=2, acked=2, failed=0, dead=0, lease_lost=0
         )
+
+    def test_reaps_expired_leases_before_every_claim(self) -> None:
+        # A worker killed mid-batch leaves IN_PROGRESS rows behind. Nothing
+        # else in the runtime recovers them: the runner must reap BEFORE it
+        # claims, every time, with the same clock and the same max_attempts.
+        registry = make_registry(lambda session, message: None)
+        gateway = FakeGateway()
+        gateway.reap_results = [18, 0]
+        gateway.pending = [[make_message(1)], []]
+        runner = make_runner(registry, gateway)
+
+        assert runner.run_once() == 1
+        assert runner.run_once() == 0
+        assert len(gateway.reap_calls) == 2
+        assert gateway.reap_calls[0]["now"] == FIXED_NOW
+        assert gateway.reap_calls[0]["max_attempts"] == DEFAULT_MAX_ATTEMPTS
+        # Same transaction as the claim: the reaper's session is the claim's.
+        assert gateway.reap_calls[0]["session"] is gateway.claim_calls[0]["session"]
+        assert runner.stats().reaped == 18
 
     def test_claims_only_registered_topics(self) -> None:
         registry = HandlerRegistry()

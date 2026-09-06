@@ -84,21 +84,24 @@ const DETTE_CARTE: ReadonlyArray<{
   {
     route: '/markets',
     module: 'market-map',
-    nature: 'COUPE ~1 086 px : la table des marchés est plus haute que sa carte et `overflow: hidden` en efface la fin',
+    nature:
+      'HAUTEUR FANTÔME : la table des marchés défile dans sa propre région (560 px), mais ses en-têtes collants font remonter sa hauteur dans le scrollHeight de la carte — rien n'est coupé à l'écran',
     lot: 'V4',
   },
-  { route: '/today', module: 'global-market', nature: 'déborde en largeur', lot: 'V6' },
-  { route: '/today', module: 'calendar', nature: 'déborde en largeur', lot: 'V6' },
-  { route: '/calendar', module: 'next-event', nature: 'déborde en largeur', lot: 'V10' },
-  { route: `/analysis/${INSTRUMENT}`, module: 'indicators', nature: 'déborde en largeur', lot: 'V7' },
-  { route: `/analysis/${INSTRUMENT}`, module: 'upcoming-catalysts', nature: 'déborde en largeur', lot: 'V7' },
-  { route: `/analysis/${INSTRUMENT}`, module: 'key-risks', nature: 'déborde en largeur', lot: 'V7' },
-  { route: `/analysis/${INSTRUMENT}`, module: 'evidence', nature: 'déborde en largeur', lot: 'V7' },
-  { route: '/portfolio', module: 'total-performance', nature: 'déborde en largeur', lot: 'V9' },
-  { route: '/risks', module: 'coverage', nature: 'déborde en largeur', lot: 'V9' },
+  /*
+    VAGUE 2 (2026-09-06) — NEUF DETTES RETIRÉES, parce qu'elles n'existent plus :
+    `/today` global-market et calendar, `/calendar` next-event, `/analysis`
+    indicators, upcoming-catalysts, key-risks et evidence, `/portfolio`
+    total-performance, `/risks` coverage. Mesurées à 0 px de débordement aux
+    trois largeurs, population SYNTHETIC comme réelle (57 instruments). Une
+    dette qui ne mesure plus rien est une porte qui ne garde plus rien.
+  */
 ];
 
-const DETTE_CARTE_MAX = 10;
+/* Cliquet resserré à la vague 2 : une seule dette reste, et elle n'est pas une
+   coupe (voir DETTE_CARTE). Toute nouvelle entrée est une régression à corriger,
+   pas une dette à inscrire. */
+const DETTE_CARTE_MAX = 1;
 
 /**
  * DETTE V3a — RANGÉES MAJORITAIREMENT VIDES, par route.
