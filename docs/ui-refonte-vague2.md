@@ -48,3 +48,20 @@ absence jamais rendue par zéro ni tiret, une dominante par page, tests verts
 Aucun ordre, aucun bouton d'ordre, aucune lecture de compte IBKR ; aucune
 refonte de l'identité ; aucune valeur inventée pour « remplir » une carte ;
 aucun merge.
+
+## Journal d'exécution (2026-09-06)
+
+| Lot | État | Commit | Preuve |
+|---|---|---|---|
+| V2-1 vocabulaire des états de donnée | fait | `921bc96` | `liveDataStateOf` (24 cas), dix états, méta de chaque Widget ; « NEAR LIVE » refusé (aucun champ servi) ; nombre jamais tronqué par une ellipse |
+| V2-4 typographie numérique | fait | `8ef9d29` | `components/number.ts` : `12'845.20`, `+2.48%`, `−0.72%` ; 30 sites ; 15 attentes de tests mises au format |
+| V2-6 inspecteur commun | fait | `aa8e072` | en-tête unique de `InspectorPanel` (kicker, sujet, note, Fermer) sur sept pages |
+| V2-10a densité textuelle | fait | `2951c29` | 26 pieds de carte ramenés sous 60 caractères |
+| V2-2 squelettes et tooltips | déjà en place / reporté | — | `Skeleton.tsx` couvre Chart, Metric, Table, Calendar, Heatmap, Inspector ; le tooltip unique reste à faire (les définitions sont déjà accessibles au clavier par le nom accessible) |
+| V2-3 cartes à niveaux | reformulé | — | `Card.rank` (dominant / default / quiet) + `data-density` tiennent lieu de niveaux ; huit composants divergents refusés |
+| V2-5 système de graphiques | en place | — | `ChartFrame`, `SparkFigure`, `MicroBars`, `MicroRange`, `CellGrid`, `MarketMap`, `ArcGauge`, `LinearGauge`, `BulletMetric`, `RingShares`, `MultiSeriesArea`, matrice de corrélation ; thème unique `charts/theme.ts` ; cinq primitives livrées non encore adoptées par une page (`BulletMetric`, `ChartFrame`, `MicroBars`, `MicroRange`, `MiniHeatStrip`) — conservées, hors bundle par tree-shaking |
+| V2-7, V2-8, V2-9, V2-11, V2-12 | à faire | — | voir plan ci-dessus |
+
+Mesures inchangées depuis la vague 1 (rangées ≤ 28 % de vide aux trois
+viewports) ; Vitest 124 fichiers / 1 180 verts, tsc 0, Biome 0 après chaque
+lot.

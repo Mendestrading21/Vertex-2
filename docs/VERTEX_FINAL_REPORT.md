@@ -81,6 +81,16 @@ chaos garde son scénario d'interruption avec un lot d'un message.
 | Dépêches incrémentales | 456 appels / 30 min pour 7 176 doublons | borne `start` de `reqHistoricalNews` à la dernière dépêche connue par instrument |
 | Rétention des anciennes versions de `snapshots` | suppression de données = décision par ADR | ADR de rétention (garder N versions par clé) |
 
+## 2 bis. Refonte totale, vague 2 (matinée du 6 septembre)
+
+Plan et journal : `docs/ui-refonte-vague2.md`. Livré : un seul vocabulaire
+d'état de donnée sur toutes les cartes (`LiveDataIndicator`, dix états, jamais
+« live » sans politique temps réel servie), un seul format de nombre
+(`12'845.20`, `+2.48%`, `−0.72%`), un seul en-tête d'inspecteur sur sept
+pages, vingt-six pieds de carte ramenés à une ligne courte. Correctifs CI :
+coalescence par remplacement (ordre prérequis → dépendant rétabli), porte
+« rôle du dépôt » sur le nom renommé, skills vendus hors lint.
+
 ## 3. Commits de la nuit (branche, aucun merge)
 
 Mission 1 et 2 : voir `docs/ui-refonte-vertex.md` §7.3 (dix-neuf commits, de
