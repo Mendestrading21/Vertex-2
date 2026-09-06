@@ -5840,8 +5840,14 @@ label {
     'health health health health portfolio portfolio portfolio portfolio opp opp opp opp'
     'attention attention attention attention attention attention attention attention attention attention attention attention'
     'global global global global global global sectors sectors sectors sectors sectors sectors'
-    'focus focus focus focus focus focus calendar calendar calendar calendar calendar calendar'
-    'regime regime regime regime vol vol vol vol risks risks risks risks';
+    /* PASSE 3 (2026-09-06, mesure 1280/1440/1600, population REAL) : les
+       instruments suivis faisaient 1 591 px face à un agenda de 157 — 45 % de
+       rangée vide, la dette de trou déclarée pour cette page. La rangée leur
+       appartient désormais en entier : les tuiles s'alignent sur douze
+       colonnes au lieu de six, le module perd les deux tiers de sa hauteur,
+       et l'agenda descend avec les trois absences, dont il a la taille. */
+    'focus focus focus focus focus focus focus focus focus focus focus focus'
+    'calendar calendar calendar regime regime regime vol vol vol risks risks risks';
   grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
