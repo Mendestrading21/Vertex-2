@@ -15,7 +15,7 @@ variables et des chemins. Compléments : `VERTEX_SOURCE_REGISTRY.md`
 | Worker | idem | journal `~/.vertex/logs/worker-*.out.log` | `select topic, status, count(*) from outbox group by 1,2` |
 | Web (Vite preview) | idem | 127.0.0.1:4173 | page Aujourd'hui, bandeau sans « Données synthétiques » |
 | TWS | lancé par l'utilisateur, lecture seule, loopback | 127.0.0.1:7496 | sonde d'entitlements au démarrage (client 71) |
-| Boucle d'ingestion | `~/.vertex/ingest-loop.ps1` | journal `~/.vertex/logs/ingest.log` | dernière ligne `pause 30 min` datée de moins de 40 min |
+| Boucle d'ingestion | `~/.vertex/ingest-loop.ps1` | journal `~/.vertex/logs/ingest.log` | une ligne `->` ou `<-` datée de moins de 70 min (voir la cadence réelle §2) |
 
 Arrêt : `~/.vertex/stop-vertex.ps1` (ou `Arreter-Vertex.cmd`). Le miroir de
 travail `~/.vertex/app` est resynchronisé depuis `VERTEX_SRC` à chaque
@@ -51,9 +51,23 @@ moins de 5 s, sans rechargement (miroir synchronisé en 3 s, HMR immédiat).
 
 | Chaîne | Commande | Client | Cadence | Signe de santé |
 |---|---|---|---|---|
-| Historique quotidien (Marchés, Analyse, Graphiques, Risques, Portefeuille) | `tools/run_edge_history.py` | 72 | 30 min | `ibkr.daily-quote/1` daté de la dernière séance ; `markets_overview` republié |
-| Dépêches (Aujourd'hui, preuves) | `tools/run_edge_news.py` | 79 | 30 min | `insérées` > 0 les jours de séance ; `doublons` élevés hors séance sont normaux |
+| Historique quotidien (Marchés, Analyse, Graphiques, Risques, Portefeuille) | `tools/run_edge_history.py` | 72 | pause 30 min (voir note) | `ibkr.daily-quote/1` daté de la dernière séance ; `markets_overview` republié |
+| Dépêches (Aujourd'hui, preuves) | `tools/run_edge_news.py` | 79 | pause 30 min (voir note) | `insérées` > 0 les jours de séance ; `doublons` élevés hors séance sont normaux ; `muets` compte les appels rendus SANS dépêche |
 | Entitlements (Sources & Rapports) | `tools/probe_entitlements.py` | 71 | au démarrage | `capabilities/global` daté du jour |
+
+**La pause est fixe, la cadence ne l'est pas.** `Start-Sleep` intervient APRÈS
+les collecteurs : la période réelle est « durée de la passe + pause ». Mesuré
+le 2026-09-06, marché fermé : historique 36 s, dépêches environ 30 minutes
+(délais côté fournisseur), pause 30 minutes, soit une passe toutes les
+58 minutes environ. Un jour de séance, les dépêches répondent et la passe est
+plus courte.
+
+**`erreurs=0` ne veut pas dire « tout est arrivé ».** `reqHistoricalNewsAsync`
+n'échoue pas quand le fournisseur ne répond pas : il rend une liste vide, donc
+une enveloppe `INSUFFICIENT_DATA`. Le compteur `muets` du résumé mesure ces
+appels silencieux (272 sur 456 lors d'un cycle du 2026-09-06). Il ne distingue
+pas un délai dépassé d'un fournisseur réellement sans actualité : cette
+information ne remonte pas jusqu'à nous.
 | SEC EDGAR (Analyse › faits officiels) | `tools/run_sec_edgar.py --cik <CIK> --instrument <TICKER> --persist` | — | manuel | `sec_fundamentals/{instrument}` publié |
 | Sources officielles macro | `tools/probe_official_sources.py --live --source fred|ecb|snb …` | — | manuel (aucune ingestion) | enveloppe sans erreur |
 
