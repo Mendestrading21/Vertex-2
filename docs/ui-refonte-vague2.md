@@ -57,10 +57,12 @@ aucun merge.
 | V2-4 typographie numérique | fait | `8ef9d29` | `components/number.ts` : `12'845.20`, `+2.48%`, `−0.72%` ; 30 sites ; 15 attentes de tests mises au format |
 | V2-6 inspecteur commun | fait | `aa8e072` | en-tête unique de `InspectorPanel` (kicker, sujet, note, Fermer) sur sept pages |
 | V2-10a densité textuelle | fait | `2951c29` | 26 pieds de carte ramenés sous 60 caractères |
+| V2-8 Options : sélection dans l'URL | fait | `330a2c8` | `?group=` et `?cols=` persistés, deny by default, table contrôlée ; 73 tests Options verts |
 | V2-2 squelettes et tooltips | déjà en place / reporté | — | `Skeleton.tsx` couvre Chart, Metric, Table, Calendar, Heatmap, Inspector ; le tooltip unique reste à faire (les définitions sont déjà accessibles au clavier par le nom accessible) |
 | V2-3 cartes à niveaux | reformulé | — | `Card.rank` (dominant / default / quiet) + `data-density` tiennent lieu de niveaux ; huit composants divergents refusés |
 | V2-5 système de graphiques | en place | — | `ChartFrame`, `SparkFigure`, `MicroBars`, `MicroRange`, `CellGrid`, `MarketMap`, `ArcGauge`, `LinearGauge`, `BulletMetric`, `RingShares`, `MultiSeriesArea`, matrice de corrélation ; thème unique `charts/theme.ts` ; cinq primitives livrées non encore adoptées par une page (`BulletMetric`, `ChartFrame`, `MicroBars`, `MicroRange`, `MiniHeatStrip`) — conservées, hors bundle par tree-shaking |
-| V2-7, V2-8, V2-9, V2-11, V2-12 | à faire | — | voir plan ci-dessus |
+| V2-11 mouvement | déjà en place | — | tokens `--vx-motion-90/140/180/220/600`, `prefers-reduced-motion` ramène tout à 0 ms, deux durées brutes seulement (0 ms) |
+| V2-7, V2-9, V2-12 | à faire | — | voir plan ci-dessus ; V2-9 dépend de la chaîne données « indices » |
 
 Mesures inchangées depuis la vague 1 (rangées ≤ 28 % de vide aux trois
 viewports) ; Vitest 124 fichiers / 1 180 verts, tsc 0, Biome 0 après chaque
