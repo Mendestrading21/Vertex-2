@@ -7367,9 +7367,16 @@ label {
     'indicators indicators indicators indicators oscillators oscillators oscillators oscillators evidence evidence evidence evidence'
     'scenarios scenarios scenarios scenarios scenarios scenarios financials financials financials financials financials financials'
     'scenarios scenarios scenarios scenarios scenarios scenarios peers peers peers peers peers peers'
-    'verdict verdict verdict verdict verdict verdict risks risks risks catalysts catalysts catalysts'
-    'revisions revisions revisions regime regime regime quality quality quality valuation valuation valuation'
-    'confidence confidence confidence confidence levels levels levels levels contradictions contradictions contradictions contradictions';
+    /* PASSE 3 (2026-09-07, mesure 1280/1440/1600, population REAL) : les
+       risques clés tenaient trois colonnes — 220 px — et leur liste s'y
+       étirait sur 722 px face à un verdict de 633 et des catalyseurs de 150.
+       C'était la rangée trouée déclarée de cette page (37 % à 1280). Ils
+       passent à six colonnes et la queue se réordonne en rangées de trois
+       puis de deux, à hauteurs comparables. L'ordre du DOM est inchangé. */
+    'verdict verdict verdict verdict verdict verdict risks risks risks risks risks risks'
+    'catalysts catalysts catalysts catalysts revisions revisions revisions revisions regime regime regime regime'
+    'quality quality quality quality valuation valuation valuation valuation confidence confidence confidence confidence'
+    'levels levels levels levels levels levels contradictions contradictions contradictions contradictions contradictions contradictions';
   grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
