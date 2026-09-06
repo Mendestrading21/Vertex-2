@@ -1,7 +1,7 @@
 import type { SessionState } from '../../api/client.ts';
 import type { SseLinkMode, SseLinkState } from '../../api/events.ts';
 import type { SnapshotMeta } from '../../api/hooks.ts';
-import { formatAge } from '../FreshnessBadge.tsx';
+import { formatAge, servedClockOf } from '../FreshnessBadge.tsx';
 import { POPULATION_NATURES } from '../SyntheticBanner.tsx';
 import { StatusChip } from './StatusChip.tsx';
 import type { StatusChipTone } from './StatusChip.tsx';
@@ -55,11 +55,24 @@ export interface LiveDecision {
 /** Populations qui interdisent tout mot d'activité sur la donnée. */
 const NEVER_ACTIVE = new Set(['SYNTHETIC', 'DEMO', 'SIMULATED', 'THEORETICAL']);
 
+/**
+ * Fraîcheur du badge : l'INSTANT servi, puis l'âge relatif à la lecture.
+ *
+ * L'ÂGE SEUL VIEILLIT MAL. Il est calculé par le serveur au moment de la
+ * réponse et ne bouge plus : la vue Marchés est mise en cache sans expiration
+ * (l'invalidation vient du flux, pas d'une horloge locale), donc « publié il y
+ * a 4 h » restait affiché des heures durant, et devenait faux sans jamais le
+ * dire. On ne corrige pas cet âge avec l'horloge du navigateur — ce serait
+ * inventer une mesure que personne n'a publiée. On ajoute le seul fait qui ne
+ * peut PAS devenir faux : l'instant de publication, servi avec la réponse.
+ */
 function freshnessOf(meta: SnapshotMeta): string {
+  const instant = servedClockOf(meta.asOf);
   if (meta.ageSeconds === null) {
-    return 'âge non publié';
+    return instant === null ? 'âge non publié' : `publié ${instant}`;
   }
-  return `publié ${formatAge(meta.ageSeconds)}`;
+  const age = `publié ${formatAge(meta.ageSeconds)}`;
+  return instant === null ? age : `publié ${instant} (${formatAge(meta.ageSeconds)} à la lecture)`;
 }
 
 export function liveBadgeDecision(input: LiveBadgeInput): LiveDecision {

@@ -68,7 +68,15 @@ describe('liveBadgeDecision — table de décision pure', () => {
 
   it('lien ouvert : SIGNAL ACTIF • publié il y a N — la donnée est « publiée », pas « cotée »', () => {
     const decision = liveBadgeDecision(BASE);
-    expect(decision.label).toBe('SIGNAL ACTIF • publié il y a 4 s');
+    /*
+      L'INSTANT SERVI D'ABORD, L'ÂGE ENSUITE. « il y a 4 s » seul devient faux
+      dès que l'onglet dort : l'âge est celui de la LECTURE, pas de l'instant
+      présent. Le badge nomme donc l'instant publié — qui, lui, ne vieillit
+      pas — et garde l'âge entre parenthèses avec sa qualification.
+    */
+    expect(decision.label).toBe(
+      'SIGNAL ACTIF • publié 03/09/2026 08:40 UTC (il y a 4 s à la lecture)',
+    );
     expect(decision.live).toBe('open');
     // Aucune teinte pour l'état du lien (revue C0, point B2).
     expect(decision.tone).toBe('neutral');
@@ -94,8 +102,22 @@ describe('liveBadgeDecision — table de décision pure', () => {
   });
 
   it('âge non publié : DIT, jamais extrapolé depuis l’horloge du navigateur', () => {
-    const decision = liveBadgeDecision({ ...BASE, meta: { ...BASE.meta, ageSeconds: null } });
-    expect(decision.label).toContain('âge non publié');
+    /*
+      DEUX ABSENCES DISTINCTES, DEUX PHRASES DISTINCTES.
+      Âge absent mais instant servi : le badge DIT l'instant publié. Il n'en
+      dérive aucun âge — soustraire l'horloge du navigateur d'un instant
+      serveur fabriquerait une fraîcheur que personne n'a publiée.
+      Âge ET instant absents : il ne reste rien à dire, et le badge le dit.
+    */
+    const sansAge = liveBadgeDecision({ ...BASE, meta: { ...BASE.meta, ageSeconds: null } });
+    expect(sansAge.label).toContain('publié 03/09/2026 08:40 UTC');
+    expect(sansAge.label).not.toContain('il y a');
+
+    const sansRien = liveBadgeDecision({
+      ...BASE,
+      meta: { ...BASE.meta, ageSeconds: null, asOf: null },
+    });
+    expect(sansRien.label).toContain('âge non publié');
   });
 
   it('aucune population SYNTHETIC ou DEMO ne peut porter un mot de direct', () => {

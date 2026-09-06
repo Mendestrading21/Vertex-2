@@ -1,4 +1,12 @@
-import { FreshnessBadge } from '../components/FreshnessBadge.tsx';
+import { FreshnessBadge, servedClockOf } from '../components/FreshnessBadge.tsx';
+
+/*
+  `servedClockOf` A DÉMÉNAGÉ dans `components/FreshnessBadge.tsx` : le badge de
+  la barre de contexte en a besoin lui aussi, et une primitive partagée ne peut
+  pas importer la coquille. Il est réexporté ici pour les appelants et les
+  tests qui le nommaient déjà.
+*/
+export { servedClockOf };
 import { resolvePopulationNature } from '../components/SyntheticBanner.tsx';
 import { flattenTickers, displayNumber, displayPercent } from '../components/markets/marketsView.ts';
 import { pageStateOf, useMarketsOverview } from '../api/hooks.ts';
@@ -135,22 +143,6 @@ export function tickerFrameOf(
  * Ce n'est pas un calcul financier : aucune quantité de marché n'est dérivée,
  * seul un instant déjà servi change de représentation.
  */
-export function servedClockOf(asOf: string | null | undefined): string | null {
-  if (asOf === null || asOf === undefined || asOf === '') {
-    return null;
-  }
-  const instant = new Date(asOf);
-  if (Number.isNaN(instant.getTime())) {
-    return null;
-  }
-  const deuxChiffres = (valeur: number): string => String(valeur).padStart(2, '0');
-  const jour = deuxChiffres(instant.getUTCDate());
-  const mois = deuxChiffres(instant.getUTCMonth() + 1);
-  const annee = String(instant.getUTCFullYear()).padStart(4, '0');
-  const heures = deuxChiffres(instant.getUTCHours());
-  const minutes = deuxChiffres(instant.getUTCMinutes());
-  return `${jour}/${mois}/${annee} ${heures}:${minutes} UTC`;
-}
 
 export function ShellTicker() {
   const query = useMarketsOverview();

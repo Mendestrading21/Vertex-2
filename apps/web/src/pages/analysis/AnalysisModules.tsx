@@ -8,6 +8,7 @@ import { Card } from '../../components/Card.tsx';
 import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { Metric } from '../../components/Metric.tsx';
 import { ModuleStatus } from '../../components/ModuleStatus.tsx';
+import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { AgendaLine } from '../../components/calendar/AgendaLine.tsx';
 import { Sparkline } from '../../components/markets/Sparkline.tsx';
 import type { FlatTicker } from '../../components/markets/marketsView.ts';
@@ -426,6 +427,16 @@ export function PeersModule({ instrument }: { readonly instrument: string }) {
       kicker="Observé"
       title={module.title}
       titleId="vx-analysis-peers-title"
+      /*
+        LE REGROUPEMENT EST NOMMÉ, PAS SOUS-ENTENDU. La carte s'appelle
+        « Pairs du secteur » et listait 56 instruments alors qu'AUCUN secteur
+        n'est déclaré : le snapshot sert « Secteur non déclaré » pour tous, et
+        « pairs du même secteur » désignait donc l'univers entier. La branche
+        vide le disait déjà (« Seul instrument couvert dans … ») ; la branche
+        pleine le tait. Le libellé servi s'affiche donc à côté du titre, sans
+        rien masquer de la liste.
+      */
+      {...(entry === null ? {} : { aside: <StatusChip label={entry.sectorLabel} tone="neutral" /> })}
       footer={<>rendement 1 j du snapshot Marchés · <Link to="/markets">voir Marchés</Link></>}
     >
       <ModuleStatus state={state} />
