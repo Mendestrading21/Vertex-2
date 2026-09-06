@@ -328,7 +328,17 @@ export function PortfolioPage() {
         <DataStateBoundary state="error" detail="Réponse absente — rien n'est affiché à la place." />
       ) : (
         <>
-          <SyntheticBanner population={frame.view?.markPopulation ?? null} />
+          {/*
+            LE BANDEAU NE PARLE QUE S'IL A QUELQUE CHOSE À DIRE. Avec un
+            portefeuille vide, `markPopulation` est absent : on passait `null`,
+            et `SyntheticBanner` criait « NATURE NON DÉCLARÉE » en rouge — une
+            alerte sur une valorisation qui n'existe pas, alors que chaque
+            carte dit déjà proprement son absence. Les quatre autres pages qui
+            traitent ce cas ne rendent le bandeau que sur une vue présente.
+          */}
+          {frame.view?.markPopulation == null ? null : (
+            <SyntheticBanner population={frame.view.markPopulation} />
+          )}
           <PortfolioBoard data={data} frame={frame} onWrite={refetchPortfolio} />
         </>
       )}

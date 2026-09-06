@@ -99,7 +99,19 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
         </span>
         <StatusChip
           label={quality === '' ? '' : quality}
-          tone={quality === 'OK' ? 'neutral' : 'warning'}
+          /*
+            LE VOCABULAIRE SERVI EST `VALID`, PAS `OK`. Mesuré le 2026-09-06 :
+            `/api/v1/markets/overview` rend `quality: "VALID"` sur les 57
+            instruments, et cette tuile les peignait donc TOUS en ambre — une
+            alerte permanente qui n'alerte plus de rien. La page Options tient
+            déjà la bonne convention au même endroit du contrat
+            (`OptionsPage.tsx`, `group.quality === 'VALID'`).
+            `OK` reste accepté : deux vocabulaires ont coexisté, et retirer le
+            second ferait revenir l'ambre partout si une route l'emploie
+            encore. Tout le reste — y compris une qualité NON SERVIE — garde
+            l'ambre : fail-closed, on ne peint pas en neutre ce qu'on ignore.
+          */
+          tone={quality === 'VALID' || quality === 'OK' ? 'neutral' : 'warning'}
         />
       </p>
 

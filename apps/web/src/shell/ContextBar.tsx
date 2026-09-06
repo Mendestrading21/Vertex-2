@@ -29,13 +29,23 @@ function isPageHandle(handle: unknown): handle is PageHandle {
 
 /**
  * Libellés d'état de session — uniquement des faits observés sur l'API :
- * `unknown` tant qu'aucune réponse n'a été vue (jamais un état deviné),
- * puis « Connecté » / « Non connecté » selon les réponses réelles.
+ * `unknown` tant qu'aucune réponse n'a été vue (jamais un état deviné), puis
+ * ce que le navigateur a RÉELLEMENT observé.
+ *
+ * CE QUE CE LIBELLÉ PEUT DIRE, ET CE QU'IL NE PEUT PAS. Le client passe à
+ * `authenticated` quand une route protégée répond 200 (`api/client.ts`). Il
+ * n'a jamais vu de session : il a vu un serveur qui accepte. Or ce poste
+ * tourne avec le contournement local déclaré (`VERTEX_AUTH_OPEN_LOCAL`), où
+ * l'API répond 200 SANS session — et la barre affichait « Connecté » avec sa
+ * pastille verte, ce qui était faux. Mesuré le 2026-09-06.
+ *
+ * « Accès accordé » est vrai dans les DEUX configurations : avec passkey
+ * comme avec le contournement, c'est exactement ce que le navigateur sait.
  */
 const SESSION_LABELS: Readonly<Record<SessionState, string>> = {
   unknown: 'Session non vérifiée',
-  authenticated: 'Connecté',
-  unauthenticated: 'Non connecté',
+  authenticated: 'Accès accordé',
+  unauthenticated: 'Accès refusé',
 };
 
 /**

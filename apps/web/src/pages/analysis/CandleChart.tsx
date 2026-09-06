@@ -164,8 +164,18 @@ export function CandleChart({ bars, description }: CandleChartProps) {
       <p className="vx-visually-hidden">{description}</p>
       <div ref={containerRef} className="vx-candles-canvas" data-testid="candles-canvas" />
       <figcaption className="vx-candles-caption">
-        Chandeliers OHLC + volume (60 barres serveur, aucun overlay). La table OHLCV ci-dessous
-        contient exactement les mêmes valeurs.{' '}
+        {/*
+          DEUX AFFIRMATIONS FAUSSES, CORRIGÉES ENSEMBLE (2026-09-06).
+          « 60 barres serveur » était un littéral : le serveur en publie 252 et
+          la figure les trace toutes. Et « exactement les mêmes valeurs » ne
+          tenait plus sur Graphiques, où l'onglet de période découpe la FIGURE
+          sans découper la table — la table y porte davantage de lignes, pas
+          les mêmes.
+          La légende dit maintenant ce que la figure trace, et ce que la table
+          porte : la série servie complète. Vrai sur les deux pages.
+        */}
+        Chandeliers OHLC + volume ({bars.length} barre(s) tracée(s), aucun overlay). La table OHLCV
+        ci-dessous porte la série servie complète, mêmes valeurs et même source.{' '}
         <span className="vx-candles-attribution">
           Graphique rendu avec Lightweight Charts™ —{' '}
           <a href="https://www.tradingview.com/" rel="noopener noreferrer" target="_blank">
