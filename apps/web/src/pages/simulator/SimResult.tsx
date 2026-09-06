@@ -66,7 +66,13 @@ export function PayoffResult({ result }: { readonly result: SimulationPreviewRes
           maxGain={result.max_gain_on_grid}
           maxLoss={result.max_loss_on_grid}
         />
-        <p className="vx-sim-defined-risk">
+        {/*
+          `div` ET NON `p` : la liste des breakevens est un `ul`, et un `ul`
+          dans un `p` est du HTML invalide — le navigateur ferme le paragraphe
+          avant la liste, ce qui casse silencieusement la structure que le
+          lecteur d'écran annonce. Le style tient à la classe, pas à la balise.
+        */}
+        <div className="vx-sim-defined-risk">
           Breakevens certifiés :{' '}
           {result.breakevens.length === 0 ? (
             'aucun sur le domaine évalué'
@@ -81,7 +87,7 @@ export function PayoffResult({ result }: { readonly result: SimulationPreviewRes
               ))}
             </ul>
           )}
-        </p>
+        </div>
         <div className="vx-ohlcv-scroll" tabIndex={0} role="region" aria-label="Points de P&L défilants">
           <table className="vx-sim-points" aria-label="Points de P&L à l'expiration (valeurs serveur exactes)">
             <thead>

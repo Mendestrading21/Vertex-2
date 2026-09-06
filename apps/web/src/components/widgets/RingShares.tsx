@@ -191,7 +191,15 @@ export function RingShares({
           <thead>
             <tr>
               <th scope="col">Part servie</th>
-              <th scope="col">Pourcentage servi</th>
+              {/*
+                L'EN-TÊTE SUIT CE QUI EST SERVI. Ce composant accepte une part
+                en POURCENTAGE (`pct`) ou en RATIO 0–1 (`ratio`) — la
+                concentration du Portefeuille lui passe des ratios — et la
+                colonne annonçait « Pourcentage servi » dans les deux cas.
+                Une part de 0.42 lue sous cet en-tête se lit 0,42 % au lieu de
+                42 %. On nomme donc l'unité réellement présente.
+              */}
+              <th scope="col">{parts.some((part) => part.ratio !== undefined) ? 'Ratio servi (0 à 1)' : 'Pourcentage servi'}</th>
             </tr>
           </thead>
           <tbody>

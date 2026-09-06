@@ -263,26 +263,46 @@ function MarketsFrame({
           <span className="vx-legend-note">Filtre local d'affichage — aucune valeur modifiée.</span>
         </div>
 
-        {/* 4. WidgetBody : dominante treemap */}
-        <MarketMap
-          sectors={data.sectors}
-          visibleGroups={visibleGroups}
-          description={description}
-          onSelect={onSelect}
-        />
+        {/*
+          4. WidgetBody : dominante treemap — ou la phrase qui dit pourquoi
+          elle n'est pas là.
 
-        {/* 5. WidgetConclusion : phrase factuelle serveur, verbatim */}
-        <p className="vx-chartframe-conclusion" data-testid="markets-conclusion">
-          {data.conclusion ?? 'Aucune conclusion publiée.'}
-        </p>
+          DÉCOCHER LES TROIS PUCES VIDAIT TOUT EN SILENCE : la carte rendait un
+          canevas blanc de 360 px, la table un corps sans lignes, et la légende
+          continuait d'affirmer « la table ci-dessous contient exactement les
+          mêmes valeurs ». Un filtre local qui ne retient rien n'est pas une
+          absence de donnée — il faut le DIRE, sinon l'écran ressemble à une
+          panne. L'export CSV suit : il n'a plus rien à exporter, et la phrase
+          l'explique.
+        */}
+        {visibleEntries.length === 0 ? (
+          <p className="vx-module-sentence" role="status" data-testid="markets-filter-empty">
+            Aucun groupe affiché — les trois puces de la légende sont décochées.
+            La donnée servie est intacte : recocher une puce la fait revenir.
+          </p>
+        ) : (
+          <>
+            <MarketMap
+              sectors={data.sectors}
+              visibleGroups={visibleGroups}
+              description={description}
+              onSelect={onSelect}
+            />
 
-        {/* Table accessible équivalente (mêmes valeurs, tri clavier, sélection). */}
-        <MarketsTable
-          entries={visibleEntries}
-          population={data.population}
-          selected={selected}
-          onSelect={onSelect}
-        />
+            {/* 5. WidgetConclusion : phrase factuelle serveur, verbatim */}
+            <p className="vx-chartframe-conclusion" data-testid="markets-conclusion">
+              {data.conclusion ?? 'Aucune conclusion publiée.'}
+            </p>
+
+            {/* Table accessible équivalente (mêmes valeurs, tri clavier, sélection). */}
+            <MarketsTable
+              entries={visibleEntries}
+              population={data.population}
+              selected={selected}
+              onSelect={onSelect}
+            />
+          </>
+        )}
       </DataStateBoundary>
 
       {/* 6. WidgetFooter : méthode/calcul, version, limites et hypothèses */}

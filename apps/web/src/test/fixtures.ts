@@ -684,7 +684,8 @@ export function makeAnalysis(overrides: Partial<AnalysisResponse> = {}): Analysi
       clusters_total: 0,
       clusters: [],
     },
-    scenarios: { status: 'ABSENT', reason: 'no_healthy_contract' },
+    // Code réellement publié par `vertex_worker/analysis.py`.
+    scenarios: { status: 'ABSENT', reason: 'no_healthy_option_contract' },
     advice: makeAnalysisAdvice(),
     coverage: { observations_considered: 1, rejected_records: [], lookback_seconds: 259200 },
     reason: null,

@@ -271,8 +271,11 @@ describe('Page Analyse — état nominal', () => {
     await renderAnalysis();
     await screen.findByText(/Aucun cluster pertinent/);
     const absent = await screen.findByTestId('scenarios-absent');
-    expect(absent.textContent).toBe(scenarioAbsentLabel('no_healthy_contract'));
-    expect(absent.textContent).toContain('no_healthy_contract');
+    // Le code servi est traduit — il ne sortait jamais tant que le
+    // dictionnaire portait une clé que le worker ne publie pas.
+    expect(absent.textContent).toBe(scenarioAbsentLabel('no_healthy_option_contract'));
+    expect(absent.textContent).toContain('no_healthy_option_contract');
+    expect(absent.textContent).toContain('aucun contrat sain');
     expect(absent.textContent).toContain('aucun contrat sain');
   });
 });

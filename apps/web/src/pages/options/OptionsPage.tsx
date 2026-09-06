@@ -131,7 +131,18 @@ function UnderlyingPicker({ current }: { readonly current: string | null }) {
       <summary>
         Sous-jacent : <code>{current}</code>
         <span className="vx-underlying-fold-count">
-          {autres === 0 ? '· aucun autre publié' : `· ${autres} autre(s) publié(s)`}
+          {/*
+            « AUCUN AUTRE PUBLIÉ » EST UNE AFFIRMATION, PAS UN REPLI. Le compte
+            vient de la vue Marchés : tant qu'elle charge, échoue ou n'a rien
+            servi, `instruments` est vide et le résumé replié affirmait qu'il
+            n'existe aucun autre sous-jacent. La liste dépliée, elle, disait
+            déjà honnêtement son état — les deux se contredisaient.
+          */}
+          {state === 'ready' || state === 'refreshing'
+            ? autres === 0
+              ? '· aucun autre publié'
+              : `· ${autres} autre(s) publié(s)`
+            : '· autres sous-jacents non chargés'}
         </span>
       </summary>
       {liste}
