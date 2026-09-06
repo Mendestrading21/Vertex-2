@@ -1,5 +1,58 @@
 import { cleanup, configure } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
+
+/**
+ * LES MOTEURS DE GRAPHIQUE SONT DOUBLÉS POUR TOUTE LA SUITE.
+ *
+ * MESURÉ EN CI LE 2026-09-06 : 1 197 tests verts, et pourtant le travail web
+ * ROUGE — « Vitest caught 1 unhandled error ». La trace vient de
+ * `lightweight-charts` : `ChartWidget._private__drawImpl` appelé depuis une
+ * `requestAnimationFrame` de jsdom APRÈS que le graphique a été retiré, donc
+ * `ensureNotNull` sur un axe déjà détruit. Vitest l'attribue au fichier qui
+ * s'exécutait à cet instant, pas à celui qui a créé le graphique : le rapport
+ * accusait `AiExplanationPanel.test.tsx`, qui n'a pas de graphique.
+ *
+ * POURQUOI ICI ET NON DANS TROIS FICHIERS. Trois fichiers de page déclaraient
+ * déjà leur propre double ; il en restait deux qui montent l'application
+ * ENTIÈRE (le routeur, donc la page Analyse et ses chandeliers) sans doubler
+ * quoi que ce soit. Ajouter le double au cas par cas laisse la porte ouverte
+ * au prochain fichier qui montera l'application. Le double vit donc une seule
+ * fois, pour toute la suite.
+ *
+ * CE QUE CE DOUBLE N'EST PAS : un contournement d'assertion. Un moteur de
+ * canevas dans jsdom ne dessine RIEN — il n'y a ni contexte 2D, ni mise en
+ * page, ni taille. Aucun test ne peut donc rien vérifier du rendu graphique ;
+ * ce que les tests vérifient est notre propre balisage (cadre, légende,
+ * description accessible, table équivalente), et il est rendu à l'identique.
+ * Le rendu graphique réel est vérifié là où il existe : par les parcours
+ * Playwright sur Chromium.
+ *
+ * Un fichier qui a besoin d'observer les appels (`setData`, `remove`) déclare
+ * son propre `vi.mock` : la déclaration du fichier l'emporte sur celle-ci.
+ */
+vi.mock('../charts/lightweightChartsLoader.ts', () => ({
+  CandlestickSeries: { name: 'Candlestick' },
+  HistogramSeries: { name: 'Histogram' },
+  createChart: vi.fn(() => ({
+    addSeries: vi.fn(() => ({ setData: vi.fn() })),
+    priceScale: vi.fn(() => ({ applyOptions: vi.fn() })),
+    timeScale: vi.fn(() => ({ fitContent: vi.fn() })),
+    remove: vi.fn(),
+  })),
+}));
+
+vi.mock('../charts/echartsLoader.ts', () => ({
+  echarts: {
+    init: vi.fn(() => ({
+      setOption: vi.fn(),
+      resize: vi.fn(),
+      dispose: vi.fn(),
+      on: vi.fn(),
+      off: vi.fn(),
+      getZr: vi.fn(() => ({ on: vi.fn(), off: vi.fn() })),
+    })),
+  },
+}));
 
 /**
  * REFONTE UI 2026-09-05 — LE PREMIER TEST D'UNE PAGE PERDAIT LA COURSE.
