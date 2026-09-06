@@ -826,7 +826,7 @@ moteur se comporte comme la règle l'exige : sans fait, pas d'avis. Mais la
 fonction d'avis n'est PAS opérable tant que ces faits ne sont pas produits.
 C'est le prochain grand chantier de données, pas un défaut de code.
 
-### Croissance non bornée du journal des snapshots — ÉCHÉANCE CALCULÉE
+### Croissance non bornée du journal des snapshots — ÉCHÉANCE ET PART EXACTE
 
 Mesuré : base `vertex` 563 Mo dont `snapshots` 514 Mo, pour 17,7 h de
 fonctionnement (`analysis` 198 Mo / 3 186 versions, `markets_overview` 177 Mo /
@@ -838,14 +838,40 @@ versions publiées est une décision humaine. Ce qui est acquis : la table n'a
 aucune politique de rétention, et `publish_if_changed` inclut `as_of` à
 dessein, donc republie même quand le contenu ne change pas.
 
+**Part exacte des versions non-tête, mesurée le 2026-09-06 à 16:50** (jointure
+`snapshots` × `snapshot_heads` sur `kind` et `key`) :
+
+| Famille | Versions | Contenu | Dont non-tête | Contenu non-tête |
+|---|---|---|---|---|
+| `analysis` | 3 186 | 198 Mo | 3 129 | 195 Mo |
+| `markets_overview` | 14 364 | 177 Mo | 14 363 | 177 Mo |
+| `attention` | 21 142 | 67 Mo | 21 141 | 67 Mo |
+| `review_queue` | 21 144 | 20 Mo | 21 143 | 20 Mo |
+| `opportunities` | 59 | 1,6 Mo | 58 | 1,5 Mo |
+| `capabilities` | 1 | 1,2 ko | 0 | — |
+
+62 têtes courantes portent l'état du produit ; tout le reste est historique.
+**99,8 % du contenu stocké est du non-tête.** Une rétention par ÂGE ne
+libérerait rien aujourd'hui (tout a moins de 24 h) : seule une rétention par
+NOMBRE de versions par `(kind, key)` mord. Le `content_hash` est distinct à
+chaque version — `as_of` est dans le contenu, délibérément — donc aucune
+déduplication par contenu n'est possible sans changer ce contrat.
+
+Trois options, aucune choisie : garder la tête seule (libère environ 460 Mo
+tout de suite), garder les N dernières versions par clé, ou déplacer
+l'historique vers une table froide. Toutes demandent une décision humaine et,
+pour la première, l'acceptation de perdre la relecture d'un état passé.
+
 ### Cinq finitions retenues, aucune urgente
 
 - ~~Le résumé de collecte de dépêches affiche `erreurs=0`~~ — **CORRIGÉ** :
   `tools/run_edge_news.py` compte `muets`, les appels rendus sans aucune
   dépêche (`INSUFFICIENT_DATA`).
-- Les enveloppes brutes `ibkr.bars/1` sont réinsérées à chaque cycle (969
-  lignes pour 59 contenus distincts) : l'identité de l'enveloppe est un
-  `uuid4` là où les deux dérivées ont déjà une identité déterministe.
+- ~~Les enveloppes brutes `ibkr.bars/1` sont réinsérées à chaque cycle~~ —
+  **CORRIGÉ** : identité stable `ibkr:bars:<con_id>:<taille>:<série>:<rth>:
+  <premier jour>:<dernier jour>`, donc le puits idempotent fait son travail.
+  Une réponse VIDE garde son identifiant ponctuel : deux silences ne sont pas
+  la même observation (trois tests).
 - ~~La boucle d'ingestion annonce « toutes les 30 min »~~ — **CORRIGÉ** : le
   libellé de `ingest-loop.ps1` et le runbook disent « pause », avec la mesure
   (une passe toutes les 58 min environ un dimanche).

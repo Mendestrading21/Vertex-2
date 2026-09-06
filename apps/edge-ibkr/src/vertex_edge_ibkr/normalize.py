@@ -61,6 +61,7 @@ __all__ = [
     "daily_bars_payload_from_bars",
     "daily_quote_envelopes",
     "daily_quotes_from_bars",
+    "raw_bars_event_id",
 ]
 
 #: Une barre `TRADES` d'IBKR n'est pas ajustée des dividendes et des splits.
@@ -265,6 +266,34 @@ def daily_bars_event_id(con_id: int | None, premier_jour: str, dernier_jour: str
     et le consommateur gardera le plus recent.
     """
     return f"ibkr:daily-bars:{con_id}:{premier_jour}:{dernier_jour}"
+
+
+def raw_bars_event_id(
+    con_id: int | None,
+    bar_size: str,
+    what_to_show: str,
+    use_rth: bool,
+    premier_jour: str,
+    dernier_jour: str,
+) -> str:
+    """Identite STABLE de l'enveloppe BRUTE de barres.
+
+    MESURE DU 2026-09-06 sur la base reelle : 969 lignes `ibkr.bars/1` pour
+    59 contenus distincts. Les deux enveloppes DERIVEES avaient deja une
+    identite deterministe et ne dupliquaient rien ; la brute, elle, recevait
+    un `uuid4`, donc chaque passe de la boucle reecrivait les memes 60 barres
+    sous une identite neuve. Le puits est idempotent SUR `event_id`
+    (`INSERT .. ON CONFLICT DO NOTHING`) : une identite tiree au sort le rend
+    inoperant.
+
+    Ce qui compose l'identite, et pourquoi : le CONTRAT demande
+    (`con_id`, taille de barre, serie affichee, seance reguliere ou non) et la
+    FENETRE couverte. Deux demandes differentes restent deux observations
+    differentes ; la meme demande sur la meme fenetre est la meme observation,
+    et elle ne s'ecrit qu'une fois.
+    """
+    rth = "rth" if use_rth else "all"
+    return f"ibkr:bars:{con_id}:{bar_size}:{what_to_show}:{rth}:{premier_jour}:{dernier_jour}"
 
 
 def daily_bars_payload_from_bars(bars: BarsPayload, spec: ContractSpec) -> BarsNormalizationResult:
