@@ -5,7 +5,7 @@ import { useCalendar } from '../../api/decisionApi.ts';
 import { AbsentCell } from '../../components/absence.tsx';
 import { pageStateOf, useMarketsOverview, useSecFundamentals } from '../../api/hooks.ts';
 import { Card } from '../../components/Card.tsx';
-import { FreshnessBadge } from '../../components/FreshnessBadge.tsx';
+import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { Metric } from '../../components/Metric.tsx';
 import { ModuleStatus } from '../../components/ModuleStatus.tsx';
 import { AgendaLine } from '../../components/calendar/AgendaLine.tsx';
@@ -93,7 +93,19 @@ export function InstrumentHeaderModule({
           <p className="vx-ih-sector">{entry === null ? 'secteur non publié par Marchés' : entry.sectorLabel}</p>
         </div>
         <div className="vx-iw-fresh">
-          <FreshnessBadge ageSeconds={data.age_seconds} sourceLabel="dossier" />
+          {/*
+            L'ÉCHELLE EST SERVIE, ELLE DOIT ÊTRE DITE. « il y a 4 h » ne se
+            juge pas sans son budget : le même âge est frais pour une barre
+            quotidienne et périmé pour une cotation. `freshness_policy` est
+            publié par l'enveloppe et n'était pas transmis ; `policyProps`
+            rend `{}` si la politique manque, donc l'échelle est tue plutôt
+            qu'inventée.
+          */}
+          <FreshnessBadge
+            ageSeconds={data.age_seconds}
+            {...policyProps(data.freshness_policy)}
+            sourceLabel="dossier"
+          />
         </div>
       </header>
 

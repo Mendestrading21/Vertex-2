@@ -5,7 +5,7 @@ import { pageStateOf, useAnalysis, useMarketsOverview } from '../../api/hooks.ts
 import { analysisStateOf, barsViewOf } from '../../pages/analysis/analysisView.ts';
 import { focusInstrumentsOf } from '../../pages/focusView.ts';
 import { opportunitiesFrameStateOf } from '../../pages/opportunities/opportunitiesView.ts';
-import { FreshnessBadge } from '../FreshnessBadge.tsx';
+import { FreshnessBadge, policyProps } from '../FreshnessBadge.tsx';
 import { Sparkline } from '../markets/Sparkline.tsx';
 import type { FlatTicker } from '../markets/marketsView.ts';
 import { GROUP_LABELS_FR, displayNumber, displayPercent, signSymbolOf } from '../markets/marketsView.ts';
@@ -63,7 +63,13 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
         </div>
         <div className="vx-iw-fresh">
           {data !== undefined && (state === 'ready' || state === 'refreshing' || state === 'stale' || state === 'delayed' || state === 'partial') ? (
-            <FreshnessBadge ageSeconds={data.age_seconds} sourceLabel="dossier" />
+            /* L'échelle servie voyage avec l'âge : sans budget, « il y a 4 h »
+               ne se juge pas. `policyProps` rend `{}` si elle manque. */
+            <FreshnessBadge
+              ageSeconds={data.age_seconds}
+              {...policyProps(data.freshness_policy)}
+              sourceLabel="dossier"
+            />
           ) : (
             <span className="vx-iw-state" data-state={state}>
               {state === 'ready' || state === 'refreshing' ? '' : MODULE_STATE_LABELS[state]}

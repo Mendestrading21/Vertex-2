@@ -51,6 +51,13 @@ export interface BarsView {
   readonly lastClose: string | null;
   readonly quality: string | null;
   readonly fresh: boolean | null;
+  /**
+   * Âge de la SÉRIE, publié par le worker — à ne pas confondre avec l'âge du
+   * DOSSIER porté par l'enveloppe. Les deux diffèrent d'un ordre de grandeur
+   * (mesuré le 2026-09-06 : dossier 4 h, série 2 j 11 h), et l'écran citait le
+   * mauvais pour justifier une péremption.
+   */
+  readonly ageSeconds: number | null;
   readonly sourceEventId: string | null;
   readonly observedAsOf: string | null;
   readonly discardedCount: number;
@@ -102,6 +109,7 @@ export function barsViewOf(data: AnalysisResponse): BarsView | null {
     lastClose: blockString(block, 'last_close'),
     quality: blockString(block, 'quality'),
     fresh: blockBool(block, 'fresh'),
+    ageSeconds: blockInt(block, 'age_seconds'),
     sourceEventId: blockString(block, 'source_event_id'),
     observedAsOf: blockString(block, 'observed_as_of'),
     discardedCount: Array.isArray(discarded) ? discarded.length : 0,

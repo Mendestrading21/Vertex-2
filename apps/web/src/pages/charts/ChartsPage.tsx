@@ -28,7 +28,7 @@ import { useDeclaredInstruments } from '../devUniverse.ts';
 import { absentModules, chartsModule, comparisonViewOf } from './chartsView.ts';
 import { pageAccentAttrs } from '../../components/widgets/pageAccent.ts';
 import { MethodNote } from '../../components/widgets/MethodNote.tsx';
-import { moduleStateOf } from '../../components/moduleState.ts';
+import type { ModuleState } from '../../components/moduleState.ts';
 import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
@@ -135,7 +135,18 @@ function ChartsFrame({
   const mainModule = chartsModule('main-chart');
   const detail =
     state === 'stale'
-      ? `Snapshot publié périmé par le relais (âge publié ${publishedOr(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
+      ? /*
+           NE PAS IMPUTER AU RELAIS CE QUE LE WORKER A DÉCLARÉ. Cette page
+           écrivait « périmé par le relais » dans TOUS les cas de péremption,
+           avec l'âge du DOSSIER. Or le cas courant est l'autre : le worker
+           publie la série comme non fraîche (`fresh = false`) alors que le
+           dossier, lui, est frais. Mesuré le 2026-09-06 : dossier 4 h, série
+           2 j 11 h. Analyse distingue déjà les deux ; Graphiques le fait
+           maintenant aussi, en nommant le propriétaire de chaque nombre.
+        */
+        data.state === 'stale'
+        ? `Snapshot publié périmé par le relais (âge publié ${publishedOr(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
+        : `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié de la série ${publishedOr(bars?.ageSeconds ?? null)} s (âge du dossier ${publishedOr(data.age_seconds)} s).`
       : state === 'partial'
         ? 'Série publiée avec des barres écartées par le worker : la couverture ci-dessus dit lesquelles.'
         : state === 'delayed'
@@ -364,8 +375,17 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
     affichait comme frais, et seul le bandeau de page disait la vérité — or un
     lecteur qui regarde une carte ne regarde pas le bandeau.
   */
-  const etatServi = moduleStateOf('ready', data);
   const state = analysisStateOf(queryState, data);
+  /*
+    ET IL DOIT PORTER LA FRAÎCHEUR DE LA SÉRIE, PAS SEULEMENT CELLE DE
+    L'ENVELOPPE. `moduleStateOf('ready', data)` ne lisait que l'état du relais :
+    quand le worker publie la série non fraîche (`bars.fresh === false`) alors
+    que le dossier est frais — le cas courant hors séance — les six cartes de
+    cette page s'affichaient en « prêt ». `analysisStateOf` lit les deux, et
+    c'est déjà lui qui décide de la page. Une seule vérité pour la page et pour
+    ses cartes.
+  */
+  const etatServi: ModuleState = state;
   const bars = useMemo(() => (data === undefined ? null : barsViewOf(data)), [data]);
   const [fenetre, setFenetre] = useState<string>('all');
 

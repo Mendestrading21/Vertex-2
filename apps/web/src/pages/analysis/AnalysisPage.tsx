@@ -166,7 +166,15 @@ function AnalysisFrame({
       : state === 'stale'
         ? data.state === 'stale'
           ? `Dossier publié périmé par le relais : ${data.reason ?? 'raison non publiée'} ; âge publié ${data.age_seconds ?? 'non'} s.`
-          : `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié ${data.age_seconds ?? 'non'} s.`
+          : /*
+               DEUX ÂGES, DEUX PROPRIÉTAIRES. Cette branche parle de la SÉRIE
+               que le worker déclare non fraîche ; elle citait l'âge du
+               DOSSIER, publié par l'enveloppe. Mesuré le 2026-09-06 : dossier
+               4 h, série 2 j 11 h. Le lecteur voyait « 4 h » sous un aveu de
+               péremption et pouvait conclure que le seuil est de quatre heures.
+               Les deux nombres sont désormais nommés.
+             */
+            `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié de la série ${bars?.ageSeconds ?? 'non publié'} s (âge du dossier ${data.age_seconds ?? 'non publié'} s).`
         : state === 'delayed'
           ? 'Population DELAYED publiée par le worker : le dossier est conservé, mais ne décrit pas le marché à cet instant.'
           : undefined;

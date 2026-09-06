@@ -61,5 +61,21 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.{ts,tsx}'],
     css: false,
+    /*
+      LE PLAFOND D'UN TEST DOIT DÉPASSER CELUI D'UNE ATTENTE, SINON IL LE
+      MANGE. `setup.ts` porte le budget d'attente d'un `findBy*` à 4 s, parce
+      qu'un fichier de page monte l'application entière. Or le plafond d'un
+      TEST restait à 5 s, celui de Vitest par défaut : un test qui attend deux
+      rendus successifs — monter la page, puis « Calculer » — dépassait donc
+      les 5 s dès que la machine était chargée, et six tests du Simulateur
+      échouaient EXACTEMENT à 5,0 s en suite complète alors qu'ils passent
+      isolément (mesuré trois fois le 2026-09-06, avec la pile live en marche).
+
+      15 s N'AFFAIBLIT AUCUNE ASSERTION : un test dont l'attente n'est jamais
+      satisfaite échoue toujours, simplement plus tard. Ce qui disparaît, c'est
+      la panne qui dépend de la charge de la machine — un rouge qui ne dit rien
+      du produit.
+    */
+    testTimeout: 15_000,
   },
 });
