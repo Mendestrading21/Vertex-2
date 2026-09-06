@@ -797,3 +797,72 @@ chemin de fraîcheur avec un lot de démarrage.
   est reproduite en base de test, pas rejouée sur `vertex_live` ; la
   présence de lignes `ibkr.news-headline/1` en base vivante n'a pas été
   interrogée ; fusion avec L1 (PR #32) non testée sur branche combinée.
+
+## Trouvé sur la pile EN DIRECT (2026-09-06, balayage de sept surfaces)
+
+Méthode : la pile live de ce poste (API 8000, interface 4173, worker,
+ingestion IBKR, base `vertex` réelle) sondée surface par surface en lecture
+seule, chaque constat rejoué par un sceptique chargé de le RÉFUTER. Vingt-deux
+constats levés, quinze réfutés, sept retenus — tous mineurs. Ce qui suit est ce
+qui reste vrai après réfutation ; rien n'est corrigé ici.
+
+### Rien de bloquant, et ce que cela veut dire
+
+Aucun 5xx sur les dix-huit routes GET (pire temps 58 ms), aucune enveloppe sans
+provenance, aucun état `empty` servi sans absence correspondante en base,
+outbox à 100 % `DONE`, API et interface et PostgreSQL en boucle locale seule,
+aucun secret dans 8,9 Mo de journaux, aucune route de compte, position, ordre
+ou exécution IBKR dans l'OpenAPI. Le miroir exécuté est identique au dépôt sur
+tout l'arbre (`diff -rq`, 0 écart).
+
+### Le verdict est BLOCKED sur 57/57 instruments, et c'est le fail-closed
+
+Sept gates sur dix ferment en `UNEVALUABLE` — `entitlements_sufficient`,
+`session_and_event_known`, `minimum_liquidity`, `calculations_valid`,
+`critical_contradictions_resolved`, `user_constraints_versioned` — parce que
+personne ne collecte encore les faits qui les alimentent ; une huitième ferme
+en `STALE_SNAPSHOT` (dernière clôture vendredi, mesure prise un dimanche). Le
+moteur se comporte comme la règle l'exige : sans fait, pas d'avis. Mais la
+fonction d'avis n'est PAS opérable tant que ces faits ne sont pas produits.
+C'est le prochain grand chantier de données, pas un défaut de code.
+
+### Croissance non bornée du journal des snapshots — ÉCHÉANCE CALCULÉE
+
+Mesuré : base `vertex` 563 Mo dont `snapshots` 514 Mo, pour 17,7 h de
+fonctionnement (`analysis` 198 Mo / 3 186 versions, `markets_overview` 177 Mo /
+14 364, `attention` 67 Mo / 21 085, `review_queue` 20 Mo / 21 087). Régime
+observé : environ 700 Mo par jour, dont une part de rattrapage initial. Le
+disque C: est à 97 % (19 Go libres) : à ce rythme l'échéance est de l'ordre de
+trois à quatre semaines. Aucune purge n'est décidée ici — supprimer des
+versions publiées est une décision humaine. Ce qui est acquis : la table n'a
+aucune politique de rétention, et `publish_if_changed` inclut `as_of` à
+dessein, donc republie même quand le contenu ne change pas.
+
+### Cinq finitions retenues, aucune urgente
+
+- Le résumé de collecte de dépêches affiche `erreurs=0` alors que 272 des 456
+  appels fournisseur d'un cycle ont expiré sans rien rendre : il manque un
+  compteur « muets » distinct dans `tools/run_edge_news.py`.
+- Les enveloppes brutes `ibkr.bars/1` sont réinsérées à chaque cycle (969
+  lignes pour 59 contenus distincts) : l'identité de l'enveloppe est un
+  `uuid4` là où les deux dérivées ont déjà une identité déterministe.
+- La boucle d'ingestion annonce « toutes les 30 min » alors que la pause de
+  30 min s'ajoute à la durée des collecteurs : cadence réelle ≈ 58 min. Le
+  libellé est à corriger, pas le comportement.
+- Aucun en-tête de sécurité HTTP sur l'API ni sur l'interface, et `/docs`,
+  `/redoc`, `/openapi.json` sont servis sans session. Sans effet tant que tout
+  est en boucle locale ; bloquant le jour d'une exposition.
+- Le badge `FRESHNESS` de la file d'attention est un jeton de remplissage :
+  `_relevance_reasons` l'ajoute sans jamais consulter un âge.
+
+### Deux faits que le balayage n'avait pas vus, et que la critique a mesurés
+
+- Onze des quatorze opérations POST n'ont jamais été appelées une seule fois
+  depuis l'installation : la moitié écriture du produit n'est pas exercée en
+  usage réel.
+- Le Simulateur, lui, fonctionne et il est EXACT : contrôlé contre un oracle
+  BSM indépendant sur un call spread 100/110, réponse en 4,3 ms, et aucun
+  compteur de base modifié (lecture seule prouvée avant/après). Sa grille de
+  scénarios publie en revanche dix-sept chiffres significatifs — la précision
+  du float64 du modèle, honnête mais non déclarée comme précision de
+  publication.

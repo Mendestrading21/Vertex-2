@@ -4,7 +4,24 @@
 phase: alimentation_reelle_et_refonte_ui
 lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
 branch: agent/vertex-total-audit-ultimate-polish
-status: pr_76_ouverte_ci_verte_worker_reaper_livre_aucun_merge
+status: pile_live_relancee_verifiee_pr_76_ouverte_aucun_merge
+pile_live_2026_09_06_1453:
+  - "Relance complète (stop-vertex puis start-vertex) sur le code du jour :
+     API 8000, interface 4173 (build reconstruit), worker, ingestion IBKR,
+     PostgreSQL 5432. Cycle d'ingestion OK : TWS client 72 historique 57/57,
+     client 79 dépêches. Aucune capacité compte/position/ordre utilisée."
+  - "Balayage de sept surfaces en lecture seule, chaque constat réfuté par un
+     sceptique : 22 constats, 15 réfutés, 7 retenus, tous mineurs. Détail et
+     échéances dans docs/99-status/DEBT.md (section « pile EN DIRECT »)."
+  - "DEUX POINTS POUR L'HUMAIN : (1) le verdict est BLOCKED sur 57/57 —
+     7 gates ferment en UNEVALUABLE faute de faits collectés (entitlements,
+     session, liquidité, calculs, contradictions, contraintes) : le
+     fail-closed fonctionne, la fonction d'avis n'est pas opérable ;
+     (2) disque C: à 97 % (19 Go libres) et snapshots à 514 Mo pour 17,7 h,
+     soit ~700 Mo/jour sans politique de rétention — échéance de l'ordre de
+     trois à quatre semaines, purge = décision humaine."
+  - "ca8664b : Échap ferme l'inspecteur sur les neuf pages (mesuré manquant
+     sur Marchés en direct), écouteur remonté dans InspectorPanel, 5 tests"
 tour_de_mise_en_place_2026_09_06:
   - "908f502 : le worker récupère les baux expirés avant chaque réclamation
      (18 lignes IN_PROGRESS trouvées bloquées sur la base réelle depuis le
