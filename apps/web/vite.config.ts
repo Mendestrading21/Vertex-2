@@ -19,6 +19,26 @@ const LOCAL_API_PROXY = {
   },
 } as const;
 
+/**
+ * En-têtes de refus par défaut des serveurs LOCAUX (développement et
+ * prévisualisation). Mesuré le 2026-09-06 : l'interface servie ne renvoyait
+ * que `Vary` et `Content-Type`, là où l'API en pose trois depuis le même jour.
+ *
+ * Ces en-têtes n'ont AUCUN rôle en production : ils sont posés par le serveur
+ * qui sert les fichiers, jamais contenus dans le build. Un hébergeur réel
+ * devra les poser lui-même — c'est écrit ici pour que personne ne croie que
+ * le build les porte.
+ *
+ * `frame-ancestors 'none'` seulement : une politique de contenu complète
+ * (`script-src`, `style-src`) se décide avec l'hébergement, pas dans un
+ * serveur de développement, et une politique fausse est pire qu'aucune.
+ */
+const LOCAL_SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'no-referrer',
+  'Content-Security-Policy': "frame-ancestors 'none'",
+} as const;
+
 export default defineConfig({
   plugins: [react()],
   build: {
@@ -30,9 +50,11 @@ export default defineConfig({
       allow: [WEB_ROOT, DESIGN_ASSETS_ROOT],
     },
     proxy: LOCAL_API_PROXY,
+    headers: LOCAL_SECURITY_HEADERS,
   },
   preview: {
     proxy: LOCAL_API_PROXY,
+    headers: LOCAL_SECURITY_HEADERS,
   },
   test: {
     environment: 'jsdom',

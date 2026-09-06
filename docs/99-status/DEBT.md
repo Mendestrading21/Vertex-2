@@ -878,10 +878,13 @@ pour la première, l'acceptation de perdre la relecture d'un état passé.
 - ~~Aucun en-tête de sécurité HTTP sur l'API~~ — **CORRIGÉ** : un middleware
   pose `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` et
   `Content-Security-Policy: frame-ancestors 'none'` sur chaque réponse, refus
-  fail-closed compris (cinq tests). RESTE OUVERT côté interface (le serveur
-  qui sert le build n'en pose aucun) et pour `/docs`, `/redoc`,
-  `/openapi.json` servis sans session : sans effet en boucle locale,
-  à trancher avant toute exposition.
+  fail-closed compris (cinq tests). Les serveurs LOCAUX de l'interface
+  (développement et prévisualisation) posent les trois mêmes, déclarés dans
+  `apps/web/vite.config.ts` — ils ne sont PAS dans le build : un hébergeur
+  réel devra les poser lui-même. RESTE OUVERT : `/docs`, `/redoc` et
+  `/openapi.json` servis sans session, et la politique de contenu complète
+  (`script-src`, `style-src`), qui se décide avec l'hébergement et n'a pas sa
+  place dans un serveur de développement.
 - ~~Le badge `FRESHNESS` de la file d'attention est un jeton de remplissage~~ —
   **CORRIGÉ** : `relevance_reasons` ne nomme que les facteurs appliqués, et
   `NO_POSITIVE_FACTOR` quand aucun ne l'est (trois tests).
