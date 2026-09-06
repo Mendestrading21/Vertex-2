@@ -104,6 +104,7 @@ from vertex_core.calculations.options import (
     OptionInputError,
     OptionLeg,
     scenario_grid,
+    scenario_grid_cell,
 )
 from vertex_core.contracts import CalculationRecord, make_calculation_record
 from vertex_core.contracts.enums import (
@@ -494,6 +495,14 @@ def load_daily_bar_records(
 
 
 def _num_string(value: float) -> str:
+    """Serie numerique publiee telle que le modele l'a produite.
+
+    NE PAS y appliquer le pas de publication de la grille de scenarios : ce
+    formateur sert aussi les rendements, les bandes, les oscillateurs et la
+    comparaison base 100, dont la precision utile n'est PAS celle de la
+    monnaie. Seules les cellules de ``options.scenario_grid`` — des montants —
+    passent par ``scenario_grid_cell``.
+    """
     return format(Decimal(repr(value)), "f")
 
 
@@ -1904,7 +1913,14 @@ def _build_scenarios(
         "spot_grid": [format(point, "f") for point in spot_points],
         "time_grid_years": [_num_string(point) for point in time_points],
         "iv_scenarios": [[_num_string(iv_value)]],
-        "grid": [[[_num_string(cell) for cell in row] for row in scenario] for scenario in grid],
+        # PAS DE PUBLICATION DECLARE PAR LE CALCUL : ces cellules sont des
+        # MONTANTS, et le modele est en float64 avec tolerances. Publier sa
+        # representation brute (dix-sept chiffres) suggerait une exactitude
+        # qu'il n'a pas. Le pas vit avec `scenario_grid` dans vertex_core, donc
+        # l'API du Simulateur et ce dossier publient la meme chose.
+        "grid": [
+            [[scenario_grid_cell(cell) for cell in row] for row in scenario] for scenario in grid
+        ],
         "calculation": _calculation_meta(record),
     }
 

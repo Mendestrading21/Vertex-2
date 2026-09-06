@@ -166,7 +166,7 @@ export function ScenarioGridModule({ result }: { readonly result: SimulationPrev
       kicker="Repricée par le worker, valeur théorique"
       title={module.title}
       titleId="vx-sim-scenarios-title"
-      footer={<>P&amp;L par spot et temps, avant coûts ; volatilité inchangée</>}
+      footer={<>P&amp;L par spot et temps, avant coûts ; publié au centième</>}
     >
       {result === null ? (
         <NoResult testId="sim-scenarios-empty" />
@@ -194,8 +194,19 @@ export function ScenarioGridModule({ result }: { readonly result: SimulationPrev
                     {time}
                   </th>
                   {(grid[timeIndex] ?? []).map((cell, spotIndex) => (
-                    <td key={result.scenario_spot_grid[spotIndex] ?? spotIndex} className="vx-num">
-                      {cell}
+                    /*
+                      MÊME FORMAT QUE PARTOUT AILLEURS. La cellule était rendue
+                      BRUTE — seule table de montants du produit à ne pas passer
+                      par le format servi. À côté d'un « 1'500.00 » certifié,
+                      elle affichait « -479.93893484498733 ». La valeur servie
+                      reste dans `title`, comme pour tout nombre du produit.
+                    */
+                    <td
+                      key={result.scenario_spot_grid[spotIndex] ?? spotIndex}
+                      className="vx-num"
+                      title={cell}
+                    >
+                      {displayNumber(cell)}
                     </td>
                   ))}
                 </tr>

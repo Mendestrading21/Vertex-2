@@ -96,10 +96,14 @@ describe('Page Simulateur — composition (LOT-A5)', () => {
     const dominantes = document.querySelectorAll('.vx-main [data-rank="dominant"]');
     expect(dominantes).toHaveLength(1);
     expect(dominantes[0]?.closest('[data-module]')?.getAttribute('data-module')).toBe('payoff');
-    // Grille de scénarios : temps × spots, chaînes serveur verbatim.
+    // Grille de scénarios : temps × spots, chaînes serveur au format du produit
+    // (la valeur servie reste dans `title`).
     const grille = screen.getByTestId('sim-scenarios');
     expect(within(grille).getAllByRole('row')).toHaveLength(1 + 2);
-    expect(grille.textContent).toContain('-120.5');
+    // Format servi du produit : signe typographique, comme partout ailleurs.
+    // La cellule était la SEULE table de montants rendue brute.
+    expect(grille.textContent).toContain('−120.5');
+    expect(grille.querySelector('td')?.getAttribute('title')).toBe('-120.5');
     expect(grille.textContent).toContain('590.1');
     // Méthode : lignée des calculs et nature des valeurs.
     const methode = screen.getByTestId('sim-method');
