@@ -125,7 +125,14 @@ clé ni secret dans Git, les rapports ou les journaux ; aucun compte créé ;
 aucune exposition publique ; aucune modification hors du dépôt cible et de
 `~/.vertex` (boucle d'ingestion locale).
 
-## 6. Prochaine commande recommandée
+## 6. Suite
+
+Plan de mise en place lot par lot, décisions sur les outils candidats et
+actions humaines indispensables : `docs/VERTEX_PLAN.md`. Branche poussée et
+PR ouverte : https://github.com/Mendestrading21/Vertex-2/pull/76 (fusion
+après relecture humaine, jamais par l'agent).
+
+## 7. Prochaine commande recommandée
 
 Déclarer les trois variables d'options dans `~/.vertex/vertex.env`, relancer
 `~/.vertex/ingest-loop.ps1` un jour de séance, puis lire
