@@ -3557,3 +3557,99 @@ l'identique · mutation CSS : la porte d'aire nommée rougit et nomme `market-ma
 Ces portes lisent la mise en page, pas le sens. Une carte qui tient dans sa
 carte peut rester illisible ; une rangée équilibrée peut être vide de contenu.
 C'est la relecture des captures qui le dit, et elle reste obligatoire.
+
+---
+
+## Nuit du 6 au 7 septembre 2026 — mise en page mesurée sur la pile live
+
+Branche `agent/vertex-total-audit-ultimate-polish`, PR #76. Toutes les mesures
+de cette section viennent d'une sonde Playwright (Edge headless) lancée contre
+la **pile live réelle** — API 8000, build livré 4173, données `REAL` du jour —
+aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
+`1440×900` et `1600×1000` (les trois cibles de release). Le produit est
+**DESKTOP ONLY** : aucune de ces mesures n'introduit de cible mobile.
+
+### Ce que la sonde a trouvé, et ce qui a été corrigé
+
+**1. La carte sectorielle ne se repliait pas.** `.vx-sector-grid` composait ses
+tuiles en `repeat(auto-fill, …)`. Le worker ne publie qu'**un** secteur
+(« Secteur non déclaré », 57/57 couverts) : `auto-fill` créait quand même les
+pistes vides, la tuile restait large de 150/170 px, ses 57 puces s'empilaient
+une par ligne sur 2 180 px de haut, le nom du secteur était tronqué en
+« Secteu… », et les trois quarts droits de la carte étaient vides. `auto-fit`
+réduit les pistes vides à zéro. La règle valait au socle **et** dans les deux
+surcharges de page — c'est la surcharge qui gagnait.
+
+**2. Un libellé servi était amputé à huit caractères.** `.vx-metric-number`
+borne son contenu à 14ch avec une ellipse et garde la valeur entière dans le
+`title` : bon compromis pour un Herfindahl de 28 chiffres. Appliqué à un
+**texte**, il rendait « Secteur … » et « ibkr-tra… » sur la carte Identité
+d'Analyse. Un libellé ainsi coupé n'existe plus qu'au survol — hors d'atteinte
+au clavier — et rien à l'écran ne dit qu'il manque du texte. `isAtomicMeasure`
+départage désormais : une mesure porte des chiffres et aucune espace ; tout le
+reste est un libellé et passe à la ligne, entier. La porte e2e
+`unbroken-measure` ne vise que `.vx-metric-number` et garde son périmètre.
+
+**3. Des cadres réservés à des figures qui n'existent pas.** `L`/`XL`
+s'étirent parce qu'ils portent une figure ; sans donnée servie, la figure n'est
+pas là et la carte gardait la hauteur de sa rangée. Mesuré : 725 px de vide sur
+la comparaison de Graphiques (68 % de la carte), 463 px sur la chronologie de
+Catalyseurs, 249 px sur l'agenda du Calendrier, 144 px sur le payoff du
+Simulateur — soit les **dominantes**, donc le plus visible de chaque page. Une
+dominante étirée porte maintenant sa hauteur de contenu dès lors que son corps
+est une frontière d'état (`.vx-dsb-message`). Après correction, **plus aucun
+module ne porte 90 px de vide intérieur** sur les onze planches.
+
+**4. La barre de contexte imposait un plancher de 850 px.** `flex: 0 0 auto`
+interdisait tout rétrécissement : le groupe de droite additionnait ses libellés
+et ce total devenait un plancher pour toute l'application — d'où le
+défilement horizontal à 1024 qu'a attrapé la CI. L'ordre de compression est
+désormais **déclaré** : le champ de recherche cède le premier (`flex: 0 8 320px`),
+le fil d'Ariane reste entier aux largeurs de release, le groupe d'état ne se
+comprime pas et ne se replie que sous 1280.
+
+**5. Deux rangées vides fermées, une régression réparée.** La porte
+« aucune rangée n'est vide à plus d'un tiers » a rougi sur `/charts` après la
+correction 3 : le trou n'était pas chez la comparaison mais chez les
+superpositions, qui tenaient quatre colonnes et empilaient leurs trois figures
+sur 1 052 px. Elles passent à huit colonnes, les figures se rangent côte à côte.
+Sur `/today`, les instruments suivis prennent la rangée entière : quatre tuiles
+alignées au lieu de deux par deux, et la dette de trou de la page est fermée.
+
+**6. Les absences déclarées se lisent enfin.** Quatre pages fermaient sur une
+rangée de six cartes à 141 px (1440) ou 120 px (1280) : titre sur deux lignes,
+« CONTRAT SERVEUR ABSENT » sur trois, bas de cartes en dents de scie. Ce bloc
+existe pour montrer une **régularité** ; à cette largeur elle ne se voyait plus.
+Risques passe à 3 rangées de 4, Opportunités et Catalyseurs à 2 rangées de 3,
+Graphiques à 4 puis 1.
+
+### Effet mesuré sur la hauteur des pages (données identiques)
+
+| page | avant | 1280 | 1440 | 1600 |
+| --- | --- | --- | --- | --- |
+| Aujourd'hui | 4 982 | 3 752 | 3 259 | 2 989 |
+| Marchés | 5 230 | — | 4 642 | — |
+
+### Exploitation et surveillance
+
+Le chien de garde relance api, worker, interface et boucle d'ingestion quand
+l'un d'eux se tait — il l'a fait le 2026-09-06 à 21:24, l'API étant morte sans
+un mot dans son journal. Mais **rien ne le relançait lui**, et l'arrêt
+coordonné ne l'arrêtait pas : « Arrêter-Vertex » n'arrêtait donc rien de
+durable, le chien redémarrant les services dans la minute. Corrigé des deux
+côtés et vérifié bout en bout : le lanceur le remet en veille s'il manque,
+l'arrêt le stoppe en premier et lui seul.
+
+### Ce qui reste ouvert
+
+- `/catalysts` et `/analysis` gardent chacune une rangée trouée **dans leur
+  dette déclarée** ; sur données réelles vides elles montent à 40 % et 37 %.
+  Leur composition est dimensionnée pour des tables servies, pas pour des
+  absences : la retoucher sur des données vides casserait la mesure CI.
+- `market-map` porte toujours une hauteur fantôme de 2 733 px
+  (`scrollHeight` de `.vx-chartframe`). Le contenu réel défile dans
+  `.vx-markets-table-scroll` et rien n'est perdu à l'écran — dette V4 inchangée.
+- `/options` ne peut pas être auditée sur la pile live : l'API répond
+  `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne. Le comportement
+  fail-closed est correct ; la mise en page de cette page reste couverte par les
+  seules mesures CI sur population `SYNTHETIC`.
