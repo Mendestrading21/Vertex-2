@@ -86,7 +86,7 @@ export function CatalystsModule({ transfer }: { readonly transfer: SimulatorTran
 export function SourcesModule({ transfer }: { readonly transfer: SimulatorTransfer | null }) {
   const module = simulatorModule('sources');
   return (
-    <Card rank="quiet" kicker="Provenance" title={module.title} titleId="vx-sim-sources-title" footer={<>l’état de navigation est perdu au rechargement : le composeur repart vide, jamais avec une intention périmée</>}>
+    <Card rank="quiet" kicker="Provenance" title={module.title} titleId="vx-sim-sources-title" footer={<>perdu au rechargement : le composeur repart vide</>}>
       {transfer !== null ? (
         <p className="vx-sim-transfer" role="status" data-testid="sim-transfer-note">
           Préremplie depuis Options : {transfer.right} <code className="vx-num">{transfer.strike}</code> · {transfer.expiration} ·{' '}

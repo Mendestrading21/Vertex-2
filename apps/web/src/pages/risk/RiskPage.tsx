@@ -133,7 +133,7 @@ function MatrixModule({
           : view.refusalReason
       }
       action={view === null ? undefined : <MatrixStateChip view={view} />}
-      footer={<>rendements quotidiens sur les séances communes ; coefficients et bandes publiés, jamais recalculés ici</>}
+      footer={<>séances communes ; coefficients et bandes publiés</>}
     >
       {view === null || view.serverState === 'empty' ? (
         <p className="vx-module-sentence" role="status">

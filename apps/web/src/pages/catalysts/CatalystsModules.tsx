@@ -97,7 +97,7 @@ export function UpcomingCountModule({
       title={module.title}
       titleId="vx-cat-count-title"
       state={state}
-      footer={<>reliés par le contexte croisé publié ; les non reliés restent sur Calendrier</>}
+      footer={<>contexte croisé publié ; non reliés : Calendrier</>}
     >
       {selection === null ? (
         // La raison serveur n'est écrite qu'UNE fois sur la page : dans la
@@ -127,7 +127,7 @@ export function RevisionsModule({ selection, state }: { readonly selection: Cata
       title={module.title}
       titleId="vx-cat-revisions-title"
       state={state}
-      footer={<>drapeau et détail sont deux champs distincts du snapshot ; aucune direction de révision n’est déduite</>}
+      footer={<>drapeau et détail servis ; aucune direction déduite</>}
     >
       {selection === null ? (
         <SelectionAbsence state={state} />
@@ -330,7 +330,7 @@ export function SourcesFreshnessModule({ selection, state }: { readonly selectio
       title={module.title}
       titleId="vx-cat-sources-title"
       state={state}
-      footer={<>sources et fraîcheur telles que publiées par événement ; aucun délai mesuré ici</>}
+      footer={<>sources et fraîcheur publiées par événement</>}
     >
       {selection === null ? (
         <SelectionAbsence state={state} />
@@ -429,7 +429,7 @@ export function ConflictsModule({ selection, state }: { readonly selection: Cata
       title={module.title}
       titleId="vx-cat-conflicts-title"
       state={state}
-      footer={<>un conflit n’est jamais résolu ici : la version affichée suit l’ordre stable publié</>}
+      footer={<>jamais résolu ici : ordre stable publié</>}
     >
       {selection === null ? (
         <SelectionAbsence state={state} />

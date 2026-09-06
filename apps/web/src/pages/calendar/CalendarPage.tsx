@@ -322,7 +322,7 @@ export function CalendarPage() {
               titleId="vx-cal-window-title"
               state="ready"
               className="vx-cal-window"
-              footer={<>le serveur valide les bornes et borne la profondeur à 90 jours ; aucune borne n’est corrigée par l’interface</>}
+              footer={<>bornes validées par le serveur ; profondeur 90 jours</>}
             >
                 <div className="vx-matrix-filters">
                   <label>

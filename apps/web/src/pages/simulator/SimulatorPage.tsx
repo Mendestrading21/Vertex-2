@@ -205,7 +205,7 @@ export function SimulatorPage() {
             title={`Structure déclarée (${legs.length}/${MAX_LEGS} jambes)`}
             titleId="vx-sim-composer-title"
             className="vx-sim-composer"
-            footer={<>chaînes décimales envoyées verbatim ; le serveur valide et calcule tout</>}
+            footer={<>décimaux verbatim ; le serveur valide et calcule</>}
           >
             <LegsEditor legs={legs} onChange={setLegs} />
             <div className="vx-sim-actions">

@@ -355,7 +355,7 @@ export function CalendarRefModule({
       title={module.title}
       titleId="vx-opp-calref-title"
       className="vx-opp-calref"
-      footer={<>un catalyseur n’est compté que sur un snapshot calendrier USED — jamais deviné</>}
+      footer={<>compté sur un calendrier USED seulement</>}
     >
       <div data-testid="opp-calendar-ref" data-status={status}>
         <p className="vx-opp-calref-status">

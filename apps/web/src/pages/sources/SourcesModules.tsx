@@ -177,7 +177,7 @@ export function VersionsModule({ health, state }: { readonly health: SystemHealt
       title={module.title}
       titleId="vx-src-versions-title"
       state={state}
-      footer={<>versions publiées par le serveur · état du flux SSE observé par le client</>}
+      footer={<>versions serveur · flux SSE observé côté client</>}
     >
       <div className="vx-metrics-row" data-testid="src-versions">
         <Metric label="Attention" value={health.attention_snapshot.present ? `v${health.attention_snapshot.version}` : null} absentLabel="jamais publié" size="compact" testId="src-version-attention" />
@@ -200,7 +200,7 @@ export function ExportsModule({ state }: { readonly state: ModuleState }) {
       title={module.title}
       titleId="vx-src-exports-title"
       state={state}
-      footer={<>fonctions pures d’un snapshot publié · rien n’est généré dans le navigateur</>}
+      footer={<>dérivé d’un snapshot publié, rien de généré ici</>}
     >
       <ul className="vx-inspector-list" data-testid="src-exports">
         <li>

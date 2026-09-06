@@ -122,7 +122,7 @@ export function ExtremesModule({
       titleId="vx-risk-extremes-title"
       state={state}
       {...(served === undefined ? {} : { served })}
-      footer={<>coefficients exacts du serveur ; l’avertissement de synchronicité reste visible</>}
+      footer={<>coefficients exacts du serveur</>}
     >
       {extremes === null ? (
         <p className="vx-module-sentence" role="status" data-testid="risk-extremes-empty">
@@ -356,7 +356,7 @@ export function DiscardsModule({
       titleId="vx-risk-discards-title"
       state={state}
       {...(served === undefined ? {} : { served })}
-      footer={<>un instrument écarté ne devient jamais une colonne vide : il sort avec son motif</>}
+      footer={<>écarté = sorti avec son motif, jamais une colonne vide</>}
     >
       {coverage.discarded.length === 0 ? (
         <p className="vx-module-sentence" role="status" data-testid="risk-discards-empty">

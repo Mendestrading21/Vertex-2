@@ -120,7 +120,7 @@ export function KpiModule({ result }: { readonly result: SimulationPreviewRespon
       kicker="Certifié par le serveur"
       title={module.title}
       titleId="vx-sim-kpi-title"
-      footer={<>extrêmes sur la GRILLE déclarée, jamais sur tout le domaine ; aucune probabilité</>}
+      footer={<>extrêmes sur la grille déclarée ; aucune probabilité</>}
     >
       {result === null ? (
         <NoResult testId="sim-kpi-empty" />
@@ -166,7 +166,7 @@ export function ScenarioGridModule({ result }: { readonly result: SimulationPrev
       kicker="Repricée par le worker, valeur théorique"
       title={module.title}
       titleId="vx-sim-scenarios-title"
-      footer={<>P&amp;L par spot et temps restant, avant coûts déclarés ; volatilité déclarée inchangée</>}
+      footer={<>P&amp;L par spot et temps, avant coûts ; volatilité inchangée</>}
     >
       {result === null ? (
         <NoResult testId="sim-scenarios-empty" />
@@ -231,7 +231,7 @@ export function EchoModule({ result }: { readonly result: SimulationPreviewRespo
     return entries.length === 0 ? 'aucune' : entries.join(', ');
   };
   return (
-    <Card rank="quiet" kicker="Renvoyées par le serveur" title={module.title} titleId="vx-sim-echo-title" footer={<>ce que le serveur a réellement appliqué, pas ce que le formulaire contenait</>}>
+    <Card rank="quiet" kicker="Renvoyées par le serveur" title={module.title} titleId="vx-sim-echo-title" footer={<>appliqué par le serveur, pas saisi</>}>
       {result === null ? (
         <NoResult testId="sim-echo-empty" />
       ) : (
@@ -276,7 +276,7 @@ export function MethodModule({ result }: { readonly result: SimulationPreviewRes
   const module = simulatorModule('method');
   const calculations = result === null ? [] : Object.entries(result.calculations);
   return (
-    <Card rank="quiet" kicker="Lignée des calculs" title={module.title} titleId="vx-sim-method-title" footer={<>rien n’est persisté ; rien ici n’est, ni ne devient, transmissible à un courtier</>}>
+    <Card rank="quiet" kicker="Lignée des calculs" title={module.title} titleId="vx-sim-method-title" footer={<>rien n’est persisté ni transmissible à un courtier</>}>
       {result === null ? (
         <NoResult testId="sim-method-empty" />
       ) : (
