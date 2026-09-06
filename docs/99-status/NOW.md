@@ -4,7 +4,33 @@
 phase: alimentation_reelle_et_refonte_ui
 lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
 branch: agent/vertex-total-audit-ultimate-polish
-status: pile_live_relancee_verifiee_pr_76_ouverte_aucun_merge
+status: pile_live_en_marche_correctifs_verifies_en_direct_pr_76_ouverte_aucun_merge
+corrections_du_2026_09_06_apres_midi:
+  - "Sept correctifs issus du balayage en direct, tous poussés, CI verte à
+     chaque étape : Échap ferme l'inspecteur sur les neuf pages (ca8664b) ;
+     la file d'attention ne prétend plus une fraîcheur non mesurée (63ee5ab) ;
+     le résumé des dépêches compte les appels muets et la boucle dit « pause »
+     et non « cadence » (2605d51, aa8fdfd) ; l'API pose trois en-têtes de
+     refus par défaut sur chaque réponse (60ebeb8) et les serveurs locaux de
+     l'interface aussi (a080475) ; les enveloppes brutes d'historique ont une
+     identité stable (197f82e) ; le contournement d'authentification avoue son
+     coût en écriture (a37e30f)."
+  - "CI web rouge avec 1 197 tests verts : lightweight-charts dessinait depuis
+     une rAF de jsdom après retrait du graphique. Les moteurs sont doublés une
+     seule fois dans la configuration de test commune (4de5bfe)."
+  - "VÉRIFIÉ EN DIRECT sur la pile : badge FRESHNESS disparu de la file
+     republiée à 16:51 ; résumé des dépêches « muets=225 » sur 456 appels à
+     17:14 ; 57 enveloppes brutes écrites sous identité stable
+     (ibkr:bars:<con_id>:<taille>:<série>:<rth>:<premier>:<dernier>) contre
+     1 026 lignes historiques pour 59 contenus. Reste à voir : la passe de
+     17:45 doit en insérer zéro."
+  - "PIÈGE DE POSTE : ne jamais suivre les journaux avec `tail -F` ici. Le
+     tail de Git pour Windows bloque l'écriture concurrente ; il a fait
+     disparaître le journal de la boucle d'ingestion entre 16:21 et 17:14, et
+     a survécu en orphelin à l'arrêt de la tâche. Documenté au runbook."
+  - "MODE DIRECT livré pour l'utilisateur : Vertex.cmd sur le Bureau ouvre une
+     fenêtre d'application sur le port 5174 (rechargement à chaud, mêmes
+     données que la pile réelle) ; le build livré reste sur 4173."
 pile_live_2026_09_06_1453:
   - "Relance complète (stop-vertex puis start-vertex) sur le code du jour :
      API 8000, interface 4173 (build reconstruit), worker, ingestion IBKR,
