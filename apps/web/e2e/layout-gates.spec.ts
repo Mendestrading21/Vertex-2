@@ -81,13 +81,6 @@ const DETTE_CARTE: ReadonlyArray<{
   readonly nature: string;
   readonly lot: string;
 }> = [
-  {
-    route: '/markets',
-    module: 'market-map',
-    nature:
-      'HAUTEUR FANTÔME : la table des marchés défile dans sa propre région (560 px), mais ses en-têtes collants font remonter sa hauteur dans le scrollHeight de la carte — rien n’est coupé à l’écran',
-    lot: 'V4',
-  },
   /*
     VAGUE 2 (2026-09-06) — NEUF DETTES RETIRÉES, parce qu'elles n'existent plus :
     `/today` global-market et calendar, `/calendar` next-event, `/analysis`
@@ -95,13 +88,25 @@ const DETTE_CARTE: ReadonlyArray<{
     total-performance, `/risks` coverage. Mesurées à 0 px de débordement aux
     trois largeurs, population SYNTHETIC comme réelle (57 instruments). Une
     dette qui ne mesure plus rien est une porte qui ne garde plus rien.
+
+    VAGUE 3 (2026-09-07) — LA DERNIÈRE EST FERMÉE, PAS RETIRÉE.
+    `/markets` `market-map` portait une HAUTEUR FANTÔME : le cadre déclarait
+    4 310 px de contenu pour 1 577 px de boîte, alors que la table de 3 441 px
+    défile dans sa propre région bornée à 560 px. Rien n'était coupé à
+    l'écran ; le prix était de MESURE, puisque cette porte lit exactement
+    `scrollHeight - clientHeight` et que la dette la faisait taire sur ce
+    module — un vrai rognage y serait passé inaperçu.
+    La cause est le débordement de MISE EN PAGE de la table, qui remontait
+    jusqu'au cadre faute de confinement déclaré. `.vx-markets-table-scroll`
+    porte désormais `contain: paint` : mesuré sur la pile live, 2 733 px de
+    fantôme -> 0, et aucune des douze routes ne coupe son contenu aux trois
+    largeurs de release.
   */
 ];
 
-/* Cliquet resserré à la vague 2 : une seule dette reste, et elle n'est pas une
-   coupe (voir DETTE_CARTE). Toute nouvelle entrée est une régression à corriger,
-   pas une dette à inscrire. */
-const DETTE_CARTE_MAX = 1;
+/* Cliquet fermé à la vague 3 : PLUS AUCUNE dette de carte. Toute entrée
+   nouvelle est une régression à corriger, jamais une dette à inscrire. */
+const DETTE_CARTE_MAX = 0;
 
 /**
  * DETTE V3a — RANGÉES MAJORITAIREMENT VIDES, par route.

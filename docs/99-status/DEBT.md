@@ -910,3 +910,52 @@ pour la première, l'acceptation de perdre la relecture d'un état passé.
   disait, dans son propre module, que le coût en LECTURE. Il ouvre aussi les
   routes mutantes et fait tomber la garde CSRF avec la session. Le paragraphe
   du module le dit désormais en toutes lettres, avec le geste qui referme.
+
+## Mise en page mesurée sur la pile live — nuit du 6 au 7 septembre 2026
+
+Sonde Playwright (Edge headless) contre la pile live réelle, données `REAL`,
+aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
+`1440×900` et `1600×1000`. Produit **DESKTOP ONLY** : aucune cible mobile.
+
+### Corrigé
+
+- ~~La carte sectorielle rendait 57 puces en colonne sur 2 180 px, le nom du
+  secteur tronqué en « Secteu… », trois quarts de carte vides~~ — **CORRIGÉ** :
+  `auto-fit` au lieu de `auto-fill`, au socle et dans les deux surcharges.
+- ~~Un libellé servi était amputé à huit caractères par la borne réservée aux
+  mesures~~ — **CORRIGÉ** : `isAtomicMeasure` départage mesure et libellé.
+- ~~Quatre dominantes gardaient la hauteur de leur rangée sans figure à
+  porter (725, 463, 249 et 144 px de vide)~~ — **CORRIGÉ** : une dominante dont
+  le corps est une frontière d'état porte sa hauteur de contenu.
+- ~~La barre de contexte imposait un plancher de 850 px à toute
+  l'application~~ — **CORRIGÉ** : ordre de compression déclaré.
+- ~~Deux rangées vides à plus d'un tiers, sur `/charts` et `/today`~~ —
+  **CORRIGÉ** : superpositions sur huit colonnes, instruments suivis sur la
+  rangée entière. La dette de trou de `/today` est fermée.
+- ~~Quatre pages fermaient sur six cartes de 120 px à 1280~~ — **CORRIGÉ** :
+  trois ou quatre par rangée.
+- ~~Le volume d'une barre était coupé sans recours~~ — **CORRIGÉ** : `title`.
+- ~~Le chien de garde n'était relancé par personne, et l'arrêt coordonné ne
+  l'arrêtait pas — « Arrêter-Vertex » n'arrêtait donc rien de durable~~ —
+  **CORRIGÉ** des deux côtés, vérifié bout en bout.
+
+### Reste ouvert
+
+- **`/catalysts` et `/analysis` gardent une rangée trouée** (40 % et 37 % sur
+  données réelles vides), dans leur dette déclarée. Leur composition est
+  dimensionnée pour des tables servies ; la retoucher sur des données vides
+  casserait la mesure CI, qui tourne sur population `SYNTHETIC`. À reprendre
+  quand ces pages auront des données réelles — pas avant.
+- **`market-map` porte une hauteur fantôme de 2 733 px** : `scrollHeight` de
+  `.vx-chartframe` inclut la table complète alors que celle-ci défile dans son
+  propre conteneur. Rien n'est perdu à l'écran, rien n'est inatteignable.
+  Dette V4 inchangée — c'est une mesure trompeuse, pas un défaut visible.
+- **`/options` n'est pas auditable sur la pile live** : l'API répond
+  `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne, aucun
+  collecteur ne publiant de surface. Le comportement fail-closed est correct et
+  la page le dit ; sa mise en page ne repose donc que sur les mesures CI en
+  population `SYNTHETIC`. Aucune donnée synthétique ne sera insérée dans la
+  base live pour la mesurer.
+- **Le libellé du champ de recherche est coupé de 13 px** à toutes les
+  largeurs (`max-width: 320px`). C'est une invite, pas une donnée servie ; le
+  raccourci `⌘K` reste visible. Non traité.

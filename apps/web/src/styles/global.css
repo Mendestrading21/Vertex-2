@@ -1954,8 +1954,23 @@ body {
   background: var(--vx-hover);
 }
 
+/*
+  `contain: paint` — CE QUI DÉFILE ICI NE DÉBORDE PLUS AILLEURS.
+  Le cadre de la carte des marchés déclarait 4 310 px de contenu pour 1 577 px
+  de boîte : 2 733 px de « hauteur fantôme ». Rien n'était pourtant perdu à
+  l'écran — la table de 3 441 px défile dans ce conteneur, qui la borne à
+  560 px. C'est le débordement de MISE EN PAGE de la table qui remontait
+  jusqu'au cadre, faute d'un confinement déclaré.
+  Le prix de ce fantôme n'était pas visuel, il était de MESURE : la porte
+  « le contenu de chaque carte tient dans sa carte » lit exactement
+  `scrollHeight - clientHeight`, et `market-map` était donc inscrite en dette
+  pour la faire taire. Une carte en dette n'est plus surveillée : un vrai
+  rognage y serait passé inaperçu. Le confinement supprime le fantôme
+  (mesuré : 2 733 -> 0) et rend la porte à ce module.
+*/
 .vx-markets-table-scroll {
   overflow-x: auto;
+  contain: paint;
   border: 1px solid var(--vx-border-soft);
   border-radius: var(--vx-radius-10);
   background: var(--vx-surface-1);
