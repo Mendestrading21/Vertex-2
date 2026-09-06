@@ -92,7 +92,7 @@ export const MARKETS_MODULES: readonly MarketsModule[] = [
   },
   {
     id: 'sectors',
-    size: 'L',
+    size: 'M',
     variant: 'support',
     title: 'Carte sectorielle',
     question: 'Quels secteurs portent la séance, instrument par instrument ?',

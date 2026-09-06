@@ -5591,9 +5591,21 @@ label {
 
 /* ---- Carte sectorielle ---------------------------------------------- */
 
+/*
+  `auto-fit`, PAS `auto-fill` — mesuré le 2026-09-06 sur la pile live.
+  Le worker ne publie qu'UN secteur (« Secteur non déclaré », 57/57
+  couverts). Avec `auto-fill`, la grille crée quand même quatre pistes de
+  150 px et n'en remplit qu'une : la tuile restait large de 150 px, ses 57
+  puces s'empilaient une par ligne sur 2 180 px de haut, le nom du secteur
+  était tronqué en « Secteu… », et les trois quarts droits de la carte
+  étaient vides. `auto-fit` réduit les pistes vides à zéro : la tuile prend
+  toute la largeur servie, les puces se répartissent, la carte passe de
+  2 180 px à quelques centaines. Le comportement à plusieurs secteurs est
+  inchangé tant que les pistes sont pleines.
+*/
 .vx-sector-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--vx-space-8);
 }
 
@@ -5944,10 +5956,15 @@ label {
   outline-offset: 2px;
 }
 
-/* La carte sectorielle occupe deux colonnes : deux tuiles de front. */
+/* La carte sectorielle occupe deux colonnes : deux tuiles de front QUAND il y
+   a deux secteurs. `auto-fit` et non `auto-fill` — même raison qu'au socle :
+   avec un seul secteur publié, `auto-fill` gardait les pistes vides et
+   laissait la tuile à 170 px pendant que les trois quarts de la carte
+   restaient vides. Mesuré le 2026-09-06 : 2 180 px de haut sur Marchés,
+   2 196 px sur Aujourd'hui, et le nom du secteur tronqué en « Secteu… ». */
 .vx-today-grid .vx-sector-grid,
 .vx-markets-grid .vx-sector-grid {
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
 }
 
 .vx-today-module .vx-freshness {

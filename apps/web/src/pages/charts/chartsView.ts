@@ -115,7 +115,7 @@ export const CHARTS_MODULES: readonly ChartsModule[] = [
     // base sur leurs seules séances communes, alignées PAR LE SERVEUR. La page
     // n'a plus rien à rebaser, ce qui reste interdit ici.
     id: 'comparison',
-    size: 'L',
+    size: 'M',
     variant: 'support',
     title: 'Comparaison base 100',
     question: 'Comment cette série se compare-t-elle à d’autres, ramenées à une base commune ?',

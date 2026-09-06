@@ -1,4 +1,4 @@
-import { formatServedNumber } from './number.ts';
+import { formatServedNumber, isAtomicMeasure } from './number.ts';
 import type { ReactNode } from 'react';
 
 /**
@@ -71,9 +71,21 @@ export function Metric({
             vit hors de la boîte bornée : un nombre sans son unité n'est pas
             une information abrégée, c'est une information fausse.
           */}
-          <span className="vx-metric-number" title={value}>
-            {formatServedNumber(value)}
-          </span>
+          {isAtomicMeasure(value) ? (
+            <span className="vx-metric-number" title={value}>
+              {formatServedNumber(value)}
+            </span>
+          ) : (
+            /*
+              UN LIBELLÉ SERVI N'EST JAMAIS ABRÉGÉ. La boîte bornée ci-dessus
+              existe pour les mesures très longues ; appliquée à un texte, elle
+              rendait « Secteur … » et « ibkr-tra… » (mesuré le 2026-09-06 sur
+              la carte Identité d'Analyse). Le texte passe donc à la ligne, en
+              entier, à l'écran — pas seulement dans un `title` que le clavier
+              n'atteint pas.
+            */
+            <span className="vx-metric-text">{value}</span>
+          )}
           {unit === undefined ? null : <span className="vx-metric-unit"> {unit}</span>}
         </span>
       )}

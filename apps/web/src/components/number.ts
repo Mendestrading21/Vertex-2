@@ -59,3 +59,34 @@ export function formatServedPercent(value: string): string {
     ? value
     : `${formatted}%`;
 }
+
+/**
+ * UNE MESURE, OU UN LIBELLÉ ? La distinction décide de la mise en page.
+ *
+ * POURQUOI ELLE EXISTE. `.vx-metric-number` borne son contenu à 14ch et le
+ * termine par une ellipse, avec la valeur entière dans le `title` : c'est le
+ * bon compromis pour un Herfindahl de vingt-huit chiffres, qui écraserait sa
+ * carte autrement. Mesuré le 2026-09-06 sur la pile live, ce même traitement
+ * s'appliquait à des valeurs qui ne sont PAS des mesures : la carte Identité
+ * d'Analyse rendait « Secteur … » pour « Secteur non déclaré » et
+ * « ibkr-tra… » pour « ibkr-trades-unadjusted ». Un libellé servi amputé à
+ * huit caractères n'est plus une donnée : il faut survoler pour le lire, ce
+ * qui exclut le clavier, et rien à l'écran ne dit qu'il manque du texte.
+ *
+ * LA RÈGLE. Une mesure porte des chiffres et ne contient aucune espace —
+ * l'unité vit hors de la boîte bornée. Tout le reste est un libellé, et un
+ * libellé passe à la ligne plutôt que d'être coupé.
+ *
+ *   « 319.97 », « +2.48% », « 22/24 », « 2026-09-06T11:32:24Z » → mesure ;
+ *   « ibkr-trades-unadjusted », « Secteur non déclaré », « VALID » → libellé.
+ *
+ * La porte e2e `unbroken-measure` ne vise que `.vx-metric-number` : un
+ * libellé qui passe à la ligne ne la contredit pas, il sort de son périmètre.
+ */
+export function isAtomicMeasure(value: string): boolean {
+  const trimmed = value.trim();
+  if (trimmed === '') {
+    return false;
+  }
+  return !/\s/.test(trimmed) && /\d/.test(trimmed);
+}

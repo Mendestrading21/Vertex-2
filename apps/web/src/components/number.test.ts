@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatServedNumber, formatServedPercent } from './number.ts';
+import { formatServedNumber, formatServedPercent, isAtomicMeasure } from './number.ts';
 
 describe('formatServedNumber — séparateurs et signe, jamais un chiffre de moins', () => {
   it("groupe les milliers par apostrophe dès quatre chiffres, décimales verbatim", () => {
@@ -34,5 +34,47 @@ describe('formatServedNumber — séparateurs et signe, jamais un chiffre de moi
     expect(formatServedPercent('2.48')).toBe('2.48%');
     expect(formatServedPercent('-0.72')).toBe('−0.72%');
     expect(formatServedPercent('non publié')).toBe('non publié');
+  });
+});
+
+describe('isAtomicMeasure — mesure bornée ou libellé qui passe à la ligne', () => {
+  it('une mesure : des chiffres, aucune espace — elle reste atomique', () => {
+    for (const raw of [
+      '319.97',
+      '+2.48%',
+      '−0.72%',
+      '22/24',
+      '2026-09-06T11:32:24Z',
+      '0.50208908615131055819803669',
+      '691200',
+    ]) {
+      expect(isAtomicMeasure(raw)).toBe(true);
+    }
+  });
+
+  it('un libellé servi n’est jamais borné : il serait amputé, pas abrégé', () => {
+    /*
+      LES DEUX CAS MESURÉS LE 2026-09-06 sur la carte Identité d'Analyse :
+      « Secteur non déclaré » était rendu « Secteur … » et
+      « ibkr-trades-unadjusted » était rendu « ibkr-tra… ». Le texte entier
+      n'existait plus que dans un `title`, donc hors d'atteinte au clavier.
+    */
+    for (const raw of [
+      'Secteur non déclaré',
+      'ibkr-trades-unadjusted',
+      'VALID',
+      'REAL',
+      'USD',
+      'NO_BENCHMARK_DECLARED',
+      '',
+      '   ',
+    ]) {
+      expect(isAtomicMeasure(raw)).toBe(false);
+    }
+  });
+
+  it('les espaces de bordure ne décident de rien', () => {
+    expect(isAtomicMeasure('  319.97  ')).toBe(true);
+    expect(isAtomicMeasure('  VALID  ')).toBe(false);
   });
 });

@@ -1880,6 +1880,29 @@
   align-self: stretch;
 }
 
+/* L'EXCEPTION À L'EXCEPTION : ON NE RÉSERVE PAS DE PLACE POUR UNE FIGURE QUI
+   N'EXISTE PAS.
+   `L` et `XL` s'étirent parce qu'ils portent une figure qui a besoin de sa
+   hauteur. Quand le serveur ne publie rien, cette figure n'est pas là — et
+   la carte garde quand même la hauteur de sa rangée. Mesuré le 2026-09-06
+   sur la pile live : la chronologie de Catalyseurs gardait 463 px de vide
+   (70 % de la carte) sous une phrase, l'agenda du Calendrier 249 px, le
+   payoff du Simulateur 144 px. C'est très exactement le défaut que le
+   LOT T3 a nommé — « un cadre de 400 px dont 340 sont vides » — mais réservé
+   aux dominantes, donc au plus visible de la page.
+   Le signal est la FRONTIÈRE D'ÉTAT elle-même (`.vx-dsb-message`, rendue par
+   `DataStateBoundary`) : elle ne coexiste jamais avec du contenu servi, elle
+   le remplace. La pastille « Données périmées » (`.vx-module-state`), qui
+   accompagne du contenu réel, n'entre pas dans cette règle. */
+.vx-board > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-board > [data-module][data-size='XL']:has(.vx-dsb-message),
+.vx-today-grid > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-today-grid > [data-module][data-size='XL']:has(.vx-dsb-message),
+.vx-markets-grid > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-markets-grid > [data-module][data-size='XL']:has(.vx-dsb-message) {
+  align-self: start;
+}
+
 
 /* ==========================================================================
    LOT P2 — OSCILLATEURS SUR LE DOSSIER
@@ -3793,6 +3816,38 @@
   vertical-align: bottom;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Le pendant du précédent pour une valeur qui n'est PAS une mesure — un
+   secteur, une base d'ajustement, une qualité de série. Rien à borner : elle
+   passe à la ligne et se lit en entier. Voir `isAtomicMeasure` (number.ts)
+   pour la règle qui départage les deux. */
+.vx-metric-text {
+  display: inline;
+  max-width: 100%;
+  /* `break-word` et non `anywhere` : les occasions de coupure normales — le
+     trait d'union de « ibkr-trades-unadjusted » — sont préférées, et un mot
+     n'est fendu que s'il ne tient toujours pas. */
+  overflow-wrap: break-word;
+  /* Le corps d'affichage est réservé aux NOMBRES : c'est eux que l'œil
+     cherche de loin. Un libellé servi se lit comme du texte, et à cette
+     taille il tient sur une ligne au lieu d'être fendu en quatre. */
+  font-size: var(--vx-font-size-body);
+  letter-spacing: 0;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* Conséquence de la règle précédente, dans les grilles de faits à deux
+   colonnes (Identité d'Analyse, Performance totale de Portefeuille) :
+   l'absence y était rendue au corps de titre par la densité compacte, et
+   « non publié » se retrouvait PLUS GROS que « REAL » ou « VALID » juste à
+   côté. Ce qui manque criait, ce qui est connu chuchotait. Les deux se
+   lisent donc au même corps ; l'absence reste distincte par sa teinte
+   sourde et par son mot, jamais par sa taille. */
+.vx-main [data-module][data-density='compact'] .vx-metrics-grid .vx-metric-value.vx-cell-absent,
+.vx-metrics-grid .vx-metric-value.vx-cell-absent {
+  font-size: var(--vx-font-size-body);
 }
 
 
