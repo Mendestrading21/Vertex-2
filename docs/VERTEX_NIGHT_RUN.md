@@ -105,3 +105,18 @@ financier, aucune lecture de compte/positions IBKR, aucun faux live.
   déclarées.
 - Suite d'intégration complète (worker, persistance, API, edge) lancée en
   arrière-plan sur `vertex_test` : résultat attendu avant le commit du code.
+
+## Checkpoint 07:50 (2026-09-06) — clôture
+
+- Suites Python rejouées en environnement propre : 695 (persistance +
+  worker, unit + intégration), 1 393 (API unit), 513 (API/edge intégration,
+  sources officielles, outils), 408 (edge unit). Le premier passage chargeait
+  `vertex.env` dans le processus de test : sept faux échecs (`VERTEX_AUTH_OPEN_LOCAL`)
+  et un blocage ; lanceur corrigé, pas le code.
+- Portes du dépôt rejouées sur le checkout : secrets et frontière financière
+  refusaient le launcher du skill Impeccable (`scripts/`, binaire téléchargé,
+  motifs de jeton) → retiré, licences en `.upstream.md` ; vertes.
+- Échecs restants propres au poste : privilège `CREATE DATABASE` absent du
+  rôle `vertex` (4), chemins `\` vs `/` (2), `bash` absent du PATH (1).
+- Branche `agent/vertex-total-audit-ultimate-polish` : 27 commits depuis
+  `0b82eb2`, non poussée, aucun merge. Rapport : `docs/VERTEX_FINAL_REPORT.md`.

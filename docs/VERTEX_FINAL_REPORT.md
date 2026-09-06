@@ -86,19 +86,33 @@ chaos garde son scénario d'interruption avec un lot d'un message.
 Mission 1 et 2 : voir `docs/ui-refonte-vertex.md` §7.3 (dix-neuf commits, de
 `2f63931` à `e3d8157`).
 
-Mission 3 : `docs(feed)` inventaire et runbook, `feat(outbox)` coalescence,
-`feat(edge-ibkr)` collecteur de chaînes — voir `git log 0b82eb2..HEAD`.
+Mission 3 : `97a66c4` docs(feed) inventaire et runbook, `466abc0`
+docs(status) NOW, `63ea7b7` feat(outbox) coalescence, `2fa34a8`
+feat(edge-ibkr) collecteur de chaînes, puis `chore(skills)` retrait du
+launcher Impeccable et `docs(report)` — voir `git log 0b82eb2..HEAD`.
 
 ## 4. Preuves exécutées (poste local, base jetable `vertex_test`)
 
 - Web : tsc 0 erreur, Biome 0 erreur (305 fichiers), Vitest 122 fichiers /
   1 168 verts, build Vite 3,9 s.
-- Python : ruff 0 erreur sur les fichiers modifiés, mypy 0 erreur sur les
-  fichiers modifiés (deux erreurs préexistantes dans
-  `tools/build_performance_report.py`, `os.sysconf` absent sous Windows) ;
-  edge-ibkr 408 tests verts ; ingestion et outbox 24 verts ; suites
-  d'intégration worker / persistance / API / edge : voir la ligne finale du
-  journal de nuit.
+- Python (environnement de test propre, sans les variables de la pile
+  réelle) : persistance + worker, unitaires et intégration PostgreSQL :
+  695 verts ; API unitaires : 1 393 verts ; API intégration, edge-ibkr
+  intégration, sources officielles, outils : 513 verts, 1 ignoré ; edge-ibkr
+  unitaires : 408 verts ; ruff 0 erreur et mypy 0 erreur sur les fichiers
+  modifiés (deux erreurs mypy préexistantes dans
+  `tools/build_performance_report.py`, `os.sysconf` absent sous Windows).
+- Portes du dépôt rejouées sur le checkout Git : secrets (1 120 fichiers
+  suivis, aucun secret), frontière financière (`ok`, aucun finding), notices,
+  politique — vertes après le retrait du launcher Impeccable (commit
+  `chore(skills)`).
+- Échecs restants, tous propres à ce poste Windows et à son rôle PostgreSQL,
+  aucun lié aux changements : quatre tests de démarrage exigent le privilège
+  `CREATE DATABASE` (le rôle `vertex` ne l'a pas) ; deux tests de câblage des
+  suites comparent des chemins avec `\` contre `/` ; un test lance `bash`
+  absent du PATH ; le premier passage avait aussi montré que charger
+  `vertex.env` dans le processus de test (`VERTEX_AUTH_OPEN_LOCAL`) fait
+  échouer les tests fail-closed — corrigé dans le lanceur, pas dans le code.
 - Non exécutable ici : Playwright (aucun navigateur installé, `python3` et
   `service postgresql` supposés par `global.setup.ts`).
 
