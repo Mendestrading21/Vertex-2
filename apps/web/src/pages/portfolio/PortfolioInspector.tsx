@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../../components/number.ts';
 import { Link } from 'react-router-dom';
 
 import type { LedgerTransactionEntry, PortfolioResponse } from '../../api/client.ts';
@@ -95,7 +96,7 @@ export function PositionInspector({
             label: 'Coût unitaire',
             value: (
               <>
-                <code className="vx-num">{lot.unitCost}</code> {lot.currency}
+                <code className="vx-num">{formatServedNumber(lot.unitCost)}</code> {lot.currency}
               </>
             ),
           },
@@ -103,7 +104,7 @@ export function PositionInspector({
             label: 'Mark',
             value: (
               <>
-                <code className="vx-num">{lot.mark}</code> {lot.currency} (clôture synthétique)
+                <code className="vx-num">{formatServedNumber(lot.mark)}</code> {lot.currency} (clôture synthétique)
               </>
             ),
           },
@@ -111,7 +112,7 @@ export function PositionInspector({
             label: 'Valeur marquée',
             value: (
               <>
-                <code className="vx-num">{lot.marketValue}</code> {lot.currency}
+                <code className="vx-num">{formatServedNumber(lot.marketValue)}</code> {lot.currency}
               </>
             ),
           },
@@ -125,7 +126,7 @@ export function PositionInspector({
                     ? {}
                     : { 'data-sign': signGroupOfText(lot.unrealizedPnl) })}
                 >
-                  {lot.unrealizedPnl}
+                  {formatServedNumber(lot.unrealizedPnl)}
                 </code>{' '}
                 {lot.currency}
               </>

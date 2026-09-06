@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../../components/number.ts';
 import { useState } from 'react';
 
 import { isApiError } from '../../api/client.ts';
@@ -175,8 +176,8 @@ export function LedgerPanel({
                         entry.price
                       )}
                     </td>
-                    <td className="vx-num">{entry.amount}</td>
-                    <td className="vx-num">{entry.fees}</td>
+                    <td className="vx-num">{formatServedNumber(entry.amount)}</td>
+                    <td className="vx-num">{formatServedNumber(entry.fees)}</td>
                     <td>
                       <code>{entry.currency}</code>
                     </td>

@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../../components/number.ts';
 import { RingShares } from '../../components/widgets/RingShares.tsx';
 import type { RingPart } from '../../components/widgets/RingShares.tsx';
 import { SharesBand } from '../../components/widgets/SharesBand.tsx';
@@ -122,7 +123,7 @@ export function ConcentrationPanel({ blocks }: { readonly blocks: readonly Curre
                   <span data-absent="true">non publiée</span>
                 ) : (
                   <>
-                    <code className="vx-num">{block.totalValue}</code> {block.currency}
+                    <code className="vx-num">{formatServedNumber(block.totalValue)}</code> {block.currency}
                   </>
                 )}
                 {block.concentrationCalculation !== null ? (

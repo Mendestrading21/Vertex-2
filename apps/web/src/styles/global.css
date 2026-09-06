@@ -6958,6 +6958,14 @@ label {
   gap: 0 var(--vx-space-16);
 }
 
+/* Porte e2e « le contenu tient dans sa carte » (CI, polices de secours à
+   1280) : dans la grille d'identité à deux colonnes, la borne de rendu d'un
+   nombre est aussi celle de sa colonne ; le segment reste atomique, la
+   valeur entière reste dans le `title`. */
+.vx-metrics-grid .vx-metric-number {
+  max-width: min(14ch, 100%);
+}
+
 .vx-metrics-grid .vx-metric {
   padding: var(--vx-space-8) 0;
   border-bottom: 1px solid var(--vx-border-soft);
@@ -8337,4 +8345,16 @@ label {
 .vx-sources-grid [data-module='exports'] code {
   white-space: normal;
   overflow-wrap: break-word;
+}
+
+/* Densité compacte : la valeur descend d'un cran typographique. Mesuré en CI
+   à 1280 (Options, cartes spot / taux / dividende) : « 366.08 SYN » en
+   taille d'affichage dépassait sa carte de 18 à 35 px. Le nombre et son
+   unité restent sur une ligne. */
+.vx-main [data-module][data-density='compact'] .vx-metric-value {
+  font-size: var(--vx-font-size-title);
+}
+
+.vx-main [data-module][data-density='compact'] .vx-metric-number {
+  max-width: min(14ch, 100%);
 }
