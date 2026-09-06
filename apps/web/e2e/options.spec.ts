@@ -303,7 +303,9 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
   test('hors ligne simulé (routes /api interrompues) → état offline honnête', async ({ page }) => {
     await page.route('**/api/**', (route) => route.abort());
     await page.goto(`/options/${UNDERLYING}`);
-    const boundary = page.locator('[data-state="offline"]');
+    // Deux témoins honnêtes de l'état hors ligne coexistent (le sélecteur de
+    // sous-jacent et le cadre de la chaîne) : c'est le cadre qui est vérifié.
+    const boundary = page.locator('.vx-dsb-message[data-state="offline"]').first();
     await expect(boundary).toBeVisible();
     await expect(boundary).toContainText('Hors ligne');
     await expect(page.getByRole('table')).toHaveCount(0);
