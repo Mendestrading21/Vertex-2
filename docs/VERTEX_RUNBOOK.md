@@ -21,6 +21,32 @@ Arrêt : `~/.vertex/stop-vertex.ps1` (ou `Arreter-Vertex.cmd`). Le miroir de
 travail `~/.vertex/app` est resynchronisé depuis `VERTEX_SRC` à chaque
 démarrage (robocopy /MIR, hors `.git`, `node_modules`, `.venv`, `dist`).
 
+### 1 bis. Mode DIRECT — regarder le travail en cours (2026-09-06)
+
+Un seul fichier à ouvrir : **`Vertex.cmd` sur le Bureau**. Il démarre la pile
+si elle dort, ajoute le mode direct, puis ouvre une **fenêtre d'application**
+(Edge ou Chrome en `--app`, profil dédié `~/.vertex/app-profile`) : pas
+d'onglet, pas de barre d'adresse.
+
+| Vue | Port | Ce qu'elle montre |
+|---|---|---|
+| **Direct** | 127.0.0.1:5174 | le code EN COURS d'écriture ; la page se met à jour seule à chaque modification, sans rechargement |
+| **Build livré** | 127.0.0.1:4173 | le paquet de production, ce qui serait livré |
+
+Les deux lisent la MÊME base et la MÊME API (`/api` relayé vers 127.0.0.1:8000
+par `apps/web/vite.config.ts`) : mêmes données, même fraîcheur, aucune donnée
+de démonstration.
+
+| Script | Rôle |
+|---|---|
+| `~/.vertex/live-vertex.ps1` | démarre la pile au besoin, le miroir vivant, le serveur à chaud, puis la fenêtre d'application (`-NoWindow` pour s'en passer, `-Page /markets` pour ouvrir ailleurs) |
+| `~/.vertex/sync-loop.ps1` | recopie le dépôt vers le miroir toutes les 3 s (mêmes exclusions que le démarrage) ; journal `~/.vertex/logs/sync.log` |
+| `~/.vertex/stop-live.ps1` | arrête le mode direct SEUL ; la pile et les données continuent |
+
+PID du mode direct : `~/.vertex/run/live.json`. Vérification de bout en bout
+faite le 2026-09-06 : une chaîne modifiée dans le dépôt apparaît à l'écran en
+moins de 5 s, sans rechargement (miroir synchronisé en 3 s, HMR immédiat).
+
 ## 2. Chaînes d'alimentation et cadence
 
 | Chaîne | Commande | Client | Cadence | Signe de santé |
