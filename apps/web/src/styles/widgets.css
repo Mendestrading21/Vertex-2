@@ -1331,7 +1331,13 @@
   grid-template-areas:
     'breadth breadth breadth breadth health health health health discards discards discards discards'
     'map map map map map map map map map map map map'
-    'sectors sectors sectors sectors sectors sectors sectors sectors focus focus focus focus'
+    /* PASSE 3 (2026-09-07) : chacune sa rangée, sur toute la largeur. La
+       carte sectorielle est un nuage de puces qui gagne à s'étaler, et les
+       instruments suivis alignent leurs tuiles côte à côte au lieu de les
+       empiler dans un rail de 301 px — même correction que sur Aujourd'hui.
+       Mesuré avant : sectorielle 626 px face à un rail de 1 591. */
+    'sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors'
+    'focus focus focus focus focus focus focus focus focus focus focus focus'
     'sessions sessions sessions vol vol vol indices indices indices rates rates rates'
     'fx fx fx fx correlation correlation correlation correlation volstruct volstruct volstruct volstruct';
   grid-template-columns: repeat(12, minmax(0, 1fr));
