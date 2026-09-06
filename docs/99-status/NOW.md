@@ -3672,6 +3672,15 @@ l'arrêt le stoppe en premier et lui seul.
   colonnes, un gate par ligne, et la queue se réordonne en rangées de trois
   puis de deux. Mesure : 220×722 → 456×374.
 
+- **File d'attention : quinze entrées pour douze titres.** « Dow Jones Futures
+  Loom After U.S.-Iran Attacks… » apparaissait trois fois, « Inflation, Apple,
+  Adobe, Oracle… » deux fois. Ce ne sont pas des doublons : chaque ligne est un
+  cluster distinct rattaché à un instrument distinct. La liste n'affichait que
+  le titre, et la répétition se lisait comme un défaut du produit. La référence
+  d'instrument publiée par la provenance est désormais relayée VERBATIM sur
+  chaque ligne — jamais traduite en ticker, aucun instantané servi ne publiant
+  cette correspondance.
+
 Après ces trois passes, la réplique locale des deux portes de mise en page ne
 trouve **aucune carte qui coupe son contenu** et **une seule rangée trouée**
 sur les onze planches (`/catalysts`, dette déclarée de 2), aux trois largeurs

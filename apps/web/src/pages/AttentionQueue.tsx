@@ -265,6 +265,22 @@ export function AttentionQueue({ items, asOf, fallbackInspector }: AttentionQueu
       <ol className="vx-queue-list">
         {items.map((item) => {
           const firstPublishedAt = provString(item.provenance, 'first_published_at');
+          /*
+            LA RÉFÉRENCE D'INSTRUMENT DISTINGUE DEUX LIGNES QUI SE RESSEMBLENT.
+            Mesuré le 2026-09-07 sur la file live : quinze entrées pour douze
+            titres. « Dow Jones Futures Loom After U.S.-Iran Attacks… »
+            apparaissait trois fois, « Inflation, Apple, Adobe, Oracle… » deux
+            fois. Ce ne sont PAS des doublons : chaque ligne est un cluster
+            distinct, rattaché à un instrument distinct (références serveur
+            265598, 4815747, 9939…). La liste n'affichait que le titre, et la
+            répétition se lisait donc comme un défaut du produit.
+            La référence est relayée VERBATIM, telle que la provenance la
+            publie. Elle n'est pas traduite en ticker : aucun instantané servi
+            ne publie cette correspondance, et la fabriquer ici créerait une
+            seconde autorité d'identité. Le panneau de détail porte déjà la
+            provenance complète.
+          */
+          const instrumentRef = provString(item.provenance, 'instrument_ref');
           return (
             <li key={item.id} className="vx-queue-item">
               <div className="vx-queue-item-main">
@@ -282,7 +298,17 @@ export function AttentionQueue({ items, asOf, fallbackInspector }: AttentionQueu
                 >
                   {item.title}
                 </button>
-                <p className="vx-queue-sources">{item.sources.join(', ')}</p>
+                <p className="vx-queue-sources">
+                  {item.sources.join(', ')}
+                  {instrumentRef === null ? (
+                    <span className="vx-cell-absent"> · instrument non publié</span>
+                  ) : (
+                    <>
+                      {' · instrument '}
+                      <code>{instrumentRef}</code>
+                    </>
+                  )}
+                </p>
               </div>
               <div className="vx-queue-item-meta">
                 {item.synthetic ? (
