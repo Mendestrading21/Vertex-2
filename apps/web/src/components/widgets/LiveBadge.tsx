@@ -66,13 +66,26 @@ const NEVER_ACTIVE = new Set(['SYNTHETIC', 'DEMO', 'SIMULATED', 'THEORETICAL']);
  * inventer une mesure que personne n'a publiée. On ajoute le seul fait qui ne
  * peut PAS devenir faux : l'instant de publication, servi avec la réponse.
  */
+/*
+  « À LA LECTURE », ET RIEN DE PLUS.
+  L'âge servi est celui de l'instant où la donnée a été LUE, pas de l'instant
+  présent : dans un onglet endormi, « publié il y a 4 s » devient faux sans
+  que rien ne change à l'écran. La qualification le dit.
+
+  L'INSTANT ABSOLU N'EST PAS RÉPÉTÉ ICI. Il l'a été un temps — et cette barre
+  a alors imposé au shell une largeur minimale de 850 px, mesurée le
+  2026-09-06 : le contrôle de dégradation 1024×768 tombait sur Aujourd'hui,
+  Marchés et Sources & Rapports, la page défilant horizontalement. La même
+  barre publie déjà l'instant servi à sa droite, et l'inspecteur le redonne
+  avec sa version : le répéter coûtait un plancher de mise en page pour zéro
+  information nouvelle.
+*/
 function freshnessOf(meta: SnapshotMeta): string {
-  const instant = servedClockOf(meta.asOf);
   if (meta.ageSeconds === null) {
+    const instant = servedClockOf(meta.asOf);
     return instant === null ? 'âge non publié' : `publié ${instant}`;
   }
-  const age = `publié ${formatAge(meta.ageSeconds)}`;
-  return instant === null ? age : `publié ${instant} (${formatAge(meta.ageSeconds)} à la lecture)`;
+  return `publié ${formatAge(meta.ageSeconds)} à la lecture`;
 }
 
 export function liveBadgeDecision(input: LiveBadgeInput): LiveDecision {

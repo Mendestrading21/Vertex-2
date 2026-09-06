@@ -740,11 +740,26 @@ body {
   white-space: nowrap;
 }
 
+/*
+  LA BARRE PLIE, ELLE N'IMPOSE PAS SA LARGEUR.
+  `flex: 0 0 auto` interdisait tout rétrécissement : le groupe de droite —
+  badge de fraîcheur, nature de la population, état de session — additionnait
+  ses libellés et le total devenait un PLANCHER pour toute l'application.
+  Mesuré le 2026-09-06 : 850 px de méta sur une fenêtre de 1024, donc un
+  défilement horizontal de la page sur Aujourd'hui, Marchés et Sources &
+  Rapports. Un libellé plus long d'un mot suffisait à casser le contrôle de
+  dégradation laptop.
+  Le groupe peut désormais se replier sur une seconde ligne. La barre gagne en
+  hauteur là où la place manque — jamais un libellé n'est coupé pour tenir.
+*/
 .vx-contextbar-meta {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
+  min-width: 0;
   align-items: center;
-  gap: var(--vx-space-12);
+  justify-content: flex-end;
+  gap: var(--vx-space-8) var(--vx-space-12);
+  flex-wrap: wrap;
 }
 
 .vx-contextbar-status {
