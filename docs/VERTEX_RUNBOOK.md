@@ -65,6 +65,15 @@ c'est l'étape dépêches qui la fait varier. Trois passes mesurées le
 passe longue : lire le compteur `muets` du résumé, qui dit combien d'appels
 sont revenus vides.
 
+**Une passe sans ligne `<-` n'est pas une passe bloquée.** Le collecteur
+redirige sa sortie vers le MÊME fichier que la boucle : à l'instant où il se
+termine, `Add-Content` peut échouer en violation de partage et la ligne est
+perdue. Mesuré le 2026-09-06 : deux lignes disparues d'un coup (`<-` et
+`pause`), la boucle dormant normalement. `ingest-loop.ps1` réessaie désormais
+dix fois avant d'abandonner, et le dit s'il abandonne. Pour trancher entre
+« bloquée » et « en pause » : regarder si le processus PowerShell de la boucle
+est vivant et s'il a un processus `cmd.exe` enfant — sans enfant, elle dort.
+
 **`erreurs=0` ne veut pas dire « tout est arrivé ».** `reqHistoricalNewsAsync`
 n'échoue pas quand le fournisseur ne répond pas : il rend une liste vide, donc
 une enveloppe `INSUFFICIENT_DATA`. Le compteur `muets` du résumé mesure ces
