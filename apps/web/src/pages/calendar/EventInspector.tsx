@@ -38,17 +38,14 @@ export function EventInspector({
 }) {
   const reading = formatInTimeZone(event.eventTimeUtc, displayTimeZone);
   return (
-    <InspectorPanel subject={event.ticker ?? event.eventId}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">
-          {event.title ?? event.eventId} <EventStatusBadge status={event.status} />
-          {event.synthetic ? <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span> : null}
-        </p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
-
+    <InspectorPanel
+      subject={event.ticker ?? event.eventId}
+      note={
+        <>{event.title ?? event.eventId} <EventStatusBadge status={event.status} />
+          {event.synthetic ? <span className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</span> : null}</>
+      }
+      onClose={onClose}
+    >
       <SnapshotFacts
         testId="cal-event-facts"
         facts={[

@@ -124,3 +124,19 @@ describe('SparkFigure — figure de série servie', () => {
     expect(figure?.getAttribute('data-tone')).toBe('macro');
   });
 });
+
+describe('SparkFigure — une clôture illisible refuse la figure, sans exception', () => {
+  it('rend un refus nommé quand une clôture servie ne se lit pas', () => {
+    render(
+      <SparkFigure
+        closes={['100.0', 'abc', '101.0']}
+        sign={null}
+        caption="Clôtures"
+        unit="SYN"
+        windowLabel="3 séances"
+      />,
+    );
+    expect(screen.getByRole('status').textContent).toContain('illisible');
+    expect(document.querySelector('.vx-w2-spark')).toBeNull();
+  });
+});

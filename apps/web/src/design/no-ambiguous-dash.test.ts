@@ -72,7 +72,7 @@
  * exemption qui se déguise.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
@@ -138,6 +138,11 @@ const ALLOWLIST: ReadonlyArray<{ readonly path: string; readonly reason: string 
       'rendu dense d’une absence DÉJÀ qualifiée, avec son nom accessible et son ' +
       'motif servi en attribut. Sa légitimité est vérifiée par absence.test.tsx, ' +
       'pas par cette porte.',
+  },
+  {
+    path: 'src/components/number.ts',
+    reason:
+      "SIGNE MOINS TYPOGRAPHIQUE (U+2212) posé devant un nombre servi négatif — jamais à la place d'une valeur absente. Décision produit de la refonte vague 2 (§9) : « −0.72% ». Le glyphe n'est écrit que par formatServedNumber, qui ne touche qu'une chaîne décimale servie et rend toute autre chaîne telle quelle.",
   },
 ];
 
@@ -245,7 +250,10 @@ function scanFile(path: string, contents?: string): Finding[] {
     ts.ScriptKind.TSX,
   );
   const findings: Finding[] = [];
-  const relativePath = contents === undefined ? relative(APP_ROOT, path) : path;
+  // Chemin POSIX quel que soit l'hôte : `relative` rend des antislashs sous
+  // Windows, et l'exemption — écrite une fois, avec des barres obliques — ne
+  // matchait plus. La porte tombait alors sur un faux positif hors CI.
+  const relativePath = contents === undefined ? relative(APP_ROOT, path).split(sep).join('/') : path;
 
   const report = (rule: string, text: string, node: ts.Node): void => {
     findings.push({

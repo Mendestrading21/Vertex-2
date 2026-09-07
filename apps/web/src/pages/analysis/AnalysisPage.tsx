@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { useWorkspace } from '../../app/workspace.tsx';
@@ -33,6 +34,7 @@ import { analysisModule } from './analysisModules.ts';
 import type { BarsView } from './analysisView.ts';
 import { adviceViewOf, analysisStateOf, barsViewOf, evidenceViewOf, scenariosViewOf } from './analysisView.ts';
 import { MethodNote } from '../../components/widgets/MethodNote.tsx';
+import { ModuleCell as SharedModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { ChartSkeleton, TableSkeleton } from '../../components/widgets/Skeleton.tsx';
 
 /**
@@ -59,10 +61,35 @@ export { IndicatorsPanel, OhlcvTable };
  * modèle, révisions d'analystes, niveaux, contradictions. Ils tiennent leur
  * place avec le motif mesuré de leur absence (article 17).
  *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE. La planche se lit SIGNAL
+ * (en-tête, identité) → PREUVE (le graphique, seul sur sa rangée) → figures
+ * (indicateurs, oscillateurs, scénarios) → faits (financiers, evidence,
+ * pairs) → DÉCISION et RISQUE (verdict, risques, catalyseurs) → absences
+ * regroupées. La composition vit dans `.vx-analysis-grid` (`global.css`) ; le
+ * catalogue est inchangé et chaque cellule pose `data-size` par `ModuleCell`
+ * et, pour les cartes de faits courts et les absences, `data-density="compact"`.
+ *
  * L'INSPECTEUR PORTE LE DOSSIER OUVERT (version, instant, âge, population,
  * référence, couverture, fraîcheur, limites) ; l'explication IA (LOT-12)
  * reste un second panneau. Aucun calcul financier ici.
  */
+
+/** La cellule d'un module de CETTE planche : la taille vient du catalogue. */
+function ModuleCell({
+  id,
+  density,
+  children,
+}: {
+  readonly id: string;
+  readonly density?: 'compact';
+  readonly children: ReactNode;
+}) {
+  return (
+    <SharedModuleCell id={id} size={analysisModule(id).size} {...(density === undefined ? {} : { density })}>
+      {children}
+    </SharedModuleCell>
+  );
+}
 
 function InstrumentPicker({ current }: { readonly current: string | null }) {
   const instruments = useDeclaredInstruments();
@@ -99,14 +126,16 @@ function AbsentAnalysisModule({ id }: { readonly id: string }) {
     throw new Error(`Module ${id} is served, not absent`);
   }
   return (
-    <div data-module={id}>
+    // La taille vient du catalogue et l'absence est compacte : elle n'a pas
+    // besoin du chrome d'une figure, sa régularité est le message.
+    <ModuleCell id={id} density="compact">
       <AbsentModule
         title={module.title}
         question={module.question}
         reason={module.status.reason}
         note={module.status.note}
       />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -137,7 +166,15 @@ function AnalysisFrame({
       : state === 'stale'
         ? data.state === 'stale'
           ? `Dossier publié périmé par le relais : ${data.reason ?? 'raison non publiée'} ; âge publié ${data.age_seconds ?? 'non'} s.`
-          : `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié ${data.age_seconds ?? 'non'} s.`
+          : /*
+               DEUX ÂGES, DEUX PROPRIÉTAIRES. Cette branche parle de la SÉRIE
+               que le worker déclare non fraîche ; elle citait l'âge du
+               DOSSIER, publié par l'enveloppe. Mesuré le 2026-09-06 : dossier
+               4 h, série 2 j 11 h. Le lecteur voyait « 4 h » sous un aveu de
+               péremption et pouvait conclure que le seuil est de quatre heures.
+               Les deux nombres sont désormais nommés.
+             */
+            `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié de la série ${bars?.ageSeconds ?? 'non publié'} s (âge du dossier ${data.age_seconds ?? 'non publié'} s).`
         : state === 'delayed'
           ? 'Population DELAYED publiée par le worker : le dossier est conservé, mais ne décrit pas le marché à cet instant.'
           : undefined;
@@ -154,6 +191,7 @@ function AnalysisFrame({
       className="vx-chartframe"
       data-rank="dominant"
       data-module="chart"
+      data-size="XL"
       aria-labelledby="vx-analysis-title"
     >
       <header className="vx-chartframe-head">
@@ -246,9 +284,8 @@ function AnalysisFrame({
         methode={
           <>
             barres OHLCV validées barre à barre par le worker (une barre invalide est écartée avec
-            sa raison, jamais réparée) ; verdict par l'unique <code>AdviceEngine</code> (
-            <code>{data.engine_version ?? 'non publié'}</code>) ; clusters par la fusion
-            déterministe.
+            sa raison, jamais réparée) ; verdict relayé tel quel du moteur{' '}
+            <code>{data.engine_version ?? 'non publié'}</code>.
           </>
         }
         attribution={
@@ -262,9 +299,8 @@ function AnalysisFrame({
         }
         limites={
           <>
-            population <code>{population}</code> déclarée par le worker ; les gates non évaluables
-            restent BLOCK <code>UNEVALUABLE</code> (fail-closed) et le statut publié est affiché tel
-            quel.
+            population <code>{population}</code> déclarée par le worker ; une gate non évaluable
+            reste fermée (<code>UNEVALUABLE</code>) et n'est jamais complétée ici.
           </>
         }
       />
@@ -291,18 +327,21 @@ function AnalysisBoard({
   return (
     <>
       <div className="vx-analysis-grid vx-board" data-testid="analysis-grid">
-        <div data-module="instrument-header">
+        {/* SIGNAL : l'instrument et ses faits d'identité. */}
+        <ModuleCell id="instrument-header">
           <InstrumentHeaderModule instrument={instrument} data={data} bars={bars} />
-        </div>
-        <div data-module="identity-facts">
+        </ModuleCell>
+        <ModuleCell id="identity-facts" density="compact">
           <IdentityModule instrument={instrument} data={data} bars={bars} />
-        </div>
+        </ModuleCell>
 
+        {/* PREUVE : la dominante, seule sur sa rangée. */}
         <AnalysisFrame data={data} bars={bars} state={state} instrument={instrument} />
 
-        <div data-module="indicators">
+        {/* Figures : ce que le moteur a calculé sur la série. */}
+        <ModuleCell id="indicators">
           {data.indicators === null || data.indicators === undefined ? (
-            <Card rank="quiet" kicker="Registre des calculs" title={indicatorsModule.title} titleId="vx-indicators-title">
+            <Card rank="quiet" kicker="Calculé" title={indicatorsModule.title} titleId="vx-indicators-title">
               <p className="vx-module-sentence" role="status">
                 Aucun indicateur publié dans ce dossier — rien n&apos;est calculé à la place.
               </p>
@@ -310,67 +349,76 @@ function AnalysisBoard({
           ) : (
             <IndicatorsPanel indicators={data.indicators} currency={currency} />
           )}
-        </div>
+        </ModuleCell>
         {/* LOT P2 — L'AVEU DEVENU FAUX. Ce module déclarait « le registre des
             calculs ne publie aucun oscillateur » ; le worker en publie deux
             depuis le LOT-S6, et Graphiques les affiche déjà. */}
-        <div data-module="oscillators">
+        <ModuleCell id="oscillators">
           <OscillatorsModule indicators={data.indicators} />
-        </div>
-        <AbsentAnalysisModule id="analyst-revisions" />
-
-        <div data-module="verdict">
+        </ModuleCell>
+        {/*
+          L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE. Les preuves ferment la
+          rangée des indicateurs et des oscillateurs ; les scénarios et les
+          faits officiels ouvrent la suivante. Mesuré le 2026-09-07, le
+          document donnait scénarios et financiers AVANT des preuves placées
+          au-dessus d'eux : un lecteur au clavier descendait puis remontait.
+        */}
+        <ModuleCell id="evidence">
           <Card
             rank="quiet"
-            kicker="AdviceEngine, autorité unique"
-            title={analysisModule('verdict').title}
-            titleId="vx-analysis-verdict-title"
-            footer={<>statut et direction distincts, relayés tels quels ; gates fail-closed</>}
+            kicker="Calculé"
+            title={analysisModule('evidence').title}
+            titleId="vx-analysis-evidence-title"
+            footer={<>clusters dédoublonnés par le worker, aucune pertinence inventée</>}
           >
-            <AdviceCard advice={advice} />
+            <EvidenceRail evidence={evidence} />
           </Card>
-        </div>
-        <div data-module="financials">
-          <FinancialsModule instrument={instrument} />
-        </div>
-
-        <div data-module="scenarios">
+        </ModuleCell>
+        <ModuleCell id="scenarios">
           <Card
             rank="quiet"
-            kicker="Repricés par le worker"
+            kicker="Calculé"
             title={analysisModule('scenarios').title}
             titleId="vx-analysis-scenarios-title"
-            footer={<>grille THÉORIQUE ou absence typée — jamais une valeur de marché</>}
+            footer={<>grille THÉORIQUE ou absence typée, jamais une valeur de marché</>}
           >
             <ScenarioPanel scenarios={scenarios} />
           </Card>
-        </div>
-        <div data-module="upcoming-catalysts">
-          <CatalystsModule instrument={instrument} />
-        </div>
-        <div data-module="key-risks">
-          <KeyRisksModule advice={advice} />
-        </div>
+        </ModuleCell>
 
+        {/* Faits : ce qui est publié ou observé, sans jugement. */}
+        <ModuleCell id="financials">
+          <FinancialsModule instrument={instrument} />
+        </ModuleCell>
+        <ModuleCell id="peers" density="compact">
+          <PeersModule instrument={instrument} />
+        </ModuleCell>
+
+        {/* DÉCISION et RISQUE : le verdict, puis ce qui le borne. */}
+        <ModuleCell id="verdict">
+          <Card
+            rank="quiet"
+            kicker="Déclaré"
+            title={analysisModule('verdict').title}
+            titleId="vx-analysis-verdict-title"
+            footer={<>statut et direction relayés tels quels</>}
+          >
+            <AdviceCard advice={advice} />
+          </Card>
+        </ModuleCell>
+        <ModuleCell id="key-risks" density="compact">
+          <KeyRisksModule advice={advice} />
+        </ModuleCell>
+        <ModuleCell id="upcoming-catalysts" density="compact">
+          <CatalystsModule instrument={instrument} />
+        </ModuleCell>
+
+        {/* Les absences, regroupées : leur régularité est le message. */}
+        <AbsentAnalysisModule id="analyst-revisions" />
         <AbsentAnalysisModule id="regime" />
         <AbsentAnalysisModule id="fundamental-quality" />
         <AbsentAnalysisModule id="valuation" />
         <AbsentAnalysisModule id="model-confidence" />
-
-        <div data-module="peers">
-          <PeersModule instrument={instrument} />
-        </div>
-        <div data-module="evidence">
-          <Card
-            rank="quiet"
-            kicker="Fusion déterministe"
-            title={analysisModule('evidence').title}
-            titleId="vx-analysis-evidence-title"
-            footer={<>clusters dédoublonnés — aucune pertinence inventée</>}
-          >
-            <EvidenceRail evidence={evidence} />
-          </Card>
-        </div>
         <AbsentAnalysisModule id="levels" />
         <AbsentAnalysisModule id="contradictions" />
       </div>

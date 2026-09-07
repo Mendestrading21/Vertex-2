@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef, useState } from 'react';
+
 import type { OptionChainExpiration } from '../../api/client.ts';
 import { geometryNumber, ivViewOf } from '../../pages/options/optionsView.ts';
 
@@ -97,10 +99,50 @@ export function ivSmileSeriesOf(group: OptionChainExpiration): IvSmileSeries {
   };
 }
 
+/**
+ * Largeur de tracé par défaut, quand rien ne peut être mesuré (jsdom, premier
+ * rendu). Les hauteurs sont celles de la boîte CSS (`.vx-smile-svg`) : la
+ * figure est dessinée AUX DIMENSIONS DE SA BOÎTE, jamais étirée dedans.
+ */
 const WIDTH = 160;
-const HEIGHT = 72;
-const PAD_X = 6;
-const PAD_Y = 6;
+const HEIGHT = 120;
+const HEIGHT_COMPACT = 56;
+const PAD_X = 8;
+const PAD_Y = 8;
+
+/**
+ * La largeur RÉELLE de la figure, observée.
+ *
+ * REFONTE UI 2026-09-05 — LES POINTS ÉTAIENT DES ELLIPSES. Le SVG déclarait
+ * une boîte de 160×72 et `preserveAspectRatio="none"` ; la CSS l'étirait en
+ * pleine largeur sur 120 px de haut, donc chaque `<circle>` devenait un ovale
+ * trois fois plus large que haut (défaut relevé par `refonte/option.md` §1.2).
+ * La figure prend désormais la largeur mesurée de sa boîte comme espace de
+ * coordonnées : un point est un disque quelle que soit la colonne. Sans
+ * `ResizeObserver` (tests), la largeur par défaut sert, sans déformation
+ * puisque le rapport d'aspect est alors préservé par le navigateur.
+ */
+function useMeasuredWidth(fallback: number): readonly [React.RefObject<HTMLElement | null>, number] {
+  const ref = useRef<HTMLElement | null>(null);
+  const [width, setWidth] = useState(fallback);
+  useLayoutEffect(() => {
+    const node = ref.current;
+    if (node === null || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const mesure = entries[0]?.contentRect.width;
+      if (mesure !== undefined && mesure > 0) {
+        setWidth(Math.round(mesure));
+      }
+    });
+    observer.observe(node);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  return [ref, width];
+}
 
 function scale(values: readonly number[], size: number, pad: number, invert: boolean): (value: number) => number {
   const min = Math.min(...values);
@@ -125,6 +167,7 @@ export interface IvSmileProps {
 export function IvSmile({ group, label, compact = false }: IvSmileProps) {
   const series = ivSmileSeriesOf(group);
   const all = [...series.calls, ...series.puts];
+  const [figureRef, width] = useMeasuredWidth(WIDTH);
   if (all.length === 0) {
     return (
       <p className="vx-iw-absent" role="status" data-testid="iv-smile-absent">
@@ -133,16 +176,17 @@ export function IvSmile({ group, label, compact = false }: IvSmileProps) {
       </p>
     );
   }
-  const x = scale(all.map((point) => point.strikeValue), WIDTH, PAD_X, false);
-  const y = scale(all.map((point) => point.ivValue), HEIGHT, PAD_Y, true);
+  const height = compact ? HEIGHT_COMPACT : HEIGHT;
+  const x = scale(all.map((point) => point.strikeValue), width, PAD_X, false);
+  const y = scale(all.map((point) => point.ivValue), height, PAD_Y, true);
   const path = (points: readonly IvPoint[]): string =>
     points.map((point) => `${x(point.strikeValue).toFixed(2)},${y(point.ivValue).toFixed(2)}`).join(' ');
   return (
-    <figure className="vx-smile" data-compact={compact ? 'true' : 'false'} data-testid="iv-smile">
+    <figure ref={figureRef} className="vx-smile" data-compact={compact ? 'true' : 'false'} data-testid="iv-smile">
       <svg
         className="vx-smile-svg"
-        viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-        preserveAspectRatio="none"
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="xMinYMid meet"
         role="img"
         aria-label={label}
       >
@@ -155,7 +199,7 @@ export function IvSmile({ group, label, compact = false }: IvSmileProps) {
             data-right={point.right}
             cx={x(point.strikeValue)}
             cy={y(point.ivValue)}
-            r={compact ? 1.4 : 2}
+            r={compact ? 2.5 : 3.5}
           />
         ))}
       </svg>

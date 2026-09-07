@@ -5,7 +5,7 @@ import { saveTextAsFile } from '../../app/downloadFile.ts';
 import type { FlatTicker } from '../../components/markets/marketsView.ts';
 import {
   GROUP_LABELS_FR,
-  frDecimal,
+  displayNumber, displayPercent,
   geometryNumber,
   signSymbolOf,
 } from '../../components/markets/marketsView.ts';
@@ -257,16 +257,16 @@ export function MarketsTable({ entries, population, selected = null, onSelect }:
                 </th>
                 <td>{entry.sectorLabel}</td>
                 <td className="vx-num">
-                  {frDecimal(entry.ticker.last_close)}
+                  {displayNumber(entry.ticker.last_close)}
                   {entry.ticker.currency !== null ? ` ${entry.ticker.currency}` : ''}
                 </td>
                 <td className="vx-num" data-sign={entry.group}>
                   <span aria-hidden="true">{signSymbolOf(entry.group)}</span>{' '}
-                  {frDecimal(entry.ticker.return_1d_pct)} %{' '}
+                  {displayPercent(entry.ticker.return_1d_pct)}{' '}
                   <span className="vx-visually-hidden">({GROUP_LABELS_FR[entry.group]})</span>
                 </td>
-                <td className="vx-num">{frDecimal(entry.ticker.weight_in_sector_pct)} %</td>
-                <td className="vx-num">{frDecimal(entry.ticker.weight_global_pct)} %</td>
+                <td className="vx-num">{displayPercent(entry.ticker.weight_in_sector_pct)}</td>
+                <td className="vx-num">{displayPercent(entry.ticker.weight_global_pct)}</td>
                 <td>{entry.ticker.quality}</td>
               </tr>
             ))}

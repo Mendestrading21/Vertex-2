@@ -217,9 +217,9 @@ describe('Page Marchés — état nominal', () => {
     });
     expect(within(table).getAllByRole('row')).toHaveLength(5); // 1 en-tête + 4
     const techRow = within(table).getByText('SYN-TECH-01').closest('tr');
-    expect(techRow?.textContent).toContain('110,00 SYN');
-    expect(techRow?.textContent).toContain('+10,00 %');
-    expect(techRow?.textContent).toContain('70,97 %');
+    expect(techRow?.textContent).toContain('110.00 SYN');
+    expect(techRow?.textContent).toContain('+10.00%');
+    expect(techRow?.textContent).toContain('70.97%');
     expect(techRow?.textContent).toContain('SYNTHÉTIQUE');
 
     // Breadth : arc gradué + jauge linéaire (deux `meter`), valeurs et
@@ -228,14 +228,14 @@ describe('Page Marchés — état nominal', () => {
     // complet de la figure est comparé en entier.
     const meters = screen.getAllByRole('meter');
     expect(meters).toHaveLength(2);
-    expect(screen.getByTestId('arc-figure').textContent).toBe('50,0 %');
+    expect(screen.getByTestId('arc-figure').textContent).toBe('50.0 %');
     // LOT T3 — LA MESURE ET SON SEUIL SONT DEUX TEXTES. Réunis dans le
     // libellé de la jauge, « 100,0 % (seuil 80,0 %) » se coupait en deux
     // lignes dont la seconde ne portait que « %) » — mesuré sur capture
     // d'Aujourd'hui, carte de 200 px. La couverture SERVIE se lit seule ; le
     // seuil SERVI vit sur son marqueur, à sa place sur la même échelle.
-    expect(screen.getByText('100,0 %')).toBeDefined();
-    expect(screen.getByText('seuil exigé 80,0 %')).toBeDefined();
+    expect(screen.getByText('100.0%')).toBeDefined();
+    expect(screen.getByText('seuil exigé 80.0%')).toBeDefined();
     expect(screen.queryByText('100,0 % (seuil 80,0 %)')).toBeNull();
     // Les trois comptes servis prennent aussi la forme de barres de
     // dénombrement, chacune avec son compte publié.
@@ -578,9 +578,9 @@ describe('Page Marchés — la planche §2 est complète, servie ou déclarée (
     const faits = await screen.findByTestId('markets-instrument-facts');
     expect(screen.getByRole('heading', { level: 2, name: 'Inspecteur — SYN-TECH-01' })).toBeDefined();
     // Chaînes serveur verbatim, virgule française : clôture, rendement, poids.
-    expect(faits.textContent).toContain('110,00');
-    expect(faits.textContent).toContain('+10,00 %');
-    expect(faits.textContent).toContain('70,97 %');
+    expect(faits.textContent).toContain('110.00');
+    expect(faits.textContent).toContain('+10.00%');
+    expect(faits.textContent).toContain('70.97%');
     // La lignée du calcul, jamais un chiffre neuf.
     const lignee = screen.getByTestId('markets-instrument-lineage');
     expect(lignee.textContent).toContain('market.simple_return');

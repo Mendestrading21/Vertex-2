@@ -61,9 +61,7 @@ NOW = datetime(2026, 8, 25, 12, 0, 0, tzinfo=UTC)
 BASE_TIME = NOW - timedelta(minutes=30)
 SEED = 20260825
 
-UNIVERSE = tuple(
-    ticker for tickers in SYNTHETIC_SECTOR_TICKERS.values() for ticker in tickers
-)
+UNIVERSE = tuple(ticker for tickers in SYNTHETIC_SECTOR_TICKERS.values() for ticker in tickers)
 
 
 class MutableClock:
@@ -122,8 +120,9 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
             .select_from(OutboxMessage)
             .where(OutboxMessage.topic == TOPIC_OPPORTUNITIES_REFRESH)
         ).scalar_one()
-    # Bars AND chains both change a candidate's advice basis (12 + 4).
-    assert refresh_jobs == inserted == 16
+    # Bars AND chains both change a candidate's advice basis (12 + 4
+    # envelopes), coalesced into ONE pending refresh job.
+    assert refresh_jobs == 1
 
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
@@ -142,14 +141,8 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
     assert content["engine_version"] == ENGINE_VERSION
 
     # -- 1. profile_ref carries BOTH the manifest id and its version --------
-    manifest = yaml.safe_load(
-        Path(DEFAULT_PROFILES_PATH).read_text(encoding="utf-8")
-    )
-    entry = next(
-        profile
-        for profile in manifest["profiles"]
-        if profile["id"] == DEFAULT_PROFILE_ID
-    )
+    manifest = yaml.safe_load(Path(DEFAULT_PROFILES_PATH).read_text(encoding="utf-8"))
+    entry = next(profile for profile in manifest["profiles"] if profile["id"] == DEFAULT_PROFILE_ID)
     profile_ref = content["profile_ref"]
     assert profile_ref["id"] == entry["id"] == DEFAULT_PROFILE_ID
     assert profile_ref["version"] == entry["version"]
@@ -178,9 +171,7 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
         # A closed verdict names the FIRST closed gate of the canonical order.
         primary = candidate["primary_exclusion_reason"]
         assert primary is not None, candidate["ticker"]
-        first_block = next(
-            gate for gate in candidate["gates"] if gate["status"] == "BLOCK"
-        )
+        first_block = next(gate for gate in candidate["gates"] if gate["status"] == "BLOCK")
         assert primary == {
             "gate_id": first_block["gate_id"],
             "reason_code": first_block["reason_code"],
@@ -198,17 +189,12 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
     assert coverage["universe_size"] == len(UNIVERSE) == 24
     assert coverage["qualified_count"] == len(qualified)
     assert coverage["excluded_count"] == len(excluded)
-    assert (
-        coverage["qualified_count"] + coverage["excluded_count"]
-        == coverage["universe_size"]
-    )
+    assert coverage["qualified_count"] + coverage["excluded_count"] == coverage["universe_size"]
     assert sum(coverage["status_counts"].values()) == coverage["universe_size"]
     for status, count in coverage["status_counts"].items():
         assert group_for_status(status) in ("QUALIFIED_GROUP", "EXCLUDED_GROUP")
         assert count == sum(
-            1
-            for candidate in (*qualified, *excluded)
-            if candidate["advice"]["status"] == status
+            1 for candidate in (*qualified, *excluded) if candidate["advice"]["status"] == status
         )
 
     # On the synthetic population the HONEST outcome is a fully closed
@@ -243,25 +229,18 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
         assert by_ticker[ticker]["bars_status"] == "OK"
     # A ticker without bars is not repaired with a default series.
     assert by_ticker["SYN-UTIL-04"]["bars_status"] == "ABSENT"
-    assert (
-        by_ticker["SYN-UTIL-04"]["required_evidence"]["price_volume"]["present"]
-        is False
-    )
+    assert by_ticker["SYN-UTIL-04"]["required_evidence"]["price_volume"]["present"] is False
 
     # -- 4. documented ordering, stable and never an opaque score -----------
     assert content["ordering"]["method"] == "lexicographic"
     assert tuple(content["ordering"]["keys"]) == QUALIFIED_ORDERING_KEYS
     assert excluded_tickers == sorted(excluded_tickers)
-    assert [candidate["rank"] for candidate in qualified] == list(
-        range(1, len(qualified) + 1)
-    )
+    assert [candidate["rank"] for candidate in qualified] == list(range(1, len(qualified) + 1))
 
     # Identical drain: publish-if-changed republishes NOTHING.
     first_version, first_hash = snapshot.version, snapshot.content_hash
     with session_factory() as session:
-        enqueue_outbox(
-            session, TOPIC_OPPORTUNITIES_REFRESH, _refresh_message("replay")
-        )
+        enqueue_outbox(session, TOPIC_OPPORTUNITIES_REFRESH, _refresh_message("replay"))
         session.commit()
     replay_runner = make_runner(session_factory, clock)
     assert replay_runner.drain(max_batches=5) == 1
@@ -277,9 +256,7 @@ def test_opportunities_chain_end_to_end(session_factory) -> None:
     # Later clock: a new version whose ORDERING is identical.
     clock.now = NOW + timedelta(minutes=5)
     with session_factory() as session:
-        enqueue_outbox(
-            session, TOPIC_OPPORTUNITIES_REFRESH, _refresh_message("tick")
-        )
+        enqueue_outbox(session, TOPIC_OPPORTUNITIES_REFRESH, _refresh_message("tick"))
         session.commit()
     later_runner = make_runner(session_factory, clock)
     assert later_runner.drain(max_batches=5) == 1

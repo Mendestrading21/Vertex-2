@@ -84,9 +84,9 @@ describe('Page Options — composition (LOT-A5)', () => {
   it('spot, taux et dividende sont les chaînes PUBLIÉES du snapshot ; le budget et les références restent lisibles', async () => {
     servir();
     await renderOptions();
-    expect(screen.getByTestId('options-spot').textContent).toContain('102,50');
-    expect(screen.getByTestId('options-rate').textContent).toContain('0,02');
-    expect(screen.getByTestId('options-dividend').textContent).toContain('0,00');
+    expect(screen.getByTestId('options-spot').textContent).toContain('102.50');
+    expect(screen.getByTestId('options-rate').textContent).toContain('0.02');
+    expect(screen.getByTestId('options-dividend').textContent).toContain('0.00');
     expect(screen.getByTestId('chain-row-budget').textContent).toContain('plafond 240');
     expect(screen.getByTestId('chain-source-references').textContent).toContain('synthetic-dev:1234:oc0000');
   });
@@ -124,5 +124,22 @@ describe('Page Options — composition (LOT-A5)', () => {
       expect(screen.queryByTestId('option-inspector')).toBeNull();
     });
     expect(await screen.findByTestId('options-snapshot-facts')).toBeDefined();
+  });
+});
+
+describe('Page Options — sélection dans l’URL (vague 2)', () => {
+  it('lit les colonnes depuis `?cols=` et retombe sur la sélection par défaut sinon', async () => {
+    servir();
+    renderApp('/options/SYN-TECH-01?cols=bid,iv,inconnue');
+    await screen.findByRole('heading', { level: 2, name: "Chaîne d'options — SYN-TECH-01" });
+    expect(await screen.findByText(/Colonnes affichées : 2 sur/)).toBeDefined();
+  });
+
+  it('un groupe inconnu dans `?group=` est ignoré : le premier groupe publié reste affiché', async () => {
+    servir();
+    renderApp('/options/SYN-TECH-01?group=2099-01-01%C2%B7XXX');
+    await screen.findByRole('heading', { level: 2, name: "Chaîne d'options — SYN-TECH-01" });
+    const pressed = document.querySelector('[data-testid="chain-group"][aria-pressed="true"]');
+    expect(pressed).not.toBeNull();
   });
 });

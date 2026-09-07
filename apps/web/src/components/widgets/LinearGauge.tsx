@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { geometryValue, servedWidth } from './geometry.ts';
 
 /**
@@ -52,6 +54,7 @@ export function LinearGauge({
   reason,
   status,
 }: LinearGaugeProps) {
+  const labelId = useId();
   const invalid = status === 'INVALID';
 
   if (valuePct === null || valueText === null || invalid) {
@@ -77,13 +80,15 @@ export function LinearGauge({
 
   return (
     <div className="vx-w2-gauge">
-      <span className="vx-w2-gauge-label" id={`vx-w2-gauge-${label}`}>
+      {/* `useId`, pas le libellé : deux jauges au même libellé partageaient un
+          `id`, et un libellé avec espaces n'est pas un identifiant. */}
+      <span className="vx-w2-gauge-label" id={labelId}>
         {label}
       </span>
       <div
         className="vx-w2-gauge-track"
         role="meter"
-        aria-labelledby={`vx-w2-gauge-${label}`}
+        aria-labelledby={labelId}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={geometryValue(valuePct) ?? undefined}

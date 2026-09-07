@@ -82,6 +82,14 @@
   border-top-color: var(--vx-warning-soft);
 }
 
+.vx-w2-meta > * {
+  /* Un instant ISO de 27 caractères ou un badge d'état ne doit jamais sortir
+     d'une carte compacte (porte e2e « le contenu tient dans sa carte »,
+     mesurée à 1280 en CI avec les polices de secours). */
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .vx-w2-skeleton {
   height: var(--vx-space-16);
   border-radius: var(--vx-radius-6);
@@ -107,6 +115,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--vx-space-8);
+  min-width: 0;
   /* 13 px : plancher AA du système typographique. Les 10/11 px hérités de
      `global.css` sont une dette, pas un canon (revue C0, point A4). */
   font-size: var(--vx-font-size-meta);
@@ -443,6 +452,9 @@
   display: grid;
   justify-items: center;
   text-align: center;
+  /* Un Herfindahl servi à vingt décimales se replie dans le creux au lieu
+     d'en sortir (mesuré 226 px pour 114 px de creux, passe 2). */
+  overflow-wrap: anywhere;
   /* Le creux de l'anneau, jamais au-delà. */
   max-width: 62%;
 }
@@ -454,8 +466,10 @@
   color: var(--vx-text);
   font-variant-numeric: tabular-nums lining-nums;
   /* Une chaîne servie longue se replie DANS le creux ; elle n'est jamais
-     coupée, jamais arrondie — seul son cran typographique change. */
-  overflow-wrap: break-word;
+     coupée, jamais arrondie — seul son cran typographique change.
+     `anywhere` : `break-word` laissait une valeur sans espace (Herfindahl à
+     vingt décimales) déborder du creux, mesuré en passe 2. */
+  overflow-wrap: anywhere;
 }
 
 .vx-w2-ring-center[data-density='medium'] .vx-w2-ring-center-value {
@@ -569,7 +583,9 @@
 
 .vx-w2-shares-legend {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+  min-width: 0;
+  overflow-wrap: anywhere;
   gap: var(--vx-space-4) var(--vx-space-12);
   margin: var(--vx-space-8) 0 0;
   padding: 0;
@@ -1145,20 +1161,41 @@
    colonne devenaient invisibles. Une seule vérité, au bon endroit.
    =========================================================================== */
 
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   AVANT (LOT P4, quatre colonnes) : la dominante partageait sa rangée avec
+   les paires extrêmes, la couverture du périmètre n'arrivait qu'en troisième
+   rangée, et deux absences (registre, journal des alertes) étaient égarées en
+   quatrième rangée parmi les modules servis. MAINTENANT, douze colonnes pour
+   que les cartes n'aient plus toutes la même largeur, dans l'ordre de la
+   question « qu'est-ce qui bouge ensemble dans mon périmètre ? » :
+     1. SIGNAL — le périmètre DÉCLARÉ (couverture), le drawdown et la
+        concentration du registre : trois cartes compactes, quatre colonnes
+        chacune ;
+     2. la dominante `correlations` (`XL`) seule sur sa rangée, toute la
+        largeur : la matrice n'a plus de compagnon qui la rétrécit ;
+     3. ce que la matrice a produit ou coûté — paires extrêmes, alignement,
+        écartés — sur une rangée, quatre colonnes chacune ;
+     4. et 5. les douze absences déclarées regroupées en bas, deux colonnes
+        chacune, en densité compacte — où leur régularité est le message.
+   Le catalogue est INCHANGÉ : les dix-neuf modules gardent leur aire nommée.
+   L'ancienne variante ≥ 1600 px ne faisait que réordonner ces mêmes aires ;
+   elle est supprimée. */
 .vx-risk-grid {
-  /* LOT P4 — hiérarchie de lecture : les mesures SERVIES d'abord, la
-     dominante haute et centrale avec ses deux compagnons de droite, les
-     absences déclarées regroupées en bas. Le drawdown occupe deux colonnes
-     pour porter sa courbe ; la concentration en porte sa bande de parts. */
   grid-template-areas:
-    'drawdown drawdown concentration concentration'
-    'correlations correlations correlations extremes'
-    'coverage coverage alignment alignment'
-    'discards discards register alerts'
-    'score var benchrel vol'
-    'liquidity turnover stress factors'
-    'budget budget radar radar';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'coverage coverage coverage coverage drawdown drawdown drawdown drawdown concentration concentration concentration concentration'
+    'correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations correlations'
+    'extremes extremes extremes extremes alignment alignment alignment alignment discards discards discards discards'
+    /* PASSE 3 (2026-09-07, mesure 1280) : QUATRE par rangée, plus six.
+       À six, chaque carte tenait 141 px à 1440 et 120 px à 1280 — « Score de
+       risque » sur deux lignes, « CONTRAT SERVEUR ABSENT » sur trois, « rien
+       ne collecte cette donnée » sur trois, et des bas de cartes en dents de
+       scie. La régularité, qui EST le message de ce bloc, ne se lisait plus.
+       À quatre (trois colonnes, ~220 px à 1280), le titre tient sur une
+       ligne et la phrase sur deux. Le catalogue et l'ordre sont inchangés. */
+    'score score score var var var benchrel benchrel benchrel vol vol vol'
+    'liquidity liquidity liquidity turnover turnover turnover stress stress stress factors factors factors'
+    'budget budget budget radar radar radar register register register alerts alerts alerts';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-risk-grid > [data-module='risk-score'] { grid-area: score; }
@@ -1180,18 +1217,6 @@
 .vx-risk-grid > [data-module='discards'] { grid-area: discards; }
 .vx-risk-grid > [data-module='risk-register'] { grid-area: register; }
 .vx-risk-grid > [data-module='alert-log'] { grid-area: alerts; }
-
-@media (min-width: 1600px) {
-  .vx-risk-grid {
-    grid-template-areas:
-      'drawdown drawdown concentration concentration extremes'
-      'correlations correlations correlations coverage coverage'
-      'alignment alignment discards register alerts'
-      'score var benchrel vol liquidity'
-      'turnover stress factors budget radar';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* La chaîne du Herfindahl fait jusqu'à 28 décimales : affichée au corps des
    métriques, elle occupait deux lignes en très grand et écrasait la bande de
@@ -1223,18 +1248,38 @@
         « Valeur marquée » et « P&L latent » tombaient hors du cadre et ne se
         lisaient qu'au défilement horizontal (mesuré sur capture 1440). Elle
         prend la largeur entière.
-     Les absences déclarées ferment la planche. */
+     Les absences déclarées ferment la planche.
+
+     REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+     AVANT : quatre colonnes ; la valorisation (un bloc de trois mesures par
+     devise) en occupait trois face à la performance totale compacte, qui
+     débordait sur sa seule colonne ; la concentration s'étirait sur deux
+     rangées pour loger devises et dividendes à sa droite.
+     MAINTENANT, douze colonnes pour que les cartes n'aient plus toutes la
+     même largeur : une rangée de SIGNAL (valorisation sur la moitié,
+     performance totale et devises sur un quart chacune — trois cartes
+     compactes de hauteur voisine), la DOMINANTE sur deux tiers à côté des
+     dividendes déclarés, les LOTS puis la PERFORMANCE en pleine largeur, le
+     JOURNAL en bande, la SAISIE en deux moitiés, et les huit absences
+     regroupées en bas — où leur régularité est le message. Le catalogue est
+     INCHANGÉ : les dix-huit modules gardent leur aire nommée. L'ancienne
+     variante ≥ 1600 px ne faisait que réordonner ces mêmes aires ; elle est
+     supprimée (les douze colonnes s'élargissent, la dominante garde sa rangée). */
   grid-template-areas:
-    'value value value totalperf'
-    'concentration concentration concentration currency'
-    'concentration concentration concentration dividends'
-    'positions positions positions positions'
-    'performance performance performance performance'
-    'ledger ledger ledger ledger'
-    'record record import import'
-    'dayperf cash benchmark allocation'
-    'sector country alerts attribution';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : performance totale (298 px) et devise (214)
+       s'empilent face à la valorisation (629) : 29 % → 8 %. L'import CSV
+       (252) et le registre (361) s'empilent face au formulaire de saisie
+       (869) : 36 % → 9 %. */
+    'value value value value value value totalperf totalperf totalperf totalperf totalperf totalperf'
+    'value value value value value value currency currency currency currency currency currency'
+    'concentration concentration concentration concentration concentration concentration concentration concentration dividends dividends dividends dividends'
+    'positions positions positions positions positions positions positions positions positions positions positions positions'
+    'performance performance performance performance performance performance performance performance performance performance performance performance'
+    'record record record record record record record record import import import import'
+    'record record record record record record record record ledger ledger ledger ledger'
+    'dayperf dayperf dayperf cash cash cash benchmark benchmark benchmark allocation allocation allocation'
+    'sector sector sector country country country alerts alerts alerts attribution attribution attribution';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-pf-grid > [data-module='value'] { grid-area: value; }
@@ -1256,21 +1301,6 @@
 .vx-pf-grid > [data-module='record-transaction'] { grid-area: record; }
 .vx-pf-grid > [data-module='csv-import'] { grid-area: import; }
 
-@media (min-width: 1600px) {
-  .vx-pf-grid {
-    grid-template-areas:
-      'value value value totalperf currency'
-      'concentration concentration concentration dividends dividends'
-      'positions positions positions positions positions'
-      'performance performance performance performance performance'
-      'ledger ledger ledger ledger ledger'
-      'record record record import import'
-      'dayperf cash benchmark allocation sector'
-      'country alerts attribution attribution attribution';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
 /* ===========================================================================
    LOT P1 — PLACEMENT DE LA PLANCHE §2 (Marchés)
    ---------------------------------------------------------------------------
@@ -1283,17 +1313,34 @@
    question de la page ; elles étaient une colonne sur quatre au milieu de
    trois absences déclarées. Elles ouvrent la planche ; les absences la
    ferment.
-   =========================================================================== */
+
+   REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   AVANT : le rail des instruments suivis (`focus`) formait une bande pleine
+   entre la synthèse et la carte, et repoussait la dominante en troisième
+   rangée ; les écartés vivaient sous les secteurs, loin de la santé qu'ils
+   expliquent. MAINTENANT, douze colonnes pour que les cartes n'aient plus
+   toutes la même largeur : une rangée de SIGNAL (breadth, santé, écartés —
+   trois cartes de comptes publiés, de hauteur voisine), la dominante en
+   deuxième rangée sur toute la largeur, puis la carte sectorielle (`L`) à
+   côté du rail des instruments suivis (`M`), et les sept absences regroupées
+   en bas — où leur régularité est le message. Le catalogue est INCHANGÉ :
+   les treize modules gardent leur aire nommée. L'ancienne variante ≥ 1600 px
+   ne faisait que réordonner ces mêmes aires ; elle est supprimée. */
 .vx-markets-grid {
   display: grid;
   grid-template-areas:
-    'breadth breadth health health'
-    'focus focus focus focus'
-    'map map map map'
-    'sectors sectors sectors discards'
-    'sessions vol indices rates'
-    'fx correlation volstruct volstruct';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'breadth breadth breadth breadth health health health health discards discards discards discards'
+    'map map map map map map map map map map map map'
+    /* PASSE 3 (2026-09-07) : chacune sa rangée, sur toute la largeur. La
+       carte sectorielle est un nuage de puces qui gagne à s'étaler, et les
+       instruments suivis alignent leurs tuiles côte à côte au lieu de les
+       empiler dans un rail de 301 px — même correction que sur Aujourd'hui.
+       Mesuré avant : sectorielle 626 px face à un rail de 1 591. */
+    'sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors sectors'
+    'focus focus focus focus focus focus focus focus focus focus focus focus'
+    'sessions sessions sessions vol vol vol indices indices indices rates rates rates'
+    'fx fx fx fx correlation correlation correlation correlation volstruct volstruct volstruct volstruct';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
   margin-top: var(--vx-space-12);
@@ -1310,21 +1357,27 @@
 .vx-markets-grid [data-module='rates-curve'] { grid-area: rates; }
 .vx-markets-grid [data-module='fx'] { grid-area: fx; }
 .vx-markets-grid [data-module='correlation'] { grid-area: correlation; }
+
+/* Planche §5 (Options) — même motif : ses aires vivent ici, après les spans du
+   socle, parce que la planche sans sous-jacent rend des `Widget`. Les aires
+   elles-mêmes (`grid-template-areas`) restent dans `global.css`. */
+.vx-options-grid [data-module='underlying'] { grid-area: underlying; }
+.vx-options-grid [data-module='identity-strip'] { grid-area: identity; }
+.vx-options-grid [data-module='spot'] { grid-area: spot; }
+.vx-options-grid [data-module='expected-move'] { grid-area: move; }
+.vx-options-grid [data-module='iv-reference'] { grid-area: ivref; }
+.vx-options-grid [data-module='iv-rank'] { grid-area: ivrank; }
+.vx-options-grid [data-module='dividend'] { grid-area: dividend; }
+.vx-options-grid [data-module='rate'] { grid-area: rate; }
+.vx-options-grid [data-module='vol-structure'] { grid-area: volstruct; }
+.vx-options-grid [data-module='underlying-series'] { grid-area: series; }
+.vx-options-grid [data-module='iv-smile'] { grid-area: smile; }
+.vx-options-grid [data-module='chain'] { grid-area: chain; }
+.vx-options-grid [data-module='strategy-builder'] { grid-area: builder; }
+.vx-options-grid [data-module='payoff-profile'] { grid-area: payoff; }
+.vx-options-grid [data-module='strategy-metrics'] { grid-area: metrics; }
 .vx-markets-grid [data-module='vol-structure'] { grid-area: volstruct; }
 .vx-markets-grid [data-module='discards'] { grid-area: discards; }
-
-@media (min-width: 1600px) {
-  .vx-markets-grid {
-    grid-template-areas:
-      'breadth breadth breadth health health'
-      'focus focus focus focus focus'
-      'map map map map map'
-      'sectors sectors sectors discards discards'
-      'sessions vol indices rates fx'
-      'correlation correlation volstruct volstruct volstruct';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* Les bornes d'une jauge ne se touchent jamais : dans une colonne étroite,
    « 0 » et « 100 » se lisaient « 0100 » (mesuré sur capture 1440). Le texte
@@ -1399,17 +1452,46 @@
    Elle est désormais composée — le cadre graphique en pleine largeur, ses
    mesures dessous, les séries servies par le moteur ensuite, les absences en
    fermeture.
-   =========================================================================== */
+
+   REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+   Pas de bande de signal : la dominante ouvre la page, c'est elle qu'on vient
+   voir. AVANT : quatre colonnes, la dernière rangée laissait deux cellules
+   VIDES (`saved saved . .`), et `synchronized` — `M` au catalogue — tenait
+   dans une seule colonne, moins large que les absences `S` voisines ; la
+   variante ≥ 1600 ne faisait que réordonner les mêmes cellules, supprimée.
+   MAINTENANT : douze colonnes, plus aucune cellule vide. Le cadre en pleine
+   bande ; sous lui, ce qui accompagne la série (volume, overlays, indicateurs
+   servis) à parts égales ; puis les trois figures calculées (RSI, MACD,
+   comparaison) à parts égales ; enfin les cinq absences sur une rangée, la
+   synchronisation (`M`) plus large que les quatre `S`. Le catalogue est
+   INCHANGÉ : les douze modules gardent leur aire nommée ; `data-size` reste
+   le span déclaré (ADR-017), les aires le composent sans le redéfinir. */
 .vx-charts-grid {
   display: grid;
   grid-template-areas:
-    'main main main main'
-    'volume volume indicators indicators'
-    'overlays overlays rsi rsi'
-    'macd macd comparison comparison'
-    'sync selected alerts layouts'
-    'saved saved . .';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    'main main main main main main main main main main main main'
+    /* PASSE 3 (2026-09-06, mesure 1280/1440/1600, population REAL).
+       CE QUI N'ALLAIT PAS. Les superpositions tenaient quatre colonnes,
+       soit 301 px : leurs trois figures — moyenne simple, exponentielle,
+       bandes de Bollinger — s'y empilaient sur 1 052 px de haut. Tout ce qui
+       partageait leur rangée creusait alors un trou : volume 381, comparaison
+       362. La composition précédente le masquait en étirant la comparaison
+       sur deux rangées — un cadre de 1 052 px dont 725 étaient vides.
+       CE QUE FAIT CELLE-CI. Les superpositions passent à huit colonnes
+       (~620 px) : `.vx-charts-figures` y range ses figures CÔTE À CÔTE, et
+       le module perd les deux tiers de sa hauteur. Le volume l'accompagne sur
+       la même rangée ; indicateurs servis et comparaison forment la suivante.
+       Deux rangées équilibrées, aucune carte étirée sur du vide. */
+    'overlays overlays overlays overlays overlays overlays overlays overlays volume volume volume volume'
+    'indicators indicators indicators indicators comparison comparison comparison comparison comparison comparison comparison comparison'
+    'rsi rsi rsi rsi rsi rsi macd macd macd macd macd macd'
+    /* PASSE 3 (2026-09-07, mesure 1280) : quatre puis une, plutôt que cinq
+       de front. Les quatre dernières tenaient 145 px à 1440 et 124 à 1280 —
+       « Études sauvegardées » sur deux lignes, « arbitrage d'autorité
+       financière requis » sur quatre. */
+    'sync sync sync selected selected selected alerts alerts alerts layouts layouts layouts'
+    'saved saved saved . . . . . . . . .';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: var(--vx-space-12);
   align-items: stretch;
   margin-top: var(--vx-space-12);
@@ -1432,20 +1514,8 @@
   min-width: 0;
 }
 
-@media (min-width: 1600px) {
-  .vx-charts-grid {
-    grid-template-areas:
-      'main main main main main'
-      'volume volume indicators indicators indicators'
-      'overlays overlays overlays rsi rsi'
-      'macd macd comparison comparison comparison'
-      'sync selected alerts layouts saved';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
-
-/* Le volume de la planche §8 occupe deux colonnes : ses barres ont la place
-   d'être hautes, et ses chiffres d'axe celle d'être lus. */
+/* Le volume de la planche §8 occupe un tiers de la bande : ses barres ont la
+   place d'être hautes, et ses chiffres d'axe celle d'être lus. */
 .vx-charts-grid .vx-w2-daybars {
   height: 132px;
 }
@@ -1838,6 +1908,29 @@
   align-self: stretch;
 }
 
+/* L'EXCEPTION À L'EXCEPTION : ON NE RÉSERVE PAS DE PLACE POUR UNE FIGURE QUI
+   N'EXISTE PAS.
+   `L` et `XL` s'étirent parce qu'ils portent une figure qui a besoin de sa
+   hauteur. Quand le serveur ne publie rien, cette figure n'est pas là — et
+   la carte garde quand même la hauteur de sa rangée. Mesuré le 2026-09-06
+   sur la pile live : la chronologie de Catalyseurs gardait 463 px de vide
+   (70 % de la carte) sous une phrase, l'agenda du Calendrier 249 px, le
+   payoff du Simulateur 144 px. C'est très exactement le défaut que le
+   LOT T3 a nommé — « un cadre de 400 px dont 340 sont vides » — mais réservé
+   aux dominantes, donc au plus visible de la page.
+   Le signal est la FRONTIÈRE D'ÉTAT elle-même (`.vx-dsb-message`, rendue par
+   `DataStateBoundary`) : elle ne coexiste jamais avec du contenu servi, elle
+   le remplace. La pastille « Données périmées » (`.vx-module-state`), qui
+   accompagne du contenu réel, n'entre pas dans cette règle. */
+.vx-board > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-board > [data-module][data-size='XL']:has(.vx-dsb-message),
+.vx-today-grid > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-today-grid > [data-module][data-size='XL']:has(.vx-dsb-message),
+.vx-markets-grid > [data-module][data-size='L']:has(.vx-dsb-message),
+.vx-markets-grid > [data-module][data-size='XL']:has(.vx-dsb-message) {
+  align-self: start;
+}
+
 
 /* ==========================================================================
    LOT P2 — OSCILLATEURS SUR LE DOSSIER
@@ -1882,29 +1975,43 @@
    de la planche. Un `[data-module]` imbriqué plus bas — il en existe dans
    l'inspecteur — ne doit jamais hériter d'une aire de la grille.
    =========================================================================== */
-/*
-  COMPOSITION PAR HAUTEURS VOISINES (même règle qu'à Calendrier et Sources).
+/* REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
 
-  Mesuré à 1440 : `'ideas score bias return'` valait 457 / 173 / 173 / 173 px,
-  soit 47 % de vide — une carte haute contre TROIS courtes. L'arithmétique de
-  la porte est instructive : la même carte haute face à UNE seule courte donne
-  31 %, sous le seuil. Ce n'est donc pas la différence de hauteur qui creuse le
-  trou, c'est le NOMBRE de courtes qui la subissent.
+   AVANT : la planche S'OUVRAIT sur trois absences (score moyen, biais global,
+   rendement attendu), les candidats évalués — deux comptes — tenaient seuls
+   une bande, et les six absences étaient dispersées sur les rangées 1, 4 et 6.
 
-  Les trois mesures de synthèse passent donc en tête, ensemble et de même
-  hauteur ; la file des idées actives prend sa bande. Les deux dernières
-  rangées étaient à 30 %, à trois points du seuil : appariées elles aussi, une
-  porte qu'on frôle finit par la franchir.
-*/
+   CE QUE LA GRILLE FAIT MAINTENANT. Douze colonnes, pour que les cartes
+   n'aient plus toutes la même largeur, et quatre temps de lecture :
+     1. les COMPTES SERVIS — candidats évalués, statuts sur l'univers,
+        directions — trois cartes de hauteur voisine ;
+     2. le CLASSEMENT, la dominante, en pleine largeur ;
+     3. les RAISONS d'exclusion (la carte la plus lue après le classement,
+        moitié de la largeur), le profil et la provenance des catalyseurs ;
+     4. les LIMITES déclarées puis les six ABSENCES, regroupées en bas, où
+        leur régularité est le message.
+   Le catalogue est INCHANGÉ : les quatorze modules gardent leur aire nommée.
+   Aucune variante par largeur : la même composition passe 1280, 1440 et
+   1600 (les douze colonnes s'élargissent, la dominante garde sa rangée). */
 .vx-opp-grid {
   grid-template-areas:
-    'score bias return return'
-    'ideas ideas ideas ideas'
-    'ranking ranking ranking ranking'
-    'biassplit health scatter factors'
-    'profile profile provenance provenance'
-    'exclusions exclusions quality activity';
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+    /* PASSE 2 (2026-09-06, mesure 1440, population SYNTHETIC) : santé (223 px) et répartition (223) s'empilent
+       face aux idées actives (440) : 33 % → 3 %. Le profil (1 051) tient
+       deux rangées face à la provenance (785) puis, à droite, la qualité (354)
+       et les exclusions (206) : 47 % / 44 % → 23 %. Les six absences
+       déclarées ferment la page sur une rangée de hauteur égale. */
+    'ideas ideas ideas ideas ideas ideas health health health health health health'
+    'ideas ideas ideas ideas ideas ideas biassplit biassplit biassplit biassplit biassplit biassplit'
+    'ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking ranking'
+    'profile profile profile profile provenance provenance provenance provenance quality quality quality quality'
+    'profile profile profile profile provenance provenance provenance provenance exclusions exclusions exclusions exclusions'
+    /* PASSE 3 (2026-09-07, mesure 1280) : les six absences passent de une
+       rangée de six à deux rangées de trois. Même raison que sur Risques —
+       à 141 px (1440) et 120 px (1280), « Score contre rendement » et
+       « Contribution des facteurs » se lisaient sur trois lignes chacun. */
+    'score score score score bias bias bias bias return return return return'
+    'scatter scatter scatter scatter factors factors factors factors activity activity activity activity';
+  grid-template-columns: repeat(12, minmax(0, 1fr));
 }
 
 .vx-opp-grid > [data-module='active-ideas'] { grid-area: ideas; }
@@ -1921,19 +2028,6 @@
 .vx-opp-grid > [data-module='recent-activity'] { grid-area: activity; }
 .vx-opp-grid > [data-module='catalysts-provenance'] { grid-area: provenance; }
 .vx-opp-grid > [data-module='quality'] { grid-area: quality; }
-
-@media (min-width: 1600px) {
-  .vx-opp-grid {
-    grid-template-areas:
-      'score score bias bias return'
-      'ideas ideas ideas ideas ideas'
-      'ranking ranking ranking ranking ranking'
-      'biassplit health health scatter factors'
-      'profile profile profile provenance provenance'
-      'exclusions exclusions activity quality quality';
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-}
 
 /* ===========================================================================
    LOT P3a — LA TEINTE DE PAGE CESSE D'ÊTRE UNE DÉCLARATION MORTE
@@ -2139,6 +2233,8 @@
 }
 
 .vx-dt-open {
+  /* Cible ≥ 28 px (WCAG 2.5.8) sans élargir la ligne dense. */
+  min-height: 28px;
   padding: 2px var(--vx-space-8);
   border: 1px solid var(--vx-border);
   border-radius: var(--vx-radius-6);
@@ -2586,7 +2682,16 @@
    sans `max-width` il aurait écarté les badges d'état vers le bord, et sans
    `flex: 1` il se serait collé au titre en laissant un vide au milieu. */
 .vx-palette-trigger {
-  flex: 0 1 320px;
+  /*
+    LE CHAMP DE RECHERCHE CÈDE EN PREMIER. Quand la barre manque de place,
+    trois choses peuvent céder : le fil d'Ariane (qui dit OÙ ON EST), le
+    groupe d'état à droite (qui dit CE QUE VAUT LA DONNÉE), et ce déclencheur
+    — dont le libellé n'est qu'une invite, et qui garde son raccourci ⌘K
+    visible même très étroit. C'est donc lui qui rétrécit, avec un facteur de
+    compression élevé : mesuré à 1280, sans cela l'état de session tombait
+    sur une seconde ligne pendant que ce champ gardait 284 de ses 320 px.
+  */
+  flex: 0 8 320px;
   justify-content: space-between;
   max-width: 320px;
   display: inline-flex;
@@ -3741,12 +3846,50 @@
    abrégée, c'est une information fausse. Mesuré sur Risques : un Herfindahl
    servi à vingt-huit chiffres écrasait sa carte. */
 .vx-metric-number {
+  /* REFONTE VAGUE 2 — un segment de mesure reste ATOMIQUE (porte e2e
+     `unbroken-measure` : jamais un nombre ou un instant sur deux lignes) et
+     n'est jamais coupé par le manque de place de sa colonne : la borne de
+     rendu est de 14ch, valeur entière dans le `title`. La colonne trop
+     étroite qui coupait « 22 » en « 2… » (santé des marchés) est corrigée à
+     la source, par une base de 88 px et une taille compacte. */
   display: inline-block;
   overflow: hidden;
   max-width: 14ch;
   vertical-align: bottom;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* Le pendant du précédent pour une valeur qui n'est PAS une mesure — un
+   secteur, une base d'ajustement, une qualité de série. Rien à borner : elle
+   passe à la ligne et se lit en entier. Voir `isAtomicMeasure` (number.ts)
+   pour la règle qui départage les deux. */
+.vx-metric-text {
+  display: inline;
+  max-width: 100%;
+  /* `break-word` et non `anywhere` : les occasions de coupure normales — le
+     trait d'union de « ibkr-trades-unadjusted » — sont préférées, et un mot
+     n'est fendu que s'il ne tient toujours pas. */
+  overflow-wrap: break-word;
+  /* Le corps d'affichage est réservé aux NOMBRES : c'est eux que l'œil
+     cherche de loin. Un libellé servi se lit comme du texte, et à cette
+     taille il tient sur une ligne au lieu d'être fendu en quatre. */
+  font-size: var(--vx-font-size-body);
+  letter-spacing: 0;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+/* Conséquence de la règle précédente, dans les grilles de faits à deux
+   colonnes (Identité d'Analyse, Performance totale de Portefeuille) :
+   l'absence y était rendue au corps de titre par la densité compacte, et
+   « non publié » se retrouvait PLUS GROS que « REAL » ou « VALID » juste à
+   côté. Ce qui manque criait, ce qui est connu chuchotait. Les deux se
+   lisent donc au même corps ; l'absence reste distincte par sa teinte
+   sourde et par son mot, jamais par sa taille. */
+.vx-main [data-module][data-density='compact'] .vx-metrics-grid .vx-metric-value.vx-cell-absent,
+.vx-metrics-grid .vx-metric-value.vx-cell-absent {
+  font-size: var(--vx-font-size-body);
 }
 
 
@@ -3824,3 +3967,219 @@
 .vx-sources-grid > [data-module='backups'] { grid-area: backups; }
 .vx-sources-grid > [data-module='components-health'] { grid-area: components; }
 .vx-sources-grid > [data-module='unknown-probes'] { grid-area: probes; }
+
+/* ==========================================================================
+   REFONTE UI 2026-09-05 — CHAÎNE D'OPTIONS : tête, groupes, faits de groupe,
+   bande de synthèse du snapshot, largeurs de colonne.
+   Même famille que les règles `.vx-chain-*` ci-dessus ; ajoutées en fin de
+   fichier, elles gagnent à spécificité égale par l'ordre source.
+   ========================================================================== */
+
+/* La tête de la dominante ne répète plus la question de la page : un titre,
+   une ligne qui dit ce que la table garantit. */
+.vx-chain-head-text {
+  min-width: 0;
+}
+
+.vx-chain-head-note {
+  margin: var(--vx-space-4) 0 0;
+  color: var(--vx-text-muted);
+  font-size: var(--vx-font-size-meta);
+  line-height: 1.45;
+}
+
+/* Bouton de groupe : cible de 40 px, nom en chasse fixe, qualité en pastille,
+   deux comptes — les autres vivent dans la ligne de faits du groupe affiché. */
+.vx-chain-group {
+  min-height: calc(var(--vx-space-32) + var(--vx-space-8));
+  gap: var(--vx-space-4);
+}
+
+.vx-chain-group-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vx-space-8);
+}
+
+.vx-chain-group[aria-pressed='true'] {
+  border-color: var(--vx-option);
+  background-color: var(--vx-option-soft);
+}
+
+/* Faits du groupe affiché : la liste horizontale du cadre graphique. */
+.vx-chain-group-facts {
+  margin: 0 0 var(--vx-space-12);
+}
+
+.vx-chain-group-facts dd strong {
+  color: var(--vx-text);
+  font-family: var(--vx-font-mono);
+  font-weight: 600;
+}
+
+.vx-chain-group-facts .vx-num {
+  overflow-wrap: anywhere;
+}
+
+/* La bande de synthèse : six faits côte à côte, micro-libellé au-dessus. */
+.vx-chain-snapshot-facts {
+  display: grid;
+  /* Deux colonnes, mesuré : à trois, les pastilles de population passaient
+     sur trois lignes et la bande dépassait ses voisines d'un tiers. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--vx-space-8) var(--vx-space-16);
+  margin: 0;
+}
+
+.vx-chain-snapshot-facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--vx-space-4);
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.vx-chain-snapshot-facts dt {
+  color: var(--vx-text-muted);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-font-size-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vx-chain-snapshot-facts dd {
+  margin: 0;
+  color: var(--vx-text-secondary);
+  font-size: var(--vx-font-size-meta);
+  text-align: left;
+}
+
+.vx-chain-snapshot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--vx-space-4);
+}
+
+.vx-chain-snapshot-refs,
+.vx-chain-snapshot-refs code {
+  display: inline;
+  overflow-wrap: anywhere;
+}
+
+/* Colonnes qui ne sont pas des nombres : l'action et l'axe. */
+.vx-chain-col-action {
+  width: calc(var(--vx-space-32) * 2 + var(--vx-space-16));
+}
+
+.vx-chain-col-strike {
+  width: 9ch;
+}
+
+.vx-chain-inspect-cell {
+  white-space: nowrap;
+}
+
+.vx-chain-inspect-cell .vx-quote-status {
+  margin: 0 var(--vx-space-4) 0 0;
+}
+
+.vx-chain-inspect[aria-pressed='true'] {
+  border-color: var(--vx-option);
+  color: var(--vx-text);
+}
+
+/* Le focus clavier ne passe pas sous les deux rangées d'en-tête collantes. */
+.vx-chain-table-scroll {
+  scroll-padding-top: calc(var(--vx-space-24) * 2 + var(--vx-space-8));
+}
+
+/* La série longue en bande : le tracé prend la hauteur d'une figure, pas
+   celle d'une vignette. */
+.vx-options-series-chart {
+  min-height: calc(var(--vx-space-32) * 2 + var(--vx-space-16));
+}
+
+/* ==========================================================================
+   REFONTE UI 2026-09-05 — INSTRUMENT ACTIF DANS LE BANDEAU DE CONTEXTE
+   Le fil entre les pages : une pilule en chasse fixe, un lien vers le
+   dossier, aucune lumière de plus que l'argent du titre.
+   ========================================================================== */
+.vx-contextbar-instrument {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--vx-space-24);
+  padding: 0 var(--vx-space-8);
+  border: 1px solid var(--vx-border-soft);
+  border-radius: var(--vx-radius-pill);
+  color: var(--vx-text);
+  font-family: var(--vx-font-mono);
+  font-size: var(--vx-font-size-meta);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.vx-contextbar-instrument code {
+  font-family: inherit;
+}
+
+.vx-contextbar-instrument:hover {
+  background: var(--vx-hover);
+}
+
+/* Options sans sous-jacent : le raccourci vers l'instrument du contexte. */
+.vx-underlying-shortcut {
+  margin: 0 0 var(--vx-space-12);
+  color: var(--vx-text-secondary);
+  font-size: var(--vx-font-size-meta);
+}
+
+/* === REFONTE UI 2026-09-05 — MARCHÉS === */
+
+/* LA DOMINANTE OCCUPE TOUTE LA LARGEUR : sa carte reprend la hauteur bornée
+   du socle (`.vx-marketmap-canvas`, `global.css` : « 22 instruments répartis
+   en six secteurs ne se lisent pas dans 420 px »). La hauteur fixe de 360 px
+   datait de la composition à quatre colonnes, où la table vivait « sous une
+   carte de 360 px » ; à douze colonnes, la carte est seule sur sa rangée et
+   aucune voisine ne se creuse. Même borne haute et basse que le socle, aucune
+   nouvelle mesure. */
+.vx-markets-grid .vx-marketmap-canvas {
+  height: clamp(420px, 42vh, 560px);
+}
+
+/* === REFONTE UI 2026-09-05 — RISQUES === */
+
+/* LA COUVERTURE NE DÉBORDE PLUS (dette `layout-gates` V9). La fenêtre servie
+   est deux horodatages ISO joints par une flèche : un seul jeton, insécable,
+   plus large que la colonne `minmax(160px, 1fr)` de la liste de faits — et un
+   enfant de grille garde `min-width: auto`, donc il poussait la carte au lieu
+   de se plier. Le jeton se coupe où il faut ; rien n'est masqué. */
+.vx-risk-grid .vx-risk-coverage dd,
+.vx-risk-grid .vx-risk-coverage dt {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* LA MATRICE DÉFILE LOCALEMENT, jamais coupée. La dominante occupe toute la
+   largeur ; si un périmètre plus large que la carte est publié, le contenu
+   reste atteignable dans les deux sens (`overflow: auto`, pas `hidden`). */
+.vx-risk-grid .vx-riskmatrix .vx-w2-grid-scroll {
+  overflow: auto;
+}
+
+/* === REFONTE UI 2026-09-05 — ANALYSE === */
+
+/* CE QUI DÉBORDAIT, ET POURQUOI CE N'EST PAS CACHÉ. Les risques déclarés
+   citent des identifiants de gate et des codes de raison en chasse fixe, que
+   le navigateur ne coupe pas ; l'evidence joint ses sources sur une ligne. À
+   un tiers de planche, ils tiennent ; quand une chaîne servie reste plus large
+   que sa carte, elle passe à la ligne lettre à lettre plutôt que d'être
+   rognée — la valeur entière reste dans le document. La grille des scénarios
+   garde son défilement LOCAL (`.vx-ohlcv-scroll`, `global.css`). Jamais
+   `overflow: hidden` sur une donnée. */
+.vx-analysis-grid [data-module='key-risks'] .vx-inspector-list,
+.vx-analysis-grid [data-module='key-risks'] .vx-opp-limits,
+.vx-analysis-grid [data-module='evidence'] .vx-evidence-meta {
+  overflow-wrap: anywhere;
+}

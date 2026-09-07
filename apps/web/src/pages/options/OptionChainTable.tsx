@@ -2,6 +2,7 @@ import { Fragment, useCallback, useId, useMemo, useState } from 'react';
 
 import type { OptionChainContract, OptionChainExpiration } from '../../api/client.ts';
 import { AbsentCell } from '../../components/absence.tsx';
+import { Tooltip } from '../../components/Tooltip.tsx';
 import {
   CHAIN_COLUMNS,
   CHAIN_COLUMNS_DEFAULT,
@@ -54,6 +55,13 @@ export interface OptionChainTableProps {
   /** Spot SERVI, verbatim, pour le repère. `null` = aucun repère tracé. */
   readonly spotValue?: string | null;
   readonly spotObservedAt?: string | null;
+  /**
+   * Sélection de colonnes CONTRÔLÉE par la page (persistée dans l'URL). Sans
+   * ces deux props, la table garde un état local — les tests unitaires la
+   * rendent hors routeur.
+   */
+  readonly columns?: readonly string[];
+  readonly onColumnsChange?: (next: readonly string[]) => void;
 }
 
 /**
@@ -95,19 +103,12 @@ function ValueCell({
     );
   }
   const quote = quoteViewOf(contract);
-  const statutCotation = column.group === 'cotation' || column.group === 'liquidité' ? quote.status : null;
   const provenance = `${column.label} : ${valeur} — ${column.definition}${
     quote.observedAt === null ? '' : ` Observé ${quote.observedAt}.`
   }`;
   return (
     <span title={provenance}>
       <code className="vx-num">{valeur}</code>
-      {/* Le statut DOUBLE l'information par du texte : jamais une couleur seule. */}
-      {statutCotation !== null && statutCotation !== 'OK' ? (
-        <span className="vx-quote-status" data-status={statutCotation}>
-          {statutCotation}
-        </span>
-      ) : null}
     </span>
   );
 }
@@ -117,11 +118,14 @@ function SideCells({
   side,
   columns,
   onInspect,
+  selected,
 }: {
   readonly contract: OptionChainContract | null;
   readonly side: 'CALL' | 'PUT';
   readonly columns: readonly ChainColumn[];
   readonly onInspect: (contract: OptionChainContract) => void;
+  /** Ce contrat est celui que l'inspecteur montre. */
+  readonly selected: boolean;
 }) {
   if (contract === null) {
     const absent = <AbsentCell quoi={`contrat ${side} à ce strike`} nature="not_published" reason={null} />;
@@ -149,10 +153,25 @@ function SideCells({
         </td>
       ))}
       <td className="vx-chain-inspect-cell">
+        {/* LE STATUT DE QUOTE EST UN FAIT DE CÔTÉ, PAS DE CELLULE. Il était
+            rendu sous CHAQUE valeur de cotation — deux « CROSSED » côte à côte
+            pour une seule quote refusée. Il est porté UNE fois par côté, à
+            côté de l'action, en texte : jamais une couleur seule. */}
+        {(() => {
+          const statut = quoteViewOf(contract).status;
+          return statut !== null && statut !== 'OK' ? (
+            <span className="vx-quote-status" data-status={statut}>
+              {statut}
+            </span>
+          ) : null;
+        })()}
         <button
           type="button"
           className="vx-chain-inspect"
-          aria-haspopup="dialog"
+          // L'inspecteur du shell n'est PAS un dialogue (aucun `role="dialog"`,
+          // aucun `aria-modal`) : l'annoncer comme tel mentait au lecteur
+          // d'écran. Le bouton dit s'il est celui dont le contrat est ouvert.
+          aria-pressed={selected}
           onClick={() => {
             onInspect(contract);
           }}
@@ -196,7 +215,8 @@ function ColumnPicker({
             {CHAIN_COLUMNS.filter((colonne) => colonne.group === groupe).map((colonne) => {
               const cochee = selection.includes(colonne.key);
               return (
-                <label className="vx-chain-column-option" key={colonne.key} title={colonne.definition}>
+                <Tooltip content={colonne.definition} placement="bottom" key={colonne.key}>
+                  <label className="vx-chain-column-option">
                   <input
                     type="checkbox"
                     checked={cochee}
@@ -209,7 +229,8 @@ function ColumnPicker({
                   />
                   <span>{colonne.label}</span>
                   <span className="vx-chain-column-unit">{colonne.unit}</span>
-                </label>
+                  </label>
+                </Tooltip>
               );
             })}
           </fieldset>
@@ -248,20 +269,31 @@ export function OptionChainTable({
   selectedConId = null,
   spotValue = null,
   spotObservedAt = null,
+  columns,
+  onColumnsChange,
 }: OptionChainTableProps) {
-  const [selection, setSelection] = useState<readonly string[]>(CHAIN_COLUMNS_DEFAULT);
+  const [localSelection, setLocalSelection] = useState<readonly string[]>(CHAIN_COLUMNS_DEFAULT);
+  const selection = columns ?? localSelection;
   const absentId = useId();
 
-  const basculer = useCallback((key: string) => {
-    setSelection((precedent) => {
-      if (precedent.includes(key)) {
-        // On ne descend jamais sous une colonne : une chaîne sans aucune valeur
-        // n'est plus une chaîne.
-        return precedent.length === 1 ? precedent : precedent.filter((k) => k !== key);
+  const basculer = useCallback(
+    (key: string) => {
+      const suivant = (precedent: readonly string[]): readonly string[] => {
+        if (precedent.includes(key)) {
+          // On ne descend jamais sous une colonne : une chaîne sans aucune valeur
+          // n'est plus une chaîne.
+          return precedent.length === 1 ? precedent : precedent.filter((k) => k !== key);
+        }
+        return precedent.length >= CHAIN_COLUMNS_MAX ? precedent : [...precedent, key];
+      };
+      if (columns !== undefined && onColumnsChange !== undefined) {
+        onColumnsChange(suivant(columns));
+        return;
       }
-      return precedent.length >= CHAIN_COLUMNS_MAX ? precedent : [...precedent, key];
-    });
-  }, []);
+      setLocalSelection(suivant);
+    },
+    [columns, onColumnsChange],
+  );
 
   // L'ordre des colonnes suit le vocabulaire, jamais l'ordre de cochage : la
   // chaîne doit avoir la même forme d'une session à l'autre.
@@ -321,9 +353,27 @@ export function OptionChainTable({
             Chaîne {group.trading_class} — échéance {group.expiration}
             <span className="vx-chain-caption-detail">
               {rows.length} strikes servis · {colonnes.length} colonnes affichées sur{' '}
-              {CHAIN_COLUMNS.length} servies · valeurs verbatim, aucun calcul local
+              {CHAIN_COLUMNS.length} servies · valeurs verbatim, aucun calcul local · valeur exacte au
+              survol et dans « Détail »
             </span>
           </caption>
+          {/* LARGEURS PAR NATURE DE COLONNE. En `table-layout: fixed`, la
+              première rangée d'en-tête (`colspan`) donnait à toutes les
+              colonnes la même largeur : la colonne « Détail » pesait autant
+              qu'une IV, et le strike — l'axe de lecture — autant qu'un bouton.
+              Le `colgroup` déclare les deux largeurs qui ne sont pas des
+              nombres ; les valeurs se partagent le reste. */}
+          <colgroup>
+            {colonnes.map((colonne) => (
+              <col key={`call-col-${colonne.key}`} />
+            ))}
+            <col className="vx-chain-col-action" />
+            <col className="vx-chain-col-strike" />
+            {colonnes.map((colonne) => (
+              <col key={`put-col-${colonne.key}`} />
+            ))}
+            <col className="vx-chain-col-action" />
+          </colgroup>
           <thead>
             <tr>
               <th colSpan={colonnes.length + 1} scope="colgroup" className="vx-chain-side-head">
@@ -339,18 +389,22 @@ export function OptionChainTable({
             </tr>
             <tr>
               {colonnes.map((colonne) => (
-                <th scope="col" key={`call-${colonne.key}`} title={colonne.definition}>
-                  {colonne.label}
-                  <span className="vx-chain-head-unit">{colonne.unit}</span>
+                <th scope="col" key={`call-${colonne.key}`}>
+                  <Tooltip content={colonne.definition} placement="bottom" tabbable>
+                    {colonne.label}
+                    <span className="vx-chain-head-unit">{colonne.unit}</span>
+                  </Tooltip>
                 </th>
               ))}
               <th scope="col">
                 <span className="vx-visually-hidden">Inspecter (call)</span>
               </th>
               {colonnes.map((colonne) => (
-                <th scope="col" key={`put-${colonne.key}`} title={colonne.definition}>
-                  {colonne.label}
-                  <span className="vx-chain-head-unit">{colonne.unit}</span>
+                <th scope="col" key={`put-${colonne.key}`}>
+                  <Tooltip content={colonne.definition} placement="bottom" tabbable>
+                    {colonne.label}
+                    <span className="vx-chain-head-unit">{colonne.unit}</span>
+                  </Tooltip>
                 </th>
               ))}
               <th scope="col">
@@ -405,11 +459,23 @@ export function OptionChainTable({
                     data-row="strike"
                     {...(selectionnee ? { 'data-selected': 'true', 'aria-current': 'true' as const } : {})}
                   >
-                    <SideCells contract={row.call} side="CALL" columns={colonnes} onInspect={onInspect} />
+                    <SideCells
+                      contract={row.call}
+                      side="CALL"
+                      columns={colonnes}
+                      onInspect={onInspect}
+                      selected={selectedConId !== null && row.call?.con_id === selectedConId}
+                    />
                     <th scope="row" className="vx-chain-strike">
                       <code className="vx-num">{row.strike}</code>
                     </th>
-                    <SideCells contract={row.put} side="PUT" columns={colonnes} onInspect={onInspect} />
+                    <SideCells
+                      contract={row.put}
+                      side="PUT"
+                      columns={colonnes}
+                      onInspect={onInspect}
+                      selected={selectedConId !== null && row.put?.con_id === selectedConId}
+                    />
                   </tr>
                 </Fragment>
               );

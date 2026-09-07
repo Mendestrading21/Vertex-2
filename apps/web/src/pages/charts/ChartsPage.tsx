@@ -15,6 +15,7 @@ import type { BarsView } from '../analysis/analysisView.ts';
 import { analysisStateOf, barsViewOf } from '../analysis/analysisView.ts';
 import { PeriodTabs } from '../../components/widgets/PeriodTabs.tsx';
 import type { PeriodOption } from '../../components/widgets/PeriodTabs.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import {
   ComparisonModule,
@@ -27,7 +28,8 @@ import { useDeclaredInstruments } from '../devUniverse.ts';
 import { absentModules, chartsModule, comparisonViewOf } from './chartsView.ts';
 import { pageAccentAttrs } from '../../components/widgets/pageAccent.ts';
 import { MethodNote } from '../../components/widgets/MethodNote.tsx';
-import { moduleStateOf } from '../../components/moduleState.ts';
+import type { ModuleState } from '../../components/moduleState.ts';
+import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
  * Page Graphiques (`TL / 08`) — question : « Quelles relations puis-je
@@ -112,13 +114,6 @@ function windowOptions(count: number): readonly PeriodOption[] {
   });
 }
 
-/** Une valeur absente est DITE absente — jamais un tiret ambigu. */
-function publie(valeur: string | number | null | undefined): string {
-  if (valeur === null || valeur === undefined || valeur === '') {
-    return 'non publié';
-  }
-  return String(valeur);
-}
 
 function ChartsFrame({
   data,
@@ -137,9 +132,21 @@ function ChartsFrame({
 }) {
   const currency = bars?.currency ?? 'devise non publiée';
   const asOf = data.as_of ?? null;
+  const mainModule = chartsModule('main-chart');
   const detail =
     state === 'stale'
-      ? `Snapshot publié périmé par le relais (âge publié ${publie(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
+      ? /*
+           NE PAS IMPUTER AU RELAIS CE QUE LE WORKER A DÉCLARÉ. Cette page
+           écrivait « périmé par le relais » dans TOUS les cas de péremption,
+           avec l'âge du DOSSIER. Or le cas courant est l'autre : le worker
+           publie la série comme non fraîche (`fresh = false`) alors que le
+           dossier, lui, est frais. Mesuré le 2026-09-06 : dossier 4 h, série
+           2 j 11 h. Analyse distingue déjà les deux ; Graphiques le fait
+           maintenant aussi, en nommant le propriétaire de chaque nombre.
+        */
+        data.state === 'stale'
+        ? `Snapshot publié périmé par le relais (âge publié ${publishedOr(data.age_seconds)} s) : la série reste affichée, mais ne décrit pas le marché à cet instant.`
+        : `Le worker a publié la série comme non fraîche (fresh = false) ; âge publié de la série ${publishedOr(bars?.ageSeconds ?? null)} s (âge du dossier ${publishedOr(data.age_seconds)} s).`
       : state === 'partial'
         ? 'Série publiée avec des barres écartées par le worker : la couverture ci-dessus dit lesquelles.'
         : state === 'delayed'
@@ -156,7 +163,7 @@ function ChartsFrame({
 
   const description =
     bars !== null && bars.status === 'OK'
-      ? `${publie(bars.count ?? bars.bars.length)} barres journalières publiées de ${publie(bars.firstTradingDay)} à ${publie(bars.lastTradingDay)}, dont ${affichees.length} affichées ; dernière clôture ${publie(bars.lastClose)} ${currency}.`
+      ? `${publishedOr(bars.count ?? bars.bars.length)} barres journalières publiées de ${publishedOr(bars.firstTradingDay)} à ${publishedOr(bars.lastTradingDay)}, dont ${affichees.length} affichées ; dernière clôture ${publishedOr(bars.lastClose)} ${currency}.`
       : 'Aucune série de barres exploitable publiée.';
 
   return (
@@ -164,6 +171,14 @@ function ChartsFrame({
       className="vx-chartframe"
       data-rank="dominant"
       data-module="main-chart"
+      /*
+        REFONTE UI 2026-09-05 — la section EST la cellule du module (même
+        motif que `MarketsFrame` et `ChainFrame`) : elle porte le span du
+        catalogue, sans quoi `align-self: stretch` (réservé aux porteurs de
+        `data-size`) ne s'appliquait jamais à la dominante. Aucun parent de
+        plus : les tests lisent `data-module` SUR l'élément dominant.
+      */
+      data-size={mainModule.size}
       aria-labelledby="vx-charts-title"
     >
       <header className="vx-chartframe-head">
@@ -188,10 +203,16 @@ function ChartsFrame({
         </div>
         <div>
           <dt>Couverture</dt>
+          {/*
+            REFONTE UI 2026-09-05 — la méta du cadre dit ce que la figure
+            couvre (compte et bornes). Exclusions et base d'ajustement sont
+            la DÉFINITION de la série : elles appartiennent à l'inspecteur,
+            qui les portait déjà — les répéter ici faisait deux vérités.
+          */}
           <dd>
             {bars === null
               ? 'aucune série publiée'
-              : `${publie(bars.count)} barre(s) valides (${publie(bars.firstTradingDay)} → ${publie(bars.lastTradingDay)}), ${bars.discardedCount} écartée(s), base ${publie(bars.adjustmentBasis)}`}
+              : `${publishedOr(bars.count)} barre(s) valides, de ${publishedOr(bars.firstTradingDay)} à ${publishedOr(bars.lastTradingDay)}`}
           </dd>
         </div>
       </dl>
@@ -238,9 +259,8 @@ function ChartsFrame({
         }
         limites={
           <>
-            population <code>{publie(data.population)}</code> déclarée par le worker ; aucun
-            overlay, indicateur, rebasage ni comparaison n&apos;est calculé dans le navigateur — ce
-            qui n&apos;est pas publié est déclaré absent ci-dessous, avec son motif.
+            population <code>{publishedOr(data.population)}</code> déclarée par le worker ; rien
+            n&apos;est recalculé dans le navigateur, ce qui n&apos;est pas publié est déclaré absent.
           </>
         }
       />
@@ -271,33 +291,33 @@ function SeriesInspector({
         </div>
         <div>
           <dt>Devise</dt>
-          <dd>{publie(bars?.currency)}</dd>
+          <dd>{publishedOr(bars?.currency)}</dd>
         </div>
         <div>
           <dt>Base d&apos;ajustement</dt>
-          <dd>{publie(bars?.adjustmentBasis)}</dd>
+          <dd>{publishedOr(bars?.adjustmentBasis)}</dd>
         </div>
         <div>
           <dt>Qualité publiée</dt>
-          <dd>{publie(bars?.quality)}</dd>
+          <dd>{publishedOr(bars?.quality)}</dd>
         </div>
         <div>
           <dt>Fraîcheur</dt>
           <dd>
-            as_of {publie(data.as_of)} · âge publié {publie(data.age_seconds)} s · fresh{' '}
+            as_of {publishedOr(data.as_of)} · âge publié {publishedOr(data.age_seconds)} s · fresh{' '}
             {bars?.fresh === null || bars?.fresh === undefined ? 'non publié' : String(bars.fresh)}
           </dd>
         </div>
         <div>
           <dt>Référence d&apos;observation</dt>
           <dd>
-            <code>{publie(bars?.sourceEventId)}</code>
+            <code>{publishedOr(bars?.sourceEventId)}</code>
           </dd>
         </div>
         <div>
           <dt>Snapshot · moteur</dt>
           <dd>
-            v{publie(data.snapshot_version)} · <code>{publie(data.engine_version)}</code>
+            v{publishedOr(data.snapshot_version)} · <code>{publishedOr(data.engine_version)}</code>
           </dd>
         </div>
         <div>
@@ -313,19 +333,24 @@ function SeriesInspector({
   );
 }
 
-/** Les modules de la planche sans source : présents, à leur place, motivés. */
+/**
+ * Les modules de la planche sans source : présents, à leur place, motivés.
+ *
+ * REFONTE UI 2026-09-05 — une absence pèse moins qu'une donnée : la cellule
+ * est compacte (chrome resserré, place tenue, motif écrit — article 17).
+ */
 function AbsentChartsModules() {
   return (
     <>
       {absentModules().map((module) => (
-        <div key={module.id} data-module={module.id} data-size={module.size}>
+        <ModuleCell key={module.id} id={module.id} size={module.size} density="compact">
           <AbsentModule
             title={module.title}
             question={module.question}
             reason={module.status.reason}
             note={module.status.note}
           />
-        </div>
+        </ModuleCell>
       ))}
     </>
   );
@@ -350,8 +375,17 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
     affichait comme frais, et seul le bandeau de page disait la vérité — or un
     lecteur qui regarde une carte ne regarde pas le bandeau.
   */
-  const etatServi = moduleStateOf('ready', data);
   const state = analysisStateOf(queryState, data);
+  /*
+    ET IL DOIT PORTER LA FRAÎCHEUR DE LA SÉRIE, PAS SEULEMENT CELLE DE
+    L'ENVELOPPE. `moduleStateOf('ready', data)` ne lisait que l'état du relais :
+    quand le worker publie la série non fraîche (`bars.fresh === false`) alors
+    que le dossier est frais — le cas courant hors séance — les six cartes de
+    cette page s'affichaient en « prêt ». `analysisStateOf` lit les deux, et
+    c'est déjà lui qui décide de la page. Une seule vérité pour la page et pour
+    ses cartes.
+  */
+  const etatServi: ModuleState = state;
   const bars = useMemo(() => (data === undefined ? null : barsViewOf(data)), [data]);
   const [fenetre, setFenetre] = useState<string>('all');
 
@@ -379,6 +413,12 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
         />
       ) : data !== undefined ? (
         <>
+          {/*
+            REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que
+            `.vx-options-grid`). Pas de bande de signal : la dominante ouvre
+            la page. Le DOM suit les aires de `widgets.css` : cadre → volume,
+            overlays, indicateurs → RSI, MACD, comparaison → absences.
+          */}
           <div className="vx-charts-grid vx-board" data-testid="charts-grid">
             <ChartsFrame
               key={instrument}
@@ -390,15 +430,26 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
               onWindow={setFenetre}
             />
 
+            {/*
+              L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE. La planche pose les
+              superpositions à gauche et le volume à droite de la même
+              rangée ; le document les donnait dans l'ordre inverse, et un
+              lecteur au clavier atteignait le volume avant la carte placée à
+              sa gauche. Mesuré le 2026-09-07 sur les trois largeurs.
+            */}
+            <OverlaysModule indicators={data.indicators} servedState={etatServi} />
+
             <VolumeModule bars={bars} servedState={etatServi} />
 
+            {/* Des mesures ponctuelles, pas une figure : carte compacte. */}
             <Widget
               id="served-indicators"
               size={chartsModule('served-indicators').size}
-              kicker="Moteur serveur"
+              kicker="Calculé"
               title={chartsModule('served-indicators').title}
               titleId="vx-charts-indicators-title"
               state={etatServi}
+              density="compact"
               footer={<>mesures ponctuelles publiées par le worker, relayées verbatim</>}
             >
               {data.indicators === null || data.indicators === undefined ? (
@@ -413,15 +464,16 @@ function ChartsRoute({ instrument }: { readonly instrument: string }) {
               )}
             </Widget>
 
-            <OverlaysModule indicators={data.indicators} servedState={etatServi} />
-            <RsiModule indicators={data.indicators} servedState={etatServi} />
-            <MacdModule indicators={data.indicators} servedState={etatServi} />
-
+            {/* Même règle : la comparaison partage sa rangée avec les
+                indicateurs servis, AVANT la rangée RSI / MACD. */}
             <ComparisonModule
               servedState={etatServi}
               comparison={comparisonViewOf(data.indicators)}
               instrument={instrument}
             />
+
+            <RsiModule indicators={data.indicators} servedState={etatServi} />
+            <MacdModule indicators={data.indicators} servedState={etatServi} />
 
             <AbsentChartsModules />
           </div>

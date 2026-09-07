@@ -1,5 +1,5 @@
 import type { AnalysisResponse } from '../../api/client.ts';
-import { FreshnessBadge } from '../../components/FreshnessBadge.tsx';
+import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { SnapshotFacts, publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 import { InspectorPanel } from '../../shell/inspector.tsx';
 import type { AdviceView, BarsView } from './analysisView.ts';
@@ -46,7 +46,18 @@ export function DossierInspector({
             label: 'as_of',
             value: data.as_of === null ? 'non publié' : <time dateTime={data.as_of}>{data.as_of}</time>,
           },
-          { label: 'Âge publié', value: <FreshnessBadge ageSeconds={data.age_seconds} sourceLabel="dossier" /> },
+          {
+            label: 'Âge publié',
+            // L'échelle servie voyage avec l'âge : sans elle, « il y a 4 h »
+            // ne se juge pas. `policyProps` rend `{}` si elle manque.
+            value: (
+              <FreshnessBadge
+                ageSeconds={data.age_seconds}
+                {...policyProps(data.freshness_policy)}
+                sourceLabel="dossier"
+              />
+            ),
+          },
           { label: 'État servi', value: <code>{data.state}</code> },
           { label: 'Population', value: <code>{publishedOr(data.population)}</code> },
           { label: 'Thèse', value: 'non publiée' },

@@ -37,3 +37,15 @@ describe('Metric — la valeur est bornée au rendu, l’unité ne l’est jamai
     expect(container.querySelector('.vx-metric-number')).toBeNull();
   });
 });
+
+describe('Metric — libellé masqué à l’écran, jamais au document', () => {
+  it('`labelHidden` garde le libellé pour les technologies d’assistance', () => {
+    const { container } = render(<Metric label="Spot" labelHidden value="366,08" unit="SYN" />);
+    const libelle = container.querySelector('.vx-metric-label');
+    expect(libelle?.textContent).toBe('Spot');
+    expect(libelle?.classList.contains('vx-visually-hidden')).toBe(true);
+    // Sans l'option, rien ne change : le libellé reste visible.
+    const { container: visible } = render(<Metric label="Spot" value="366,08" />);
+    expect(visible.querySelector('.vx-metric-label')?.classList.contains('vx-visually-hidden')).toBe(false);
+  });
+});

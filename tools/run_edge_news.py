@@ -61,7 +61,7 @@ for _chemin in (
 from sqlalchemy import create_engine  # noqa: E402
 from sqlalchemy.orm import Session  # noqa: E402
 
-from vertex_core.contracts import DataEnvelope  # noqa: E402
+from vertex_core.contracts import DataEnvelope, EnvelopeQuality  # noqa: E402
 from vertex_edge_ibkr.adapter import IbAsyncInformationAdapter  # noqa: E402
 from vertex_edge_ibkr.news import news_headline_envelopes  # noqa: E402
 from vertex_edge_ibkr.port import EdgeIbkrError  # noqa: E402
@@ -177,6 +177,15 @@ async def _collecter(
         "doublons": 0,
         "ecartees": 0,
         "erreurs": 0,
+        # MUETS : appels rendus SANS aucune dépêche. Mesuré le 2026-09-06 sur
+        # la boucle en direct : 272 des 456 appels d'un cycle expiraient côté
+        # IBKR sans lever d'exception — `reqHistoricalNewsAsync` rend alors une
+        # liste vide, donc une enveloppe `INSUFFICIENT_DATA`. Le résumé
+        # affichait « erreurs=0 » et rassurait à tort. Ce compteur ne distingue
+        # PAS un délai dépassé d'un fournisseur réellement sans actualité :
+        # l'information ne remonte pas jusqu'ici, et on n'invente pas ce qu'on
+        # ne mesure pas.
+        "muets": 0,
     }
 
     enveloppe_fournisseurs = await adaptateur.news_providers()
@@ -222,6 +231,8 @@ async def _collecter(
                 )
                 continue
             compteurs["appels"] += 1
+            if enveloppe.quality_status is EnvelopeQuality.INSUFFICIENT_DATA:
+                compteurs["muets"] += 1
 
             derivees, resultat = news_headline_envelopes(
                 enveloppe, enveloppe.payload, spec
@@ -292,10 +303,11 @@ async def _principal() -> int:
         await adaptateur.disconnect()
 
     log.info(
-        "terminé — instruments=%d appels=%d dépêches=%d insérées=%d doublons=%d "
-        "écartées=%d erreurs=%d",
+        "terminé — instruments=%d appels=%d muets=%d dépêches=%d insérées=%d "
+        "doublons=%d écartées=%d erreurs=%d",
         compteurs["instruments"],
         compteurs["appels"],
+        compteurs["muets"],
         compteurs["depechees"],
         compteurs["inserees"],
         compteurs["doublons"],

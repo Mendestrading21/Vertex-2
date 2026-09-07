@@ -200,15 +200,15 @@ test.describe('Page Opportunités — snapshot réel', () => {
     await expect(page.getByTestId('opp-ideas-universe')).toContainText(String(coverage['universe_size']));
     await expect(page.getByTestId('opp-ideas-excluded')).toContainText(String(coverage['excluded_count']));
     // Inspecteur par défaut : la vérité du snapshot ; « Inspecter » la remplace.
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Snapshot publié');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Snapshot publié');
     await expect(page.getByTestId('opp-snapshot-facts')).toBeVisible();
     const excluded = content['excluded'] as Record<string, unknown>[];
     const premier = excluded[0]!['ticker'] as string;
     await page.getByRole('button', { name: `Inspecter ${premier}` }).click();
-    await expect(page.locator('.vx-inspector-heading')).toHaveText(`Inspecteur — ${premier}`);
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', `Inspecteur — ${premier}`);
     await expect(page.getByTestId('opp-candidate-gates')).toBeVisible();
     await page.getByRole('button', { name: 'Fermer' }).click();
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Snapshot publié');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Snapshot publié');
   });
 
   test('axe : zéro violation critique/sérieuse + capture', async ({ page }, testInfo) => {

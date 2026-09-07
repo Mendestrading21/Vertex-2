@@ -28,7 +28,7 @@ test.describe('Accès passkey', () => {
     // Aucune donnée affichée sans session.
     await expect(page.locator('.vx-queue-item')).toHaveCount(0);
     // La barre de contexte reflète l'état observé (401 reçu → non connecté).
-    await expect(page.getByRole('banner').getByText('Non connecté')).toBeVisible();
+    await expect(page.getByRole('banner').getByText('Accès refusé')).toBeVisible();
 
     await page.goto('/sources-reports');
     await expect(page.locator('[data-state="auth-required"]')).toBeVisible();
@@ -108,7 +108,7 @@ test.describe('Accès passkey', () => {
 
     await page.goto('/auth');
     await page.getByRole('button', { name: 'Se connecter' }).click();
-    await expect(page.getByRole('banner').getByText('Connecté', { exact: true })).toBeVisible({
+    await expect(page.getByRole('banner').getByText('Accès accordé', { exact: true })).toBeVisible({
       timeout: 15_000,
     });
 

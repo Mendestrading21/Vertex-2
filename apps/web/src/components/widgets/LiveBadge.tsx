@@ -1,7 +1,7 @@
 import type { SessionState } from '../../api/client.ts';
 import type { SseLinkMode, SseLinkState } from '../../api/events.ts';
 import type { SnapshotMeta } from '../../api/hooks.ts';
-import { formatAge } from '../FreshnessBadge.tsx';
+import { formatAge, servedClockOf } from '../FreshnessBadge.tsx';
 import { POPULATION_NATURES } from '../SyntheticBanner.tsx';
 import { StatusChip } from './StatusChip.tsx';
 import type { StatusChipTone } from './StatusChip.tsx';
@@ -55,9 +55,39 @@ export interface LiveDecision {
 /** Populations qui interdisent tout mot d'activité sur la donnée. */
 const NEVER_ACTIVE = new Set(['SYNTHETIC', 'DEMO', 'SIMULATED', 'THEORETICAL']);
 
+/**
+ * Fraîcheur du badge : l'INSTANT servi, puis l'âge relatif à la lecture.
+ *
+ * L'ÂGE SEUL VIEILLIT MAL. Il est calculé par le serveur au moment de la
+ * réponse et ne bouge plus : la vue Marchés est mise en cache sans expiration
+ * (l'invalidation vient du flux, pas d'une horloge locale), donc « publié il y
+ * a 4 h » restait affiché des heures durant, et devenait faux sans jamais le
+ * dire. On ne corrige pas cet âge avec l'horloge du navigateur — ce serait
+ * inventer une mesure que personne n'a publiée. On ajoute le seul fait qui ne
+ * peut PAS devenir faux : l'instant de publication, servi avec la réponse.
+ */
+/*
+  CE QUE CE BADGE DIT, ET CE QU'IL LAISSE DIRE AILLEURS.
+
+  Âge servi : « publié il y a 4 s », et rien de plus. Deux formulations plus
+  riches ont été essayées puis mesurées le 2026-09-06 — l'instant absolu en
+  tête, puis la qualification « à la lecture ». Les deux disent vrai, et les
+  deux le disent une seconde fois : la même barre publie déjà l'instant servi
+  à sa droite, et l'inspecteur écrit « âge publié par le serveur » avec sa
+  version. Ce doublon coûtait de la largeur là où elle manque — barre à
+  850 px de méta, défilement horizontal à 1024, fil d'Ariane tronqué et état
+  de session rejeté sur une seconde ligne à 1280. Le badge garde donc la
+  forme courte.
+
+  Âge NON servi : le badge dit l'instant publié s'il en existe un. Il n'en
+  dérive aucun âge — soustraire l'horloge du navigateur d'un instant serveur
+  fabriquerait une fraîcheur que personne n'a publiée. Sans âge ni instant,
+  il n'y a rien à dire, et il le dit.
+*/
 function freshnessOf(meta: SnapshotMeta): string {
   if (meta.ageSeconds === null) {
-    return 'âge non publié';
+    const instant = servedClockOf(meta.asOf);
+    return instant === null ? 'âge non publié' : `publié ${instant}`;
   }
   return `publié ${formatAge(meta.ageSeconds)}`;
 }

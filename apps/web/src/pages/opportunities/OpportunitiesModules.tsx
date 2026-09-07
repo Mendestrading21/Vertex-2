@@ -64,7 +64,7 @@ export function ActiveIdeasModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Couverture publiée"
+      kicker="Publié"
       title={module.title}
       titleId="vx-opp-ideas-title"
       footer={<>univers déclaré par le worker · aucun candidat reclassé ici</>}
@@ -116,7 +116,7 @@ export function BiasSplitModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Directions publiées"
+      kicker="Publié"
       title={module.title}
       titleId="vx-opp-bias-title"
       footer={<>une direction UNKNOWN reste UNKNOWN — jamais convertie en neutre</>}
@@ -157,7 +157,7 @@ export function OpportunityHealthModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Moteur fail-closed"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-opp-health-title"
       footer={<>comptage du moteur unique sur l’univers déclaré</>}
@@ -196,7 +196,7 @@ export function ProfileModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Profil appliqué en partie"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-opp-profile-title"
       className="vx-opp-profile"
@@ -280,15 +280,14 @@ export function ExclusionsModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Compteurs publiés"
+      kicker="Publié"
       title={module.title}
       titleId="vx-opp-reasons-title"
       className="vx-opp-reasons"
       footer={
-        <>
-          chaque clé est la raison exacte (<code>gate:reason_code</code> ou{' '}
-          <code>required_evidence:nom</code>)
-        </>
+        // REFONTE UI 2026-09-05 — un pied d'une ligne ; la forme des clés
+        // (`gate:reason_code`, `required_evidence:nom`) se lit dans les barres.
+        <>clé = raison exacte du moteur</>
       }
     >
       {/* LOT P2c — UNE TABLE DE DEUX COLONNES DEVIENT DES BARRES. Deux colonnes
@@ -352,11 +351,11 @@ export function CalendarRefModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Snapshot calendrier"
+      kicker="Publié"
       title={module.title}
       titleId="vx-opp-calref-title"
       className="vx-opp-calref"
-      footer={<>un catalyseur n’est compté que sur un snapshot calendrier USED — jamais deviné</>}
+      footer={<>compté sur un calendrier USED seulement</>}
     >
       <div data-testid="opp-calendar-ref" data-status={status}>
         <p className="vx-opp-calref-status">
@@ -449,7 +448,7 @@ export function LimitationsModule({
       size={module.size}
       state={servedState}
       rank="quiet"
-      kicker="Déclaré par le moteur"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-opp-limitations-title"
       className="vx-opp-limitations"

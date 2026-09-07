@@ -1,10 +1,111 @@
 # État courant
 
 ```yaml
-phase: preparation_session_ibkr_reelle
-lot: "Démarrage live — les trois pièges du runbook"
-branch: claude/vertex-connection-kgkntr
-status: pr_ouverte_ci_en_cours
+phase: alimentation_reelle_et_refonte_ui
+lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
+branch: agent/vertex-total-audit-ultimate-polish
+status: pile_live_en_marche_correctifs_verifies_en_direct_pr_76_ouverte_aucun_merge
+corrections_du_2026_09_06_apres_midi:
+  - "Sept correctifs issus du balayage en direct, tous poussés, CI verte à
+     chaque étape : Échap ferme l'inspecteur sur les neuf pages (ca8664b) ;
+     la file d'attention ne prétend plus une fraîcheur non mesurée (63ee5ab) ;
+     le résumé des dépêches compte les appels muets et la boucle dit « pause »
+     et non « cadence » (2605d51, aa8fdfd) ; l'API pose trois en-têtes de
+     refus par défaut sur chaque réponse (60ebeb8) et les serveurs locaux de
+     l'interface aussi (a080475) ; les enveloppes brutes d'historique ont une
+     identité stable (197f82e) ; le contournement d'authentification avoue son
+     coût en écriture (a37e30f)."
+  - "CI web rouge avec 1 197 tests verts : lightweight-charts dessinait depuis
+     une rAF de jsdom après retrait du graphique. Les moteurs sont doublés une
+     seule fois dans la configuration de test commune (4de5bfe)."
+  - "VÉRIFIÉ EN DIRECT sur la pile : badge FRESHNESS disparu de la file
+     republiée à 16:51 ; résumé des dépêches « muets=225 » sur 456 appels à
+     17:14 ; 57 enveloppes brutes écrites sous identité stable
+     (ibkr:bars:<con_id>:<taille>:<série>:<rth>:<premier>:<dernier>) contre
+     1 026 lignes historiques pour 59 contenus. PREUVE FINALE à 17:45 : la
+     passe suivante a inséré 0 enveloppe brute et reconnu 57 doublons de plus
+     (14 419 → 14 476). La réécriture perpétuelle est arrêtée."
+  - "PIÈGE DE POSTE : ne jamais suivre les journaux avec `tail -F` ici. Le
+     tail de Git pour Windows bloque l'écriture concurrente ; il a fait
+     disparaître le journal de la boucle d'ingestion entre 16:21 et 17:14, et
+     a survécu en orphelin à l'arrêt de la tâche. Documenté au runbook."
+  - "MODE DIRECT livré pour l'utilisateur : Vertex.cmd sur le Bureau ouvre une
+     fenêtre d'application sur le port 5174 (rechargement à chaud, mêmes
+     données que la pile réelle) ; le build livré reste sur 4173."
+pile_live_2026_09_06_1453:
+  - "Relance complète (stop-vertex puis start-vertex) sur le code du jour :
+     API 8000, interface 4173 (build reconstruit), worker, ingestion IBKR,
+     PostgreSQL 5432. Cycle d'ingestion OK : TWS client 72 historique 57/57,
+     client 79 dépêches. Aucune capacité compte/position/ordre utilisée."
+  - "Balayage de sept surfaces en lecture seule, chaque constat réfuté par un
+     sceptique : 22 constats, 15 réfutés, 7 retenus, tous mineurs. Détail et
+     échéances dans docs/99-status/DEBT.md (section « pile EN DIRECT »)."
+  - "DEUX POINTS POUR L'HUMAIN : (1) le verdict est BLOCKED sur 57/57 —
+     7 gates ferment en UNEVALUABLE faute de faits collectés (entitlements,
+     session, liquidité, calculs, contradictions, contraintes) : le
+     fail-closed fonctionne, la fonction d'avis n'est pas opérable ;
+     (2) disque C: à 97 % (19 Go libres) et snapshots à 514 Mo pour 17,7 h,
+     soit ~700 Mo/jour sans politique de rétention — échéance de l'ordre de
+     trois à quatre semaines, purge = décision humaine."
+  - "ca8664b : Échap ferme l'inspecteur sur les neuf pages (mesuré manquant
+     sur Marchés en direct), écouteur remonté dans InspectorPanel, 5 tests"
+tour_de_mise_en_place_2026_09_06:
+  - "908f502 : le worker récupère les baux expirés avant chaque réclamation
+     (18 lignes IN_PROGRESS trouvées bloquées sur la base réelle depuis le
+     redémarrage de la veille ; reprises et traitées en DONE après redémarrage
+     du worker à 13:32) ; neuf dettes de la porte de mise en page retirées,
+     cliquet 10 → 1 ; ADR-006 complété"
+  - "Pile live vérifiée : TWS 7496 joignable, boucle d'ingestion connectée
+     (historique OK, dépêches en timeout un dimanche), API 8000, web 4173
+     reconstruit avec l'infobulle, outbox 0 en attente, dernière observation
+     2026-09-04 (vendredi)"
+  - "Second moteur (session « Vertex 1 », dépôt Desktop/Vertex 1, donneur
+     Flask) : 15 commits ce matin sur ui/refonte-dashboards, PR #867 ; aucun
+     commit d'un autre moteur sur Vertex-2 aujourd'hui"
+vague2_suite_2026_09_06:
+  - "e9563f1 : infobulle unique (components/Tooltip.tsx, placement borné,
+     clavier, aria-describedby), mesures V2-7 (tables natives : 80 ms à 240
+     lignes, virtualisation non proposée) et V2-12 (172 872 octets gzip
+     initiaux, moteurs de graphiques hors chargement initial) ; CI 7/7
+     (run 34028650506)"
+  - "Revue complète sur la pile live (57 instruments réels) : 15 routes × 3
+     largeurs, zéro débordement coupé hors dette V4 market-map, zéro texte
+     suspect, zéro vocabulaire d'ordre ; rapport §2 ter de
+     docs/VERTEX_FINAL_REPORT.md. Restent sans données servies sur ce poste :
+     chaîne d'options (collecteur inactif), portefeuille et risques (aucun
+     portefeuille déclaré)"
+ci_2026_09_06:
+  - "PR #76 (agent/vertex-total-audit-ultimate-polish → main, base 0b82eb2) :
+     run 34021031911 sur c3cdb7d, 7 jobs sur 7 verts, e2e 834 parcours. Quatre
+     tours pour les e2e (17 → 9 → 3 → 0) ; dernier défaut : sans sous-jacent,
+     la planche Options rend des Widget et les aires nommées de global.css
+     perdaient contre les spans de widgets.css — aires déménagées (c3cdb7d).
+     Journal : docs/ui-refonte-vague2.md. Fusion : humaine, squash."
+nuit_agent_2026_09_05_06:
+  - "base main = 0b82eb2 ; 22 commits bornés sur la branche, aucun merge, aucun
+     force-push, aucun secret. Rapport : docs/VERTEX_FINAL_REPORT.md ; suivi UI :
+     docs/ui-refonte-vertex.md §7 ; journal : docs/VERTEX_NIGHT_RUN.md"
+  - "UI : douze pages sur douze colonnes nommées (signal → dominante → chiffres →
+     absences), ModuleCell partagé, instrument actif dans le bandeau, 75 règles
+     CSS mortes retirées, rangées ≤ 28 % de vide aux trois viewports, zéro
+     débordement horizontal hors régions défilantes ; tsc 0, Biome 0, Vitest 122
+     fichiers / 1 168 verts ; Playwright non exécutable sur ce poste"
+  - "Données : base réelle mesurée (14 364 cotations, 57 instruments, 5 760
+     dépêches ; 14 360 versions de markets_overview pour 14 364 cotations) ;
+     inventaire par page dans docs/VERTEX_DATA_COVERAGE.md, registre dans
+     docs/VERTEX_SOURCE_REGISTRY.md, runbook dans docs/VERTEX_RUNBOOK.md"
+  - "Coalescence de l'outbox : enqueue_outbox_coalesced, au plus un message en
+     attente par (sujet, clé) ; SEC non coalescé ; tests d'intégration sur base
+     jetable vertex_test"
+  - "Collecteur réel de chaînes d'options : vertex_edge_ibkr.options +
+     tools/run_edge_options.py (client 75), schéma ibkr.option-chain-slice/1,
+     définition renommée ibkr.option-chain-definition/1 ; INACTIF tant que
+     VERTEX_OPTIONS_UNDERLYINGS / RATE / DIVIDEND_YIELD ne sont pas déclarés
+     dans ~/.vertex/vertex.env (décision utilisateur : hypothèses de taux et
+     de dividende) ; non lancé contre TWS (samedi)"
+  - "prochaine commande : déclarer les trois variables, relancer
+     ~/.vertex/ingest-loop.ps1 un jour de séance, puis ouvrir une PR de la
+     branche vers main après relecture humaine"
 demarrage_live_2026_09_05:
   - "main = 282a75f. #70, #72 et #73 fusionnées ce jour. Il ne reste ouverte
      que #69, rouge sur les e2e SEULEMENT (6 checks sur 7 verts), base deux
@@ -3456,3 +3557,142 @@ l'identique · mutation CSS : la porte d'aire nommée rougit et nomme `market-ma
 Ces portes lisent la mise en page, pas le sens. Une carte qui tient dans sa
 carte peut rester illisible ; une rangée équilibrée peut être vide de contenu.
 C'est la relecture des captures qui le dit, et elle reste obligatoire.
+
+---
+
+## Nuit du 6 au 7 septembre 2026 — mise en page mesurée sur la pile live
+
+Branche `agent/vertex-total-audit-ultimate-polish`, PR #76. Toutes les mesures
+de cette section viennent d'une sonde Playwright (Edge headless) lancée contre
+la **pile live réelle** — API 8000, build livré 4173, données `REAL` du jour —
+aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
+`1440×900` et `1600×1000` (les trois cibles de release). Le produit est
+**DESKTOP ONLY** : aucune de ces mesures n'introduit de cible mobile.
+
+### Ce que la sonde a trouvé, et ce qui a été corrigé
+
+**1. La carte sectorielle ne se repliait pas.** `.vx-sector-grid` composait ses
+tuiles en `repeat(auto-fill, …)`. Le worker ne publie qu'**un** secteur
+(« Secteur non déclaré », 57/57 couverts) : `auto-fill` créait quand même les
+pistes vides, la tuile restait large de 150/170 px, ses 57 puces s'empilaient
+une par ligne sur 2 180 px de haut, le nom du secteur était tronqué en
+« Secteu… », et les trois quarts droits de la carte étaient vides. `auto-fit`
+réduit les pistes vides à zéro. La règle valait au socle **et** dans les deux
+surcharges de page — c'est la surcharge qui gagnait.
+
+**2. Un libellé servi était amputé à huit caractères.** `.vx-metric-number`
+borne son contenu à 14ch avec une ellipse et garde la valeur entière dans le
+`title` : bon compromis pour un Herfindahl de 28 chiffres. Appliqué à un
+**texte**, il rendait « Secteur … » et « ibkr-tra… » sur la carte Identité
+d'Analyse. Un libellé ainsi coupé n'existe plus qu'au survol — hors d'atteinte
+au clavier — et rien à l'écran ne dit qu'il manque du texte. `isAtomicMeasure`
+départage désormais : une mesure porte des chiffres et aucune espace ; tout le
+reste est un libellé et passe à la ligne, entier. La porte e2e
+`unbroken-measure` ne vise que `.vx-metric-number` et garde son périmètre.
+
+**3. Des cadres réservés à des figures qui n'existent pas.** `L`/`XL`
+s'étirent parce qu'ils portent une figure ; sans donnée servie, la figure n'est
+pas là et la carte gardait la hauteur de sa rangée. Mesuré : 725 px de vide sur
+la comparaison de Graphiques (68 % de la carte), 463 px sur la chronologie de
+Catalyseurs, 249 px sur l'agenda du Calendrier, 144 px sur le payoff du
+Simulateur — soit les **dominantes**, donc le plus visible de chaque page. Une
+dominante étirée porte maintenant sa hauteur de contenu dès lors que son corps
+est une frontière d'état (`.vx-dsb-message`). Après correction, **plus aucun
+module ne porte 90 px de vide intérieur** sur les onze planches.
+
+**4. La barre de contexte imposait un plancher de 850 px.** `flex: 0 0 auto`
+interdisait tout rétrécissement : le groupe de droite additionnait ses libellés
+et ce total devenait un plancher pour toute l'application — d'où le
+défilement horizontal à 1024 qu'a attrapé la CI. L'ordre de compression est
+désormais **déclaré** : le champ de recherche cède le premier (`flex: 0 8 320px`),
+le fil d'Ariane reste entier aux largeurs de release, le groupe d'état ne se
+comprime pas et ne se replie que sous 1280.
+
+**5. Deux rangées vides fermées, une régression réparée.** La porte
+« aucune rangée n'est vide à plus d'un tiers » a rougi sur `/charts` après la
+correction 3 : le trou n'était pas chez la comparaison mais chez les
+superpositions, qui tenaient quatre colonnes et empilaient leurs trois figures
+sur 1 052 px. Elles passent à huit colonnes, les figures se rangent côte à côte.
+Sur `/today`, les instruments suivis prennent la rangée entière : quatre tuiles
+alignées au lieu de deux par deux, et la dette de trou de la page est fermée.
+
+**6. Les absences déclarées se lisent enfin.** Quatre pages fermaient sur une
+rangée de six cartes à 141 px (1440) ou 120 px (1280) : titre sur deux lignes,
+« CONTRAT SERVEUR ABSENT » sur trois, bas de cartes en dents de scie. Ce bloc
+existe pour montrer une **régularité** ; à cette largeur elle ne se voyait plus.
+Risques passe à 3 rangées de 4, Opportunités et Catalyseurs à 2 rangées de 3,
+Graphiques à 4 puis 1.
+
+### Effet mesuré sur la hauteur des pages (données identiques)
+
+| page | avant | 1280 | 1440 | 1600 |
+| --- | --- | --- | --- | --- |
+| Aujourd'hui | 4 982 | 3 752 | 3 259 | 2 989 |
+| Marchés | 5 230 | — | 4 642 | — |
+
+### Exploitation et surveillance
+
+Le chien de garde relance api, worker, interface et boucle d'ingestion quand
+l'un d'eux se tait — il l'a fait le 2026-09-06 à 21:24, l'API étant morte sans
+un mot dans son journal. Mais **rien ne le relançait lui**, et l'arrêt
+coordonné ne l'arrêtait pas : « Arrêter-Vertex » n'arrêtait donc rien de
+durable, le chien redémarrant les services dans la minute. Corrigé des deux
+côtés et vérifié bout en bout : le lanceur le remet en veille s'il manque,
+l'arrêt le stoppe en premier et lui seul.
+
+### Ce qui reste ouvert
+
+- `/catalysts` et `/analysis` gardent chacune une rangée trouée **dans leur
+  dette déclarée** ; sur données réelles vides elles montent à 40 % et 37 %.
+  Leur composition est dimensionnée pour des tables servies, pas pour des
+  absences : la retoucher sur des données vides casserait la mesure CI.
+- `market-map` porte toujours une hauteur fantôme de 2 733 px
+  (`scrollHeight` de `.vx-chartframe`). Le contenu réel défile dans
+  `.vx-markets-table-scroll` et rien n'est perdu à l'écran — dette V4 inchangée.
+- `/options` ne peut pas être auditée sur la pile live : l'API répond
+  `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne. Le comportement
+  fail-closed est correct ; la mise en page de cette page reste couverte par les
+  seules mesures CI sur population `SYNTHETIC`.
+
+### Suite de la nuit — trois pages recomposées, une dette de carte fermée
+
+- **`market-map` : hauteur fantôme supprimée, porte rendue.** Le cadre
+  déclarait 4 310 px de contenu pour 1 577 px de boîte alors que la table de
+  3 441 px défile dans sa propre région bornée à 560 px. Rien n'était coupé à
+  l'écran ; le prix était de mesure, la dette faisant taire la porte « le
+  contenu tient dans sa carte » sur ce module. `contain: paint` sur le
+  conteneur défilant ramène le fantôme à zéro. **`DETTE_CARTE_MAX` passe de 1
+  à 0 : plus aucune dette de carte.** CI verte sur ce retrait.
+- **Marchés.** La carte sectorielle tenait huit colonnes et les instruments
+  suivis un rail de quatre où les tuiles s'empilaient : 626 px de nuage de
+  puces face à 1 591 px de rail. Chacune prend sa rangée entière. Page :
+  5 230 → 4 597 (1280), 4 054 (1440), 3 870 px (1600).
+- **Analyse.** Les risques déclarés tenaient 220 px et leur liste de gates s'y
+  étirait sur 722 px — la rangée trouée déclarée de la page, 37 % à 1280. Six
+  colonnes, un gate par ligne, et la queue se réordonne en rangées de trois
+  puis de deux. Mesure : 220×722 → 456×374.
+
+- **File d'attention : quinze entrées pour douze titres.** « Dow Jones Futures
+  Loom After U.S.-Iran Attacks… » apparaissait trois fois, « Inflation, Apple,
+  Adobe, Oracle… » deux fois. Ce ne sont pas des doublons : chaque ligne est un
+  cluster distinct rattaché à un instrument distinct. La liste n'affichait que
+  le titre, et la répétition se lisait comme un défaut du produit. La référence
+  d'instrument publiée par la provenance est désormais relayée VERBATIM sur
+  chaque ligne — jamais traduite en ticker, aucun instantané servi ne publiant
+  cette correspondance.
+
+- **L'ordre du document ne suivait pas l'ordre de lecture sur sept pages.**
+  Une sonde compare, planche par planche, l'ordre du DOM à l'ordre où l'œil
+  rencontre les cartes (haut d'abord, puis gauche) : vingt-et-un modules
+  divergeaient, jusqu'à trois positions d'écart. L'ordre du document EST
+  l'ordre du clavier — un lecteur qui tabule descendait puis remontait sans
+  que rien à l'écran l'explique. Les règles du projet posent que « l'ordre de
+  lecture est celui du DOM » : c'est donc le document qui a rejoint la
+  composition, sans qu'aucune aire nommée, taille ni catalogue ne bouge. Les
+  onze planches rendent la même image qu'avant. **11 sur 11 alignées.**
+
+Après ces trois passes, la réplique locale des deux portes de mise en page ne
+trouve **aucune carte qui coupe son contenu** et **une seule rangée trouée**
+sur les onze planches (`/catalysts`, dette déclarée de 2), aux trois largeurs
+de release. Toutes les figures peignent : les canvas mesurés « vides » sont
+les couches de curseur de Lightweight Charts, transparentes par construction.

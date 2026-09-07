@@ -1,7 +1,7 @@
 import type { SimulationPreviewResponse } from '../../api/client.ts';
 import { Card } from '../../components/Card.tsx';
 import { Metric } from '../../components/Metric.tsx';
-import { frDecimal } from '../../components/markets/marketsView.ts';
+import { displayNumber } from '../../components/markets/marketsView.ts';
 import { PayoffChart } from './PayoffChart.tsx';
 import { simulatorModule } from './simulatorModules.ts';
 import { signGroupOfText } from '../../components/widgets/sign.ts';
@@ -66,7 +66,13 @@ export function PayoffResult({ result }: { readonly result: SimulationPreviewRes
           maxGain={result.max_gain_on_grid}
           maxLoss={result.max_loss_on_grid}
         />
-        <p className="vx-sim-defined-risk">
+        {/*
+          `div` ET NON `p` : la liste des breakevens est un `ul`, et un `ul`
+          dans un `p` est du HTML invalide — le navigateur ferme le paragraphe
+          avant la liste, ce qui casse silencieusement la structure que le
+          lecteur d'écran annonce. Le style tient à la classe, pas à la balise.
+        */}
+        <div className="vx-sim-defined-risk">
           Breakevens certifiés :{' '}
           {result.breakevens.length === 0 ? (
             'aucun sur le domaine évalué'
@@ -81,7 +87,7 @@ export function PayoffResult({ result }: { readonly result: SimulationPreviewRes
               ))}
             </ul>
           )}
-        </p>
+        </div>
         <div className="vx-ohlcv-scroll" tabIndex={0} role="region" aria-label="Points de P&L défilants">
           <table className="vx-sim-points" aria-label="Points de P&L à l'expiration (valeurs serveur exactes)">
             <thead>
@@ -120,7 +126,7 @@ export function KpiModule({ result }: { readonly result: SimulationPreviewRespon
       kicker="Certifié par le serveur"
       title={module.title}
       titleId="vx-sim-kpi-title"
-      footer={<>extrêmes sur la GRILLE déclarée, jamais sur tout le domaine ; aucune probabilité</>}
+      footer={<>extrêmes sur la grille déclarée ; aucune probabilité</>}
     >
       {result === null ? (
         <NoResult testId="sim-kpi-empty" />
@@ -129,13 +135,13 @@ export function KpiModule({ result }: { readonly result: SimulationPreviewRespon
           <div className="vx-metrics-row">
             <Metric
               label="Gain max sur la grille"
-              value={frDecimal(result.max_gain_on_grid.pnl)}
+              value={displayNumber(result.max_gain_on_grid.pnl)}
               sign={signOf(result.max_gain_on_grid.pnl)}
               note={`à spot ${result.max_gain_on_grid.at_spot}`}
             />
             <Metric
               label="Perte max sur la grille"
-              value={frDecimal(result.max_loss_on_grid.pnl)}
+              value={displayNumber(result.max_loss_on_grid.pnl)}
               sign={signOf(result.max_loss_on_grid.pnl)}
               note={`à spot ${result.max_loss_on_grid.at_spot}`}
             />
@@ -166,7 +172,7 @@ export function ScenarioGridModule({ result }: { readonly result: SimulationPrev
       kicker="Repricée par le worker, valeur théorique"
       title={module.title}
       titleId="vx-sim-scenarios-title"
-      footer={<>P&amp;L par spot et temps restant, avant coûts déclarés ; volatilité déclarée inchangée</>}
+      footer={<>P&amp;L par spot et temps, avant coûts ; publié au centième</>}
     >
       {result === null ? (
         <NoResult testId="sim-scenarios-empty" />
@@ -194,8 +200,19 @@ export function ScenarioGridModule({ result }: { readonly result: SimulationPrev
                     {time}
                   </th>
                   {(grid[timeIndex] ?? []).map((cell, spotIndex) => (
-                    <td key={result.scenario_spot_grid[spotIndex] ?? spotIndex} className="vx-num">
-                      {cell}
+                    /*
+                      MÊME FORMAT QUE PARTOUT AILLEURS. La cellule était rendue
+                      BRUTE — seule table de montants du produit à ne pas passer
+                      par le format servi. À côté d'un « 1'500.00 » certifié,
+                      elle affichait « -479.93893484498733 ». La valeur servie
+                      reste dans `title`, comme pour tout nombre du produit.
+                    */
+                    <td
+                      key={result.scenario_spot_grid[spotIndex] ?? spotIndex}
+                      className="vx-num"
+                      title={cell}
+                    >
+                      {displayNumber(cell)}
                     </td>
                   ))}
                 </tr>
@@ -231,7 +248,7 @@ export function EchoModule({ result }: { readonly result: SimulationPreviewRespo
     return entries.length === 0 ? 'aucune' : entries.join(', ');
   };
   return (
-    <Card rank="quiet" kicker="Renvoyées par le serveur" title={module.title} titleId="vx-sim-echo-title" footer={<>ce que le serveur a réellement appliqué, pas ce que le formulaire contenait</>}>
+    <Card rank="quiet" kicker="Renvoyées par le serveur" title={module.title} titleId="vx-sim-echo-title" footer={<>appliqué par le serveur, pas saisi</>}>
       {result === null ? (
         <NoResult testId="sim-echo-empty" />
       ) : (
@@ -276,7 +293,7 @@ export function MethodModule({ result }: { readonly result: SimulationPreviewRes
   const module = simulatorModule('method');
   const calculations = result === null ? [] : Object.entries(result.calculations);
   return (
-    <Card rank="quiet" kicker="Lignée des calculs" title={module.title} titleId="vx-sim-method-title" footer={<>rien n’est persisté ; rien ici n’est, ni ne devient, transmissible à un courtier</>}>
+    <Card rank="quiet" kicker="Lignée des calculs" title={module.title} titleId="vx-sim-method-title" footer={<>rien n’est persisté ni transmissible à un courtier</>}>
       {result === null ? (
         <NoResult testId="sim-method-empty" />
       ) : (

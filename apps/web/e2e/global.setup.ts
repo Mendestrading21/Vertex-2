@@ -188,7 +188,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     await page.goto('/auth');
     await page.getByRole('button', { name: 'Créer la passkey (premier démarrage)' }).click();
     // Session réelle ouverte : la barre de contexte reflète l'état observé.
-    await expect(page.getByRole('banner').getByText('Connecté', { exact: true })).toBeVisible({
+    await expect(page.getByRole('banner').getByText('Accès accordé', { exact: true })).toBeVisible({
       timeout: 15_000,
     });
 

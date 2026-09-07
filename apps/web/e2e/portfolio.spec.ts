@@ -9,6 +9,7 @@
  * projets de viewport rejouent ce fichier sur la même base (journal
  * append-only), aucun compte absolu ne serait honnête.
  */
+import { displayNumber } from './format.ts';
 import type { APIResponse, Page } from '@playwright/test';
 
 import { expect, expectNoSeriousAxeViolations, screenshotPath, test } from './fixtures.ts';
@@ -61,10 +62,10 @@ test.describe('Page Portefeuille — valorisation réelle', () => {
       const unrealized = block['unrealized'] as Record<string, unknown>;
       const concentration = block['concentration'] as Record<string, unknown>;
       if (unrealized['status'] === 'OK') {
-        await expect(summary).toContainText(String(unrealized['total_unrealized']));
+        await expect(summary).toContainText(displayNumber(String(unrealized['total_unrealized'])));
       }
       if (concentration['status'] === 'OK') {
-        await expect(summary).toContainText(String(concentration['total_value']));
+        await expect(summary).toContainText(displayNumber(String(concentration['total_value'])));
       }
     }
 
@@ -73,7 +74,7 @@ test.describe('Page Portefeuille — valorisation réelle', () => {
     const table = page.getByRole('table', { name: 'Lots ouverts valorisés (valeurs serveur exactes)' });
     await expect(table.locator('tbody tr')).toHaveCount(lots.length);
     for (const lot of lots) {
-      await expect(table.locator('tbody')).toContainText(lot.market_value);
+      await expect(table.locator('tbody')).toContainText(displayNumber(lot.market_value));
     }
 
     // Section d'exclusion présente et SÉPARÉE (états du seed : aucun exclu).
@@ -283,7 +284,7 @@ test.describe('Page Portefeuille — valorisation réelle', () => {
       const concentration = block['concentration'] as Record<string, unknown>;
       if (concentration['status'] === 'OK') {
         await expect(page.getByTestId(`pf-currency-${String(block['currency'])}`)).toContainText(
-          String(concentration['total_value']),
+          displayNumber(String(concentration['total_value'])),
         );
       }
     }
@@ -295,7 +296,7 @@ test.describe('Page Portefeuille — valorisation réelle', () => {
     await page.getByRole('button', { name: `Inspecter ${lot.ticker} (lot ${lot.lot_id})` }).click();
     const faits = page.getByTestId('pf-lot-facts');
     await expect(faits).toBeVisible();
-    await expect(faits).toContainText(lot.market_value);
+    await expect(faits).toContainText(displayNumber(lot.market_value));
     await expect(page.getByRole('heading', { level: 2, name: `Inspecteur — ${lot.ticker}` })).toBeVisible();
     await page.getByRole('button', { name: 'Fermer' }).click();
     await expect(page.getByTestId('pf-snapshot-facts')).toBeVisible();

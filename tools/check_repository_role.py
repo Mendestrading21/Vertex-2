@@ -4,6 +4,7 @@
 Read-only: invokes only ``git remote get-url``, ``git branch --show-current`` and
 ``git rev-parse``. It never changes Git configuration or working files.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -14,7 +15,8 @@ from pathlib import Path
 
 EXPECTED = {
     "donor": "Mendestrading21/Vertex-",
-    "target": "Mendestrading21/Vertex-1.0-Beta-",
+    # Renommé le 2026-09-05 (ex `Vertex-1.0-Beta-`, ancienne URL redirigée par GitHub).
+    "target": "Mendestrading21/Vertex-2",
 }
 
 
@@ -69,4 +71,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

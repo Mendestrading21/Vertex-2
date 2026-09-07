@@ -8,6 +8,7 @@
  * nombre pour la GÉOMÉTRIE du rendu (taille de tuile, tri local) — jamais
  * pour produire une nouvelle valeur financière.
  */
+import { formatServedNumber, formatServedPercent } from '../number.ts';
 import type { MarketsSector, MarketsTicker } from '../../api/client.ts';
 import { geometryValue } from '../widgets/geometry.ts';
 import { signGroupOfText } from '../widgets/sign.ts';
@@ -49,8 +50,19 @@ export function flattenTickers(sectors: readonly MarketsSector[]): FlatTicker[] 
 }
 
 /** Affichage français d'une chaîne décimale serveur (point → virgule). */
-export function frDecimal(value: string): string {
-  return value.replace('.', ',');
+/**
+ * Présentation d'un nombre servi — délègue à la règle unique du produit
+ * (`components/number.ts` : apostrophe des milliers, point décimal, signe
+ * moins typographique). Conservé ici pour que les composants de marché
+ * gardent une seule origine d'import ; le nom dit désormais ce qu'il fait.
+ */
+export function displayNumber(value: string): string {
+  return formatServedNumber(value);
+}
+
+/** Pourcentage servi, « % » accolé (`+2.48%`). */
+export function displayPercent(value: string): string {
+  return formatServedPercent(value);
 }
 
 /** Valeur numérique d'une chaîne serveur pour la géométrie/tri UNIQUEMENT. */

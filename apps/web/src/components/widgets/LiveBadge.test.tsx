@@ -68,6 +68,14 @@ describe('liveBadgeDecision — table de décision pure', () => {
 
   it('lien ouvert : SIGNAL ACTIF • publié il y a N — la donnée est « publiée », pas « cotée »', () => {
     const decision = liveBadgeDecision(BASE);
+    /*
+      FORME COURTE, ET C'EST UNE DÉCISION MESURÉE. Deux variantes plus riches
+      ont été essayées le 2026-09-06 — instant absolu en tête, puis « à la
+      lecture ». Les deux répétaient ce que la barre publie déjà à sa droite
+      et ce que l'inspecteur écrit en toutes lettres, et les deux coûtaient
+      850 px de méta : défilement horizontal à 1024, fil d'Ariane tronqué à
+      1280. Le badge dit l'âge SERVI, une fois.
+    */
     expect(decision.label).toBe('SIGNAL ACTIF • publié il y a 4 s');
     expect(decision.live).toBe('open');
     // Aucune teinte pour l'état du lien (revue C0, point B2).
@@ -94,8 +102,22 @@ describe('liveBadgeDecision — table de décision pure', () => {
   });
 
   it('âge non publié : DIT, jamais extrapolé depuis l’horloge du navigateur', () => {
-    const decision = liveBadgeDecision({ ...BASE, meta: { ...BASE.meta, ageSeconds: null } });
-    expect(decision.label).toContain('âge non publié');
+    /*
+      DEUX ABSENCES DISTINCTES, DEUX PHRASES DISTINCTES.
+      Âge absent mais instant servi : le badge DIT l'instant publié. Il n'en
+      dérive aucun âge — soustraire l'horloge du navigateur d'un instant
+      serveur fabriquerait une fraîcheur que personne n'a publiée.
+      Âge ET instant absents : il ne reste rien à dire, et le badge le dit.
+    */
+    const sansAge = liveBadgeDecision({ ...BASE, meta: { ...BASE.meta, ageSeconds: null } });
+    expect(sansAge.label).toContain('publié 03/09/2026 08:40 UTC');
+    expect(sansAge.label).not.toContain('il y a');
+
+    const sansRien = liveBadgeDecision({
+      ...BASE,
+      meta: { ...BASE.meta, ageSeconds: null, asOf: null },
+    });
+    expect(sansRien.label).toContain('âge non publié');
   });
 
   it('aucune population SYNTHETIC ou DEMO ne peut porter un mot de direct', () => {

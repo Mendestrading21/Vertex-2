@@ -797,3 +797,165 @@ chemin de fraîcheur avec un lot de démarrage.
   est reproduite en base de test, pas rejouée sur `vertex_live` ; la
   présence de lignes `ibkr.news-headline/1` en base vivante n'a pas été
   interrogée ; fusion avec L1 (PR #32) non testée sur branche combinée.
+
+## Trouvé sur la pile EN DIRECT (2026-09-06, balayage de sept surfaces)
+
+Méthode : la pile live de ce poste (API 8000, interface 4173, worker,
+ingestion IBKR, base `vertex` réelle) sondée surface par surface en lecture
+seule, chaque constat rejoué par un sceptique chargé de le RÉFUTER. Vingt-deux
+constats levés, quinze réfutés, sept retenus — tous mineurs. Ce qui suit est ce
+qui reste vrai après réfutation ; rien n'est corrigé ici.
+
+### Rien de bloquant, et ce que cela veut dire
+
+Aucun 5xx sur les dix-huit routes GET (pire temps 58 ms), aucune enveloppe sans
+provenance, aucun état `empty` servi sans absence correspondante en base,
+outbox à 100 % `DONE`, API et interface et PostgreSQL en boucle locale seule,
+aucun secret dans 8,9 Mo de journaux, aucune route de compte, position, ordre
+ou exécution IBKR dans l'OpenAPI. Le miroir exécuté est identique au dépôt sur
+tout l'arbre (`diff -rq`, 0 écart).
+
+### Le verdict est BLOCKED sur 57/57 instruments, et c'est le fail-closed
+
+Sept gates sur dix ferment en `UNEVALUABLE` — `entitlements_sufficient`,
+`session_and_event_known`, `minimum_liquidity`, `calculations_valid`,
+`critical_contradictions_resolved`, `user_constraints_versioned` — parce que
+personne ne collecte encore les faits qui les alimentent ; une huitième ferme
+en `STALE_SNAPSHOT` (dernière clôture vendredi, mesure prise un dimanche). Le
+moteur se comporte comme la règle l'exige : sans fait, pas d'avis. Mais la
+fonction d'avis n'est PAS opérable tant que ces faits ne sont pas produits.
+C'est le prochain grand chantier de données, pas un défaut de code.
+
+### Croissance non bornée du journal des snapshots — ÉCHÉANCE ET PART EXACTE
+
+Mesuré : base `vertex` 563 Mo dont `snapshots` 514 Mo, pour 17,7 h de
+fonctionnement (`analysis` 198 Mo / 3 186 versions, `markets_overview` 177 Mo /
+14 364, `attention` 67 Mo / 21 085, `review_queue` 20 Mo / 21 087). Régime
+observé : environ 700 Mo par jour, dont une part de rattrapage initial. Le
+disque C: est à 97 % (19 Go libres) : à ce rythme l'échéance est de l'ordre de
+trois à quatre semaines. Aucune purge n'est décidée ici — supprimer des
+versions publiées est une décision humaine. Ce qui est acquis : la table n'a
+aucune politique de rétention, et `publish_if_changed` inclut `as_of` à
+dessein, donc republie même quand le contenu ne change pas.
+
+**Part exacte des versions non-tête, mesurée le 2026-09-06 à 16:50** (jointure
+`snapshots` × `snapshot_heads` sur `kind` et `key`) :
+
+| Famille | Versions | Contenu | Dont non-tête | Contenu non-tête |
+|---|---|---|---|---|
+| `analysis` | 3 186 | 198 Mo | 3 129 | 195 Mo |
+| `markets_overview` | 14 364 | 177 Mo | 14 363 | 177 Mo |
+| `attention` | 21 142 | 67 Mo | 21 141 | 67 Mo |
+| `review_queue` | 21 144 | 20 Mo | 21 143 | 20 Mo |
+| `opportunities` | 59 | 1,6 Mo | 58 | 1,5 Mo |
+| `capabilities` | 1 | 1,2 ko | 0 | — |
+
+62 têtes courantes portent l'état du produit ; tout le reste est historique.
+**99,8 % du contenu stocké est du non-tête.** Une rétention par ÂGE ne
+libérerait rien aujourd'hui (tout a moins de 24 h) : seule une rétention par
+NOMBRE de versions par `(kind, key)` mord. Le `content_hash` est distinct à
+chaque version — `as_of` est dans le contenu, délibérément — donc aucune
+déduplication par contenu n'est possible sans changer ce contrat.
+
+Trois options, aucune choisie : garder la tête seule (libère environ 460 Mo
+tout de suite), garder les N dernières versions par clé, ou déplacer
+l'historique vers une table froide. Toutes demandent une décision humaine et,
+pour la première, l'acceptation de perdre la relecture d'un état passé.
+
+### Cinq finitions retenues, aucune urgente
+
+- ~~Le résumé de collecte de dépêches affiche `erreurs=0`~~ — **CORRIGÉ** :
+  `tools/run_edge_news.py` compte `muets`, les appels rendus sans aucune
+  dépêche (`INSUFFICIENT_DATA`).
+- ~~Les enveloppes brutes `ibkr.bars/1` sont réinsérées à chaque cycle~~ —
+  **CORRIGÉ** : identité stable `ibkr:bars:<con_id>:<taille>:<série>:<rth>:
+  <premier jour>:<dernier jour>`, donc le puits idempotent fait son travail.
+  Une réponse VIDE garde son identifiant ponctuel : deux silences ne sont pas
+  la même observation (trois tests).
+- ~~La boucle d'ingestion annonce « toutes les 30 min »~~ — **CORRIGÉ** : le
+  libellé de `ingest-loop.ps1` et le runbook disent « pause », avec la mesure
+  (une passe toutes les 58 min environ un dimanche).
+- ~~Aucun en-tête de sécurité HTTP sur l'API~~ — **CORRIGÉ** : un middleware
+  pose `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer` et
+  `Content-Security-Policy: frame-ancestors 'none'` sur chaque réponse, refus
+  fail-closed compris (cinq tests). Les serveurs LOCAUX de l'interface
+  (développement et prévisualisation) posent les trois mêmes, déclarés dans
+  `apps/web/vite.config.ts` — ils ne sont PAS dans le build : un hébergeur
+  réel devra les poser lui-même. RESTE OUVERT : `/docs`, `/redoc` et
+  `/openapi.json` servis sans session, et la politique de contenu complète
+  (`script-src`, `style-src`), qui se décide avec l'hébergement et n'a pas sa
+  place dans un serveur de développement.
+- ~~Le badge `FRESHNESS` de la file d'attention est un jeton de remplissage~~ —
+  **CORRIGÉ** : `relevance_reasons` ne nomme que les facteurs appliqués, et
+  `NO_POSITIVE_FACTOR` quand aucun ne l'est (trois tests).
+
+### Deux faits que le balayage n'avait pas vus, et que la critique a mesurés
+
+- Onze des quatorze opérations POST n'ont jamais été appelées une seule fois
+  depuis l'installation : la moitié écriture du produit n'est pas exercée en
+  usage réel.
+- Le Simulateur, lui, fonctionne et il est EXACT : contrôlé contre un oracle
+  BSM indépendant sur un call spread 100/110, réponse en 4,3 ms, et aucun
+  compteur de base modifié (lecture seule prouvée avant/après). Sa grille de
+  scénarios publie en revanche dix-sept chiffres significatifs — la précision
+  du float64 du modèle, honnête mais non déclarée comme précision de
+  publication. **VÉRIFIÉ, PAS UN DÉFAUT DE DOCTRINE** : le registre déclare
+  que le BSM tourne en float64 avec tolérances, et que seul le payoff à
+  l'échéance est en `Decimal` exact ; la cellule traverse la frontière en
+  CHAÎNE, pas en flottant JSON. Ce qui manque est la précision de PUBLICATION,
+  à déclarer avec le contrat de la grille — pas un arrondi à décider dans le
+  code de l'API.
+
+- Le contournement d'authentification local (`VERTEX_AUTH_OPEN_LOCAL=1`) ne
+  disait, dans son propre module, que le coût en LECTURE. Il ouvre aussi les
+  routes mutantes et fait tomber la garde CSRF avec la session. Le paragraphe
+  du module le dit désormais en toutes lettres, avec le geste qui referme.
+
+## Mise en page mesurée sur la pile live — nuit du 6 au 7 septembre 2026
+
+Sonde Playwright (Edge headless) contre la pile live réelle, données `REAL`,
+aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
+`1440×900` et `1600×1000`. Produit **DESKTOP ONLY** : aucune cible mobile.
+
+### Corrigé
+
+- ~~La carte sectorielle rendait 57 puces en colonne sur 2 180 px, le nom du
+  secteur tronqué en « Secteu… », trois quarts de carte vides~~ — **CORRIGÉ** :
+  `auto-fit` au lieu de `auto-fill`, au socle et dans les deux surcharges.
+- ~~Un libellé servi était amputé à huit caractères par la borne réservée aux
+  mesures~~ — **CORRIGÉ** : `isAtomicMeasure` départage mesure et libellé.
+- ~~Quatre dominantes gardaient la hauteur de leur rangée sans figure à
+  porter (725, 463, 249 et 144 px de vide)~~ — **CORRIGÉ** : une dominante dont
+  le corps est une frontière d'état porte sa hauteur de contenu.
+- ~~La barre de contexte imposait un plancher de 850 px à toute
+  l'application~~ — **CORRIGÉ** : ordre de compression déclaré.
+- ~~Deux rangées vides à plus d'un tiers, sur `/charts` et `/today`~~ —
+  **CORRIGÉ** : superpositions sur huit colonnes, instruments suivis sur la
+  rangée entière. La dette de trou de `/today` est fermée.
+- ~~Quatre pages fermaient sur six cartes de 120 px à 1280~~ — **CORRIGÉ** :
+  trois ou quatre par rangée.
+- ~~Le volume d'une barre était coupé sans recours~~ — **CORRIGÉ** : `title`.
+- ~~Le chien de garde n'était relancé par personne, et l'arrêt coordonné ne
+  l'arrêtait pas — « Arrêter-Vertex » n'arrêtait donc rien de durable~~ —
+  **CORRIGÉ** des deux côtés, vérifié bout en bout.
+
+### Reste ouvert
+
+- **`/catalysts` et `/analysis` gardent une rangée trouée** (40 % et 37 % sur
+  données réelles vides), dans leur dette déclarée. Leur composition est
+  dimensionnée pour des tables servies ; la retoucher sur des données vides
+  casserait la mesure CI, qui tourne sur population `SYNTHETIC`. À reprendre
+  quand ces pages auront des données réelles — pas avant.
+- **`market-map` porte une hauteur fantôme de 2 733 px** : `scrollHeight` de
+  `.vx-chartframe` inclut la table complète alors que celle-ci défile dans son
+  propre conteneur. Rien n'est perdu à l'écran, rien n'est inatteignable.
+  Dette V4 inchangée — c'est une mesure trompeuse, pas un défaut visible.
+- **`/options` n'est pas auditable sur la pile live** : l'API répond
+  `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne, aucun
+  collecteur ne publiant de surface. Le comportement fail-closed est correct et
+  la page le dit ; sa mise en page ne repose donc que sur les mesures CI en
+  population `SYNTHETIC`. Aucune donnée synthétique ne sera insérée dans la
+  base live pour la mesurer.
+- **Le libellé du champ de recherche est coupé de 13 px** à toutes les
+  largeurs (`max-width: 320px`). C'est une invite, pas une donnée servie ; le
+  raccourci `⌘K` reste visible. Non traité.

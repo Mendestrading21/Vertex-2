@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import type { OpportunitiesResponse } from '../../api/client.ts';
 import { useOpportunities } from '../../api/decisionApi.ts';
@@ -9,6 +10,7 @@ import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
 import type { DataState } from '../../components/DataStateBoundary.tsx';
 import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { Metric } from '../../components/Metric.tsx';
+import { ModuleCell as SharedModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { ProvenanceLine } from '../../components/widgets/ProvenanceLine.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { SyntheticBanner } from '../../components/SyntheticBanner.tsx';
@@ -64,7 +66,38 @@ export { opportunitiesFrameStateOf };
  * États servis, jamais confondus : `ok`, `stale` (même contenu sous le
  * bandeau « Données périmées », âge PUBLIÉ par le serveur) et `empty`.
  * `clock_inconsistent` reste FERMÉ, avec la cause publiée.
+ *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif qu'Options et
+ * Aujourd'hui). La planche s'ouvrait sur TROIS absences ; elle se lit
+ * désormais comptes servis → classement (dominante) → raisons, profil,
+ * provenance → limites et absences regroupées. La composition vit dans
+ * `.vx-opp-grid` (`widgets.css`) ; le catalogue est inchangé et chaque
+ * absence pose `data-size` (lu par le socle) et `data-density="compact"` via
+ * `ModuleCell`. Les modules servis sont rendus par `Widget`, qui pose déjà
+ * ces attributs : ils ne sont pas enveloppés (un second porteur de
+ * `data-module` ferait compter le module deux fois).
  */
+
+/** La cellule d'un module de CETTE planche : la taille vient du catalogue. */
+function ModuleCell({
+  id,
+  density,
+  children,
+}: {
+  readonly id: string;
+  readonly density?: 'compact';
+  readonly children: ReactNode;
+}) {
+  return (
+    <SharedModuleCell
+      id={id}
+      size={opportunitiesModule(id).size}
+      {...(density === undefined ? {} : { density })}
+    >
+      {children}
+    </SharedModuleCell>
+  );
+}
 
 function AbsentOpportunitiesModule({ id }: { readonly id: string }) {
   const module = opportunitiesModule(id);
@@ -75,14 +108,14 @@ function AbsentOpportunitiesModule({ id }: { readonly id: string }) {
     // LOT P2d — LA TAILLE VIENT DU CATALOGUE, PAS DE LA MISE EN PAGE. Une
     // absence occupe l'aire que la planche lui a réservée ; sans `data-size`
     // elle prendrait la taille par défaut et déplacerait ses voisines.
-    <div data-module={id} data-size={module.size}>
+    <ModuleCell id={id} density="compact">
       <AbsentModule
         title={module.title}
         question={module.question}
         reason={module.status.reason}
         note={module.status.note}
       />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -136,21 +169,22 @@ function RankingModule({
       size={module.size}
       state={moduleStateOf('ready', data)}
       rank="dominant"
-      kicker="Ordre publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-opp-ranking-title"
       action={<>{view.candidates.qualified.length + view.candidates.contradictory.length + view.candidates.excluded.length} candidats publiés</>}
       footer={
+        // REFONTE UI 2026-09-05 — le pied ne porte que l'ordre publié :
+        // méthode et clés, verbatim. La note du moteur est lue dans
+        // l'inspecteur (fait « Ordre publié »), pas répétée ici.
         <>
-          Classement :{' '}
           {view.ordering.method === null ? (
             <span className="vx-cell-absent">méthode de classement non publiée</span>
           ) : (
             <code>{view.ordering.method}</code>
           )}
-          {' — '}
-          {view.ordering.keys.join(' → ') || 'aucune clé publiée'}.{' '}
-          {view.ordering.note ?? ''} Aucun reclassement local.
+          {' · '}
+          {view.ordering.keys.join(' → ') || 'aucune clé publiée'}
         </>
       }
     >
@@ -279,24 +313,38 @@ function OpportunitiesBoard({
 
   return (
     <>
+      {/* L'ordre du DOM suit l'ordre de lecture des aires (`.vx-opp-grid`) :
+          comptes servis, dominante, raisons / profil / provenance, puis
+          limites et absences. Les enfants sont DIRECTS : les e2e comptent
+          les cellules de la planche. */}
       <div className="vx-opp-grid vx-board" data-testid="opportunities-grid">
         <ActiveIdeasModule view={view} servedState={etatServi} />
-        <AbsentOpportunitiesModule id="mean-score" />
-        <AbsentOpportunitiesModule id="global-bias" />
-        <AbsentOpportunitiesModule id="expected-return" />
+        <OpportunityHealthModule view={view} servedState={etatServi} />
+        <BiasSplitModule view={view} servedState={etatServi} />
 
         <RankingModule data={data} view={view} selected={selected} onInspect={setSelected} />
 
-        <BiasSplitModule view={view} servedState={etatServi} />
+        <ProfileModule view={view} servedState={etatServi} />
+        <CalendarRefModule view={view} servedState={etatServi} />
+
+        <LimitationsModule view={view} servedState={etatServi} />
+        {/*
+          L'ORDRE DU DOM EST L'ORDRE DU CLAVIER : il doit suivre l'ordre où
+          l'œil rencontre les cartes. Mesuré le 2026-09-07 : les raisons
+          d'exclusion venaient QUATRIÈMES dans le document et se lisaient
+          SEPTIÈMES à l'écran — la planche les place sous les limites
+          publiées, dans la colonne de droite. Un lecteur au clavier les
+          atteignait donc avant trois cartes situées au-dessus d'elles.
+          La composition ne bouge pas ; c'est le document qui rejoint ce
+          qu'elle montre.
+        */}
+        <ExclusionsModule view={view} servedState={etatServi} />
+        <AbsentOpportunitiesModule id="mean-score" />
+        <AbsentOpportunitiesModule id="global-bias" />
+        <AbsentOpportunitiesModule id="expected-return" />
         <AbsentOpportunitiesModule id="score-return-scatter" />
         <AbsentOpportunitiesModule id="factor-contribution" />
         <AbsentOpportunitiesModule id="recent-activity" />
-
-        <OpportunityHealthModule view={view} servedState={etatServi} />
-        <ProfileModule view={view} servedState={etatServi} />
-        <ExclusionsModule view={view} servedState={etatServi} />
-        <CalendarRefModule view={view} servedState={etatServi} />
-        <LimitationsModule view={view} servedState={etatServi} />
       </div>
 
       {picked === null ? (

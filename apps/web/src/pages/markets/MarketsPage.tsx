@@ -10,6 +10,7 @@ import type { DataState } from '../../components/DataStateBoundary.tsx';
 import { Metric } from '../../components/Metric.tsx';
 import { CensusBars } from '../../components/CensusBars.tsx';
 import { SectorGrid } from '../../components/markets/SectorGrid.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { SyntheticBanner } from '../../components/SyntheticBanner.tsx';
@@ -88,15 +89,19 @@ function AbsentMarketsModule({ id }: { readonly id: string }) {
   if (module.status.kind !== 'absent') {
     throw new Error(`Module ${id} is served, not absent`);
   }
+  /*
+    REFONTE UI 2026-09-05 — une absence pèse moins qu'une donnée : la cellule
+    est compacte (chrome resserré, place tenue, motif écrit — article 17).
+  */
   return (
-    <div data-module={id} data-size={module.size}>
+    <ModuleCell id={id} size={module.size} density="compact">
       <AbsentModule
         title={module.title}
         question={module.question}
         reason={module.status.reason}
         note={module.status.note}
       />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -121,6 +126,19 @@ function MarketsFrame({
     () => allEntries.filter((entry) => visibleGroups.has(entry.group)),
     [allEntries, visibleGroups],
   );
+  /** Les deux séances servies, nommées seulement si TOUS les instruments s'accordent. */
+  const joursServis = useMemo(() => {
+    const jours = new Set(allEntries.map((entry) => entry.ticker.trading_day));
+    const veilles = new Set(allEntries.map((entry) => entry.ticker.previous_trading_day));
+    if (jours.size !== 1 || veilles.size !== 1) {
+      return null;
+    }
+    const [jour] = [...jours];
+    const [veille] = [...veilles];
+    return jour === undefined || veille === undefined
+      ? null
+      : `clôtures du ${veille} et du ${jour}`;
+  }, [allEntries]);
 
   function toggleGroup(group: SignGroup): void {
     setVisibleGroups((previous) => {
@@ -137,6 +155,7 @@ function MarketsFrame({
 
   const coverage = data.coverage;
   const asOf = data.as_of;
+  const mapModule = marketsModule('market-map');
   const description =
     data.conclusion ?? 'Carte des marchés : aucune conclusion serveur fournie.';
 
@@ -160,6 +179,13 @@ function MarketsFrame({
       className="vx-chartframe"
       data-rank="dominant"
       data-module="market-map"
+      /*
+        REFONTE UI 2026-09-05 — la section EST la cellule du module (même
+        motif que `ChainFrame` sur Options) : elle porte le span du catalogue,
+        sans quoi `align-self: stretch` (réservé aux porteurs de `data-size`)
+        ne s'appliquait jamais à la dominante.
+      */
+      data-size={mapModule.size}
       aria-labelledby="vx-marketmap-title"
     >
       {/* 1. WidgetHeader : question + titre */}
@@ -184,7 +210,16 @@ function MarketsFrame({
         </div>
         <div>
           <dt>Période</dt>
-          <dd>2 clôtures journalières consécutives · UTC (stockage)</dd>
+          {/*
+            LA PÉRIODE NOMME LES SÉANCES, PAS LEUR NOMBRE. « 2 clôtures
+            consécutives » ne disait pas LESQUELLES : la carte montrait le
+            4 septembre sous un `as_of` du 6, et rien ne les reliait.
+            `trading_day` et `previous_trading_day` sont servis PAR INSTRUMENT
+            (contrat `MarketsTicker`) : on ne les nomme que si les 57 tombent
+            d'accord. Dès que deux places divergent, on retombe sur le compte —
+            inventer un jour commun serait une dérivation interdite ici.
+          */}
+          <dd>{joursServis ?? '2 clôtures journalières consécutives'} · UTC (stockage)</dd>
         </div>
         <div>
           <dt>Source</dt>
@@ -250,26 +285,46 @@ function MarketsFrame({
           <span className="vx-legend-note">Filtre local d'affichage — aucune valeur modifiée.</span>
         </div>
 
-        {/* 4. WidgetBody : dominante treemap */}
-        <MarketMap
-          sectors={data.sectors}
-          visibleGroups={visibleGroups}
-          description={description}
-          onSelect={onSelect}
-        />
+        {/*
+          4. WidgetBody : dominante treemap — ou la phrase qui dit pourquoi
+          elle n'est pas là.
 
-        {/* 5. WidgetConclusion : phrase factuelle serveur, verbatim */}
-        <p className="vx-chartframe-conclusion" data-testid="markets-conclusion">
-          {data.conclusion ?? 'Aucune conclusion publiée.'}
-        </p>
+          DÉCOCHER LES TROIS PUCES VIDAIT TOUT EN SILENCE : la carte rendait un
+          canevas blanc de 360 px, la table un corps sans lignes, et la légende
+          continuait d'affirmer « la table ci-dessous contient exactement les
+          mêmes valeurs ». Un filtre local qui ne retient rien n'est pas une
+          absence de donnée — il faut le DIRE, sinon l'écran ressemble à une
+          panne. L'export CSV suit : il n'a plus rien à exporter, et la phrase
+          l'explique.
+        */}
+        {visibleEntries.length === 0 ? (
+          <p className="vx-module-sentence" role="status" data-testid="markets-filter-empty">
+            Aucun groupe affiché — les trois puces de la légende sont décochées.
+            La donnée servie est intacte : recocher une puce la fait revenir.
+          </p>
+        ) : (
+          <>
+            <MarketMap
+              sectors={data.sectors}
+              visibleGroups={visibleGroups}
+              description={description}
+              onSelect={onSelect}
+            />
 
-        {/* Table accessible équivalente (mêmes valeurs, tri clavier, sélection). */}
-        <MarketsTable
-          entries={visibleEntries}
-          population={data.population}
-          selected={selected}
-          onSelect={onSelect}
-        />
+            {/* 5. WidgetConclusion : phrase factuelle serveur, verbatim */}
+            <p className="vx-chartframe-conclusion" data-testid="markets-conclusion">
+              {data.conclusion ?? 'Aucune conclusion publiée.'}
+            </p>
+
+            {/* Table accessible équivalente (mêmes valeurs, tri clavier, sélection). */}
+            <MarketsTable
+              entries={visibleEntries}
+              population={data.population}
+              selected={selected}
+              onSelect={onSelect}
+            />
+          </>
+        )}
       </DataStateBoundary>
 
       {/* 6. WidgetFooter : méthode/calcul, version, limites et hypothèses */}
@@ -287,8 +342,7 @@ function MarketsFrame({
         limites={
           <>
             2 clôtures par instrument, breadth refusée sous le seuil de couverture ; un instrument
-            sans ses 2 clôtures est écarté et compté. Nature des données : voir le bandeau de
-            population ci-dessus, qui en est le seul propriétaire.
+            sans ses 2 clôtures est écarté et compté.
           </>
         }
       />
@@ -312,7 +366,7 @@ function MarketHealthModule({ data }: { readonly data: MarketsOverview }) {
     <Widget
       id="market-health"
       size={module.size}
-      kicker="Couverture publiée"
+      kicker="Publié"
       title={module.title}
       titleId="vx-markets-health-title"
       state={moduleStateOf('ready', { state: data.data_state, population: data.population })}
@@ -330,16 +384,19 @@ function MarketHealthModule({ data }: { readonly data: MarketsOverview }) {
       <div className="vx-metrics-row">
         <Metric
           label="Couverts"
+          size="compact"
           value={coverage === null ? null : `${coverage.covered}/${coverage.expected}`}
           {...(coverage !== null ? { note: `${coverage.received} reçus` } : {})}
         />
         <Metric
           label="Écartés"
+          size="compact"
           value={coverage === null ? null : String(coverage.discarded)}
           {...(coverage !== null ? { note: 'sans leurs deux clôtures' } : {})}
         />
         <Metric
           label="Rejets"
+          size="compact"
           value={coverage === null ? null : String(coverage.rejected_records.length)}
           {...(coverage !== null ? { note: 'observations refusées par les gates' } : {})}
         />
@@ -368,11 +425,11 @@ function DiscardsModule({ data }: { readonly data: MarketsOverview }) {
     <Widget
       id="discards"
       size={module.size}
-      kicker="Refus nommés"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-markets-discards-title"
       state={moduleStateOf('ready', { state: data.data_state, population: data.population })}
-      footer={<>raisons relayées telles quelles — jamais interpolées</>}
+      footer={<>raisons relayées verbatim</>}
     >
       {coverage === null ? (
         <p className="vx-module-sentence" role="status">
@@ -433,19 +490,23 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
   const selectedEntry = allEntries.find((entry) => entry.ticker.ticker === selected) ?? null;
   const breadthModule = marketsModule('breadth');
   const sectorsModule = marketsModule('sectors');
+  const focusModule = marketsModule('focus');
 
+  /*
+    REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif que `.vx-options-grid`).
+    Le DOM suit l'ordre des aires de `widgets.css` : SIGNAL (breadth, santé,
+    écartés) → CARTE (dominante) → secteurs et instruments suivis → absences.
+    Le clavier et le lecteur d'écran parcourent donc la planche dans l'ordre où
+    l'œil la lit ; aucune aire nommée n'a changé de propriétaire.
+  */
   return (
     <>
       <SyntheticBanner population={data.population} />
       <div className="vx-markets-grid" data-testid="markets-grid">
-        <AbsentMarketsModule id="sessions" />
-        <AbsentMarketsModule id="volatility" />
-        <AbsentMarketsModule id="indices" />
-
         <Widget
           id="breadth"
           size={breadthModule.size}
-          kicker="Breadth publiée"
+          kicker="Calculé"
           title={breadthModule.title}
           titleId="vx-markets-breadth-title"
           state={moduleStateOf('ready', { state: data.data_state, population: data.population })}
@@ -462,31 +523,36 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
 
         <MarketHealthModule data={data} />
 
-        <div data-module="focus">
-          <FocusRowModule />
-        </div>
+        <DiscardsModule data={data} />
 
-        <MarketsFrame data={data} state={state} selected={selected} onSelect={setSelected} />
+        <MarketsFrame data={data} state={state} selected={selected} onSelect={choisir} />
 
         <Widget
           id="sectors"
           size={sectorsModule.size}
-          kicker="Snapshot Marchés"
+          kicker="Calculé"
           title={sectorsModule.title}
           titleId="vx-markets-sectors-title"
           state={moduleStateOf('ready', { state: data.data_state, population: data.population })}
           action={<StatusChip label={`${data.sectors.length} secteur(s) publié(s)`} tone="neutral" />}
-          footer={<>rendement 1 j par instrument, chaîne serveur ; aucun rendement de secteur n&apos;est publié</>}
+          footer={<>rendement 1 j par instrument, chaîne serveur</>}
         >
-          <SectorGrid sectors={data.sectors} selected={selected} onSelect={setSelected} />
+          <SectorGrid sectors={data.sectors} selected={selected} onSelect={choisir} />
         </Widget>
 
+        {/* Le rail est rendu par une `section` sans `data-module` : la cellule
+            porte l'identifiant et le span du catalogue (`M`). */}
+        <ModuleCell id="focus" size={focusModule.size}>
+          <FocusRowModule />
+        </ModuleCell>
+
+        <AbsentMarketsModule id="sessions" />
+        <AbsentMarketsModule id="volatility" />
+        <AbsentMarketsModule id="indices" />
         <AbsentMarketsModule id="rates-curve" />
         <AbsentMarketsModule id="fx" />
         <AbsentMarketsModule id="correlation" />
         <AbsentMarketsModule id="vol-structure" />
-
-        <DiscardsModule data={data} />
       </div>
 
       {selectedEntry === null ? (
@@ -496,7 +562,9 @@ function MarketsBoard({ data, state }: { readonly data: MarketsOverview; readonl
           entry={selectedEntry}
           data={data}
           onClose={() => {
-            choisir(null);
+            // Fermer l'inspecteur retire la mise en avant LOCALE ; le choix d'espace
+            // de travail reste : on a regardé cet instrument, la page suivante le sait.
+            setSelected(null);
           }}
         />
       )}

@@ -1,3 +1,4 @@
+import { formatServedNumber, isAtomicMeasure } from './number.ts';
 import type { ReactNode } from 'react';
 
 /**
@@ -23,9 +24,29 @@ export interface MetricProps {
   readonly testId?: string;
   /** `compact` pour une valeur longue (horodatage, identifiant) : lisible, pas spectaculaire. */
   readonly size?: 'display' | 'compact';
+  /**
+   * Libellé rendu aux seules technologies d'assistance.
+   *
+   * REFONTE UI 2026-09-05 — la « triple étiquette » : une carte qui porte UNE
+   * mesure (Spot publié, Taux) écrivait kicker + titre + libellé pour le même
+   * mot, et la tête pesait plus que la valeur. Le titre de la carte EST alors
+   * le libellé ; celui-ci reste dans le document (`vx-visually-hidden`), jamais
+   * supprimé : le nom accessible de la mesure ne dépend pas de la mise en page.
+   */
+  readonly labelHidden?: boolean;
 }
 
-export function Metric({ label, value, unit, sign, note, absentLabel, testId, size = 'display' }: MetricProps) {
+export function Metric({
+  label,
+  value,
+  unit,
+  sign,
+  note,
+  absentLabel,
+  testId,
+  size = 'display',
+  labelHidden = false,
+}: MetricProps) {
   return (
     <div
       className="vx-metric"
@@ -33,7 +54,7 @@ export function Metric({ label, value, unit, sign, note, absentLabel, testId, si
       {...(sign === undefined || sign === null ? {} : { 'data-sign': sign })}
       {...(testId === undefined ? {} : { 'data-testid': testId })}
     >
-      <span className="vx-metric-label">{label}</span>
+      <span className={labelHidden ? 'vx-metric-label vx-visually-hidden' : 'vx-metric-label'}>{label}</span>
       {value === null ? (
         <span className="vx-metric-value vx-cell-absent" role="img" aria-label={absentLabel ?? `${label} : non publié`}>
           non publié
@@ -50,9 +71,21 @@ export function Metric({ label, value, unit, sign, note, absentLabel, testId, si
             vit hors de la boîte bornée : un nombre sans son unité n'est pas
             une information abrégée, c'est une information fausse.
           */}
-          <span className="vx-metric-number" title={value}>
-            {value}
-          </span>
+          {isAtomicMeasure(value) ? (
+            <span className="vx-metric-number" title={value}>
+              {formatServedNumber(value)}
+            </span>
+          ) : (
+            /*
+              UN LIBELLÉ SERVI N'EST JAMAIS ABRÉGÉ. La boîte bornée ci-dessus
+              existe pour les mesures très longues ; appliquée à un texte, elle
+              rendait « Secteur … » et « ibkr-tra… » (mesuré le 2026-09-06 sur
+              la carte Identité d'Analyse). Le texte passe donc à la ligne, en
+              entier, à l'écran — pas seulement dans un `title` que le clavier
+              n'atteint pas.
+            */
+            <span className="vx-metric-text">{value}</span>
+          )}
           {unit === undefined ? null : <span className="vx-metric-unit"> {unit}</span>}
         </span>
       )}

@@ -4,6 +4,7 @@ import { usePerformance } from '../../api/portfolioApi.ts';
 import { AbsentModule } from '../../components/AbsentModule.tsx';
 import { ActivityFeed } from '../../components/widgets/ActivityFeed.tsx';
 import type { FeedGroup, FeedItem } from '../../components/widgets/ActivityFeed.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { Card } from '../../components/Card.tsx';
 import { Metric } from '../../components/Metric.tsx';
@@ -31,9 +32,12 @@ export function AbsentPortfolioModule({ id }: { readonly id: string }) {
     throw new Error(`Module ${id} is served, not absent`);
   }
   return (
-    <div data-module={id} data-size={module.size}>
+    // REFONTE UI 2026-09-05 — la cellule vient du socle et pose la taille du
+    // catalogue et la densité compacte : une absence n'a pas besoin du chrome
+    // d'une figure.
+    <ModuleCell id={id} size={module.size} density="compact">
       <AbsentModule title={module.title} question={module.question} reason={module.status.reason} note={module.status.note} />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -97,7 +101,7 @@ export function TotalPerformanceModule({ portfolioId }: { readonly portfolioId: 
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot de performance"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-pf-total-title"
       footer={
@@ -112,7 +116,7 @@ export function TotalPerformanceModule({ portfolioId }: { readonly portfolioId: 
     >
       <ModuleStatus state={state} raw={query.data?.reason ?? null} />
       {moduleShowsContent(state) && view !== null ? (
-        <div className="vx-metrics-row" data-testid="pf-total-performance">
+        <div className="vx-metrics-grid" data-testid="pf-total-performance">
           {(['twr_gross', 'twr_net', 'xirr_gross', 'xirr_net'] as const).map((key) => ratioMetric(key, view.metrics[key]))}
         </div>
       ) : moduleShowsContent(state) ? (
@@ -137,7 +141,7 @@ export function CurrencyExposureModule({
 }) {
   const module = portfolioModule('currency-exposure');
   return (
-    <Card rank="quiet" kicker="Valeur marquée par devise" title={module.title} titleId="vx-pf-currency-title" footer={<>un bloc par devise publiée ; aucune conversion, aucun total consolidé</>}>
+    <Card rank="quiet" kicker="Publié" title={module.title} titleId="vx-pf-currency-title" footer={<>une valeur par devise publiée ; aucune conversion</>}>
       {view === null ? (
         <ValuationAbsence state={state} reason={reason} />
       ) : view.blocks.length === 0 ? (
@@ -185,12 +189,14 @@ export function PositionsModule({
   return (
     <Card
       rank="quiet"
-      kicker="Dérivés du journal"
+      kicker="Publié"
       title={module.title}
       titleId="vx-pf-table-title"
       className="vx-pf-positions"
       aside={view === null ? undefined : <>{lots.length} valorisé(s) · {excluded.length} exclu(s)</>}
-      footer={<>marques SYNTHÉTIQUES ; « Détail » ouvre le lot dans l’inspecteur</>}
+      // La nature des marques n'est plus écrite ici : elle vient du bandeau de
+      // population et de l'inspecteur, jamais d'un pied codé en dur.
+      footer={<>« Détail » ouvre le lot</>}
     >
       {view === null ? <ValuationAbsence state={state} reason={reason} /> : <PortfolioTable lots={lots} excluded={excluded} selected={selected} onInspect={onInspect} />}
     </Card>
@@ -236,7 +242,10 @@ export function DividendsModule({ transactions }: { readonly transactions: reado
     <Widget
       id="dividends"
       size={module.size}
-      kicker="Faits déclarés au journal"
+      // Rendu par `Widget` : la densité passe par sa prop, jamais par une
+      // cellule de plus (deux porteurs de `data-module` compteraient double).
+      density="compact"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-pf-dividends-title"
       /*
@@ -248,7 +257,7 @@ export function DividendsModule({ transactions }: { readonly transactions: reado
         d'instantané.
       */
       state="ready"
-      footer={<>{dividends.length} ligne(s) de nature « {LEDGER_KIND_LABELS.DIVIDEND} » ; montants verbatim, jamais sommés</>}
+      footer={<>{dividends.length} ligne(s) « {LEDGER_KIND_LABELS.DIVIDEND} » ; jamais sommées</>}
     >
       <div data-testid={dividends.length === 0 ? 'pf-dividends-empty' : 'pf-dividends'}>
         <ActivityFeed

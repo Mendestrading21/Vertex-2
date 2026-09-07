@@ -5,6 +5,7 @@
  * contre la réponse API, IV absente ≠ 0, inspecteur avec lignée
  * CalculationRecord, axe et état hors ligne.
  */
+import { displayNumber } from './format.ts';
 import { expect, expectNoSeriousAxeViolations, screenshotPath, test } from './fixtures.ts';
 
 interface ApiContract {
@@ -240,7 +241,8 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
     expect(sorti).toBe(true);
 
     // CONSERVÉ : Échap referme le panneau.
-    await inspector.getByRole('button', { name: 'Fermer' }).focus();
+    // « Fermer » vit dans l'en-tête commun du panneau, au-dessus de la feuille.
+    await page.locator('.vx-inspector-panel').getByRole('button', { name: 'Fermer' }).focus();
     await page.keyboard.press('Escape');
     await expect(inspector).toHaveCount(0);
   });
@@ -277,7 +279,7 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
       expect(corps).not.toMatch(/\d/);
     }
     // Le spot publié, verbatim (virgule française).
-    await expect(page.getByTestId('options-spot')).toContainText(chain.spot!.value.replace('.', ','));
+    await expect(page.getByTestId('options-spot')).toContainText(displayNumber(chain.spot!.value));
     // Un sourire par groupe publié dans la structure par échéance ; le groupe
     // affiché a un sourire tracé (le seed publie des IV résolues).
     await expect(page.getByTestId('options-vol-structure').locator('li')).toHaveCount(chain.expirations.length);
@@ -285,7 +287,7 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
     // Série du sous-jacent tracée depuis son dossier.
     await expect(page.getByTestId('options-underlying-series').getByTestId('spark-line')).toBeVisible({ timeout: 15_000 });
     // Inspecteur par défaut : la chaîne publiée, jamais une colonne vide.
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Chaîne publiée');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Chaîne publiée');
     await expect(page.getByTestId('options-snapshot-facts')).toBeVisible();
   });
 
@@ -302,7 +304,9 @@ test.describe('Page Options — chaîne, groupes jamais fusionnés, inspecteur',
   test('hors ligne simulé (routes /api interrompues) → état offline honnête', async ({ page }) => {
     await page.route('**/api/**', (route) => route.abort());
     await page.goto(`/options/${UNDERLYING}`);
-    const boundary = page.locator('[data-state="offline"]');
+    // Deux témoins honnêtes de l'état hors ligne coexistent (le sélecteur de
+    // sous-jacent et le cadre de la chaîne) : c'est le cadre qui est vérifié.
+    const boundary = page.getByRole('status').filter({ hasText: 'Hors ligne' }).first();
     await expect(boundary).toBeVisible();
     await expect(boundary).toContainText('Hors ligne');
     await expect(page.getByRole('table')).toHaveCount(0);

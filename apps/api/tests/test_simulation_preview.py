@@ -104,6 +104,18 @@ def test_bull_call_debit_preview_matches_the_specification(
     assert all(isinstance(cell, str) for row in grid[0] for cell in row)
     assert body["scenario_spot_grid"] == ["80.00", "100.00", "120.00"]
 
+    # PAS DE PUBLICATION DECLARE : deux decimales, jamais la representation
+    # brute du float64. Mesure du 2026-09-06 sur la pile en direct : la grille
+    # rendait "-479.93893484498733" a cote d'un payoff exact "-500.00", dans la
+    # meme colonne de P&L. Le modele est en float64 avec tolerances declarees ;
+    # publier au-dela suggere une exactitude qu'il n'a pas.
+    for row in grid[0]:
+        for cell in row:
+            entier, _, decimales = cell.partition(".")
+            assert decimales != "", f"cellule sans decimales publiees : {cell}"
+            assert len(decimales) == 2, f"precision non declaree publiee : {cell}"
+            assert entier.lstrip("-").isdigit(), f"cellule non numerique : {cell}"
+
     # CalculationRecord lineage for BOTH authoritative calculations.
     for name in ("payoff", "scenario_grid"):
         calc = body["calculations"][name]

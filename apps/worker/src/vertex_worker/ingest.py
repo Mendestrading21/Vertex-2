@@ -27,7 +27,7 @@ from sqlalchemy.orm import Session
 
 from vertex_core.contracts import DataEnvelope
 from vertex_persistence.repository.observations import insert_observation
-from vertex_persistence.repository.outbox import enqueue_outbox
+from vertex_persistence.repository.outbox import enqueue_outbox, enqueue_outbox_coalesced
 from vertex_worker.analysis import TOPIC_ANALYSIS_INGESTED, is_daily_bars_schema
 from vertex_worker.calendar import (
     TOPIC_CALENDAR_INGESTED,
@@ -46,6 +46,7 @@ from vertex_worker.sec_fundamentals import (
 )
 
 __all__ = [
+    "COALESCE_GLOBAL",
     "OUTBOX_NOTIFY_CHANNEL",
     "TOPIC_OBSERVATION_INGESTED",
     "IngestResult",
@@ -57,6 +58,22 @@ TOPIC_OBSERVATION_INGESTED = "observation.ingested"
 """Outbox topic enqueued for every newly written observation."""
 
 OUTBOX_NOTIFY_CHANNEL = "vertex_outbox"
+
+COALESCE_GLOBAL = "global"
+"""Coalescence key of every recompute-the-whole-table job enqueued here.
+
+Every handler behind these topics (attention, review queue, markets overview,
+analysis dossiers, option chains, calendar, opportunities) rebuilds its
+snapshot from the observation table and ignores the message payload beyond
+logging — so two PENDING jobs of the same topic do exactly the same work
+twice. Measured on the real base (2026-09-06): one publication per ingested
+observation, 14 360 versions of ``markets_overview`` for one year of quotes.
+With coalescence a burst of N observations leaves at most one waiting job
+per topic; the job that runs after the last commit sees them all.
+
+``sec.fundamentals.ingested`` is NOT coalesced: its handler reads the
+``event_id`` of its message and processes that filing.
+"""
 """LISTEN/NOTIFY wake-up channel (signal only; tables stay the durable source)."""
 
 
@@ -88,9 +105,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
     # `isinstance` contre elle rejette toutes les enveloppes réelles.
     # L'annotation et le contrôle runtime ne sont pas le même objet.
     if not isinstance(envelope, DataEnvelope):
-        raise TypeError(
-            f"envelope: expected DataEnvelope, got {type(envelope).__name__}"
-        )
+        raise TypeError(f"envelope: expected DataEnvelope, got {type(envelope).__name__}")
 
     inserted = insert_observation(
         session,
@@ -113,7 +128,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
     if not inserted:
         return IngestResult(event_id=envelope.event_id, inserted=False, outbox_message_id=None)
 
-    message_id = enqueue_outbox(
+    message_id = enqueue_outbox_coalesced(
         session,
         TOPIC_OBSERVATION_INGESTED,
         {
@@ -121,11 +136,12 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
             "source": envelope.source,
             "schema_version": envelope.schema_version,
         },
-    )
+        coalesce_key=COALESCE_GLOBAL,
+    ).message_id
     if is_daily_quote_schema(envelope.schema_version):
         # Additional markets job, same transaction and same idempotence: it is
         # enqueued only when the observation row was actually inserted.
-        enqueue_outbox(
+        enqueue_outbox_coalesced(
             session,
             TOPIC_QUOTES_INGESTED,
             {
@@ -133,11 +149,12 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
                 "source": envelope.source,
                 "schema_version": envelope.schema_version,
             },
+            coalesce_key=COALESCE_GLOBAL,
         )
     if is_option_chain_schema(envelope.schema_version):
         # Additional option-chain job (same transaction, same idempotence):
         # the option-chain handler owns that topic (vertex_worker.options).
-        enqueue_outbox(
+        enqueue_outbox_coalesced(
             session,
             TOPIC_OPTION_CHAINS_INGESTED,
             {
@@ -145,6 +162,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
                 "source": envelope.source,
                 "schema_version": envelope.schema_version,
             },
+            coalesce_key=COALESCE_GLOBAL,
         )
     if is_daily_bars_schema(envelope.schema_version) or is_option_chain_schema(
         envelope.schema_version
@@ -153,7 +171,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
         # scenario basis. For a chain envelope this message is enqueued
         # AFTER its option-chain job, so a drained outbox recomputes the
         # chain snapshot before the dossier reads it.
-        enqueue_outbox(
+        enqueue_outbox_coalesced(
             session,
             TOPIC_ANALYSIS_INGESTED,
             {
@@ -161,11 +179,12 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
                 "source": envelope.source,
                 "schema_version": envelope.schema_version,
             },
+            coalesce_key=COALESCE_GLOBAL,
         )
     if is_calendar_event_schema(envelope.schema_version):
         # Additional calendar job (same transaction, same idempotence): the
         # calendar handler owns its dedicated topic (vertex_worker.calendar).
-        enqueue_outbox(
+        enqueue_outbox_coalesced(
             session,
             TOPIC_CALENDAR_INGESTED,
             {
@@ -173,6 +192,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
                 "source": envelope.source,
                 "schema_version": envelope.schema_version,
             },
+            coalesce_key=COALESCE_GLOBAL,
         )
     if is_sec_fundamentals_schema(envelope.schema_version):
         # Normalized SEC filings and facts own a dedicated point-in-time
@@ -197,7 +217,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
         # evidence. For calendar envelopes this message is enqueued AFTER
         # the calendar job, so a drained outbox recomputes the calendar
         # snapshot before the opportunities handler reads it.
-        enqueue_outbox(
+        enqueue_outbox_coalesced(
             session,
             TOPIC_OPPORTUNITIES_REFRESH,
             {
@@ -205,6 +225,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
                 "source": envelope.source,
                 "schema_version": envelope.schema_version,
             },
+            coalesce_key=COALESCE_GLOBAL,
         )
     # Review-queue refresh "après observation.ingested" (page 09, documented
     # here): every NEWLY inserted observation may change the novelty context
@@ -212,7 +233,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
     # transaction with the same idempotence (only when the row was actually
     # written). The registry is one-handler-per-topic, so the review-queue
     # handler owns its own topic instead of sharing observation.ingested.
-    enqueue_outbox(
+    enqueue_outbox_coalesced(
         session,
         TOPIC_REVIEW_QUEUE_REFRESH,
         {
@@ -220,6 +241,7 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
             "source": envelope.source,
             "schema_version": envelope.schema_version,
         },
+        coalesce_key=COALESCE_GLOBAL,
     )
     # Wake-up signal only, delivered on commit; its loss is tolerated because
     # the worker polls the outbox table (ADR-006: NOTIFY is never the queue).
@@ -227,6 +249,4 @@ def ingest_envelope(session: Session, envelope: DataEnvelope[Any]) -> IngestResu
         text("SELECT pg_notify(:channel, :topic)"),
         {"channel": OUTBOX_NOTIFY_CHANNEL, "topic": TOPIC_OBSERVATION_INGESTED},
     )
-    return IngestResult(
-        event_id=envelope.event_id, inserted=True, outbox_message_id=message_id
-    )
+    return IngestResult(event_id=envelope.event_id, inserted=True, outbox_message_id=message_id)

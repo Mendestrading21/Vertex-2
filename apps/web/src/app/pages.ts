@@ -35,6 +35,21 @@ interface PageLiveLink {
   readonly note?: string;
 }
 
+/**
+ * Préfixe de la tête suivie quand elle dépend d'un paramètre de route.
+ *
+ * Le flux signale certaines familles PAR INSTRUMENT (`analysis/<ticker>`), et
+ * la coquille ne connaît pas l'instrument au moment où elle décrit la page :
+ * `live` restait donc `null` et le bandeau affichait « SANS SIGNAL » sur des
+ * pages que le flux suit réellement — 57 têtes `analysis/…` sont publiées en
+ * base. Le préfixe sert UNIQUEMENT à répondre « cette page est-elle suivie ? » ;
+ * il ne nomme aucune clé de cache et ne déclenche aucune requête.
+ *
+ * Il n'est posé que là où le serveur publie vraiment : Options, Portefeuille et
+ * Simulateur n'ont aucune ligne, « SANS SIGNAL » y est exact et le reste.
+ */
+export type PageLiveResourcePrefix = 'analysis/';
+
 export interface PageDef {
   /** Identifiant stable de la page. */
   readonly key: string;
@@ -50,6 +65,8 @@ export interface PageDef {
   readonly lot: string;
   /** Ressource principale suivie par le flux SSE, ou `null` avec son motif. */
   readonly live: PageLiveLink | null;
+  /** Voir {@link PageLiveResourcePrefix} : suivi par préfixe, badge seulement. */
+  readonly liveResourcePrefix?: PageLiveResourcePrefix;
 }
 
 export interface NavGroup {
@@ -86,8 +103,10 @@ const analysis: PageDef = {
     'Que disent les données certifiées sur cet instrument, et quelles limites restent ouvertes ?',
   lot: 'LOT-19',
   // Tête PAR INSTRUMENT (`analysis/<instrument>`, suivie par préfixe) : le
-  // shell ne connaît pas l'instrument, il ne peut donc pas nommer la clé.
+  // shell ne connaît pas l'instrument, il ne peut donc pas nommer la clé —
+  // mais il peut dire que la page EST suivie, via le préfixe.
   live: null,
+  liveResourcePrefix: 'analysis/',
 };
 
 const options: PageDef = {
@@ -142,6 +161,7 @@ const charts: PageDef = {
   lot: 'LOT-A2',
   // Même tête par instrument que l'Analyse : `analysis/<instrument>`.
   live: null,
+  liveResourcePrefix: 'analysis/',
 };
 
 const portfolio: PageDef = {

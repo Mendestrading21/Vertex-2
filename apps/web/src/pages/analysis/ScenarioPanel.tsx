@@ -1,3 +1,4 @@
+import { displayNumber } from '../../components/markets/marketsView.ts';
 import type { ScenariosView } from './analysisView.ts';
 import { scenarioAbsentLabel } from './analysisView.ts';
 
@@ -56,8 +57,17 @@ export function ScenarioPanel({ scenarios }: { readonly scenarios: ScenariosView
                   {time}
                 </th>
                 {(scenario[timeIndex] ?? []).map((cell, spotIndex) => (
-                  <td key={scenarios.spotGrid[spotIndex] ?? spotIndex} className="vx-num">
-                    {cell}
+                  /*
+                    MÊME FORMAT QUE PARTOUT AILLEURS, et valeur servie dans
+                    `title` — cette table et celle du Simulateur étaient les
+                    deux seules tables de montants rendues brutes.
+                  */
+                  <td
+                    key={scenarios.spotGrid[spotIndex] ?? spotIndex}
+                    className="vx-num"
+                    title={cell}
+                  >
+                    {displayNumber(cell)}
                   </td>
                 ))}
               </tr>

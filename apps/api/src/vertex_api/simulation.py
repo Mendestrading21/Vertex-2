@@ -45,6 +45,7 @@ from vertex_core.calculations.options import (
     defined_risk_check,
     payoff_at_expiry,
     scenario_grid,
+    scenario_grid_cell,
 )
 from vertex_core.contracts import CalculationRecord, make_calculation_record
 from vertex_core.contracts.types import (
@@ -195,7 +196,13 @@ def _dec(value: Decimal) -> str:
 
 
 def _num_string(value: float) -> str:
-    return format(Decimal(repr(value)), "f")
+    """Cellule de grille, au pas de publication DECLARE PAR LE CALCUL.
+
+    Le pas vit dans ``vertex_core.calculations.options``, avec la fonction qui
+    produit le nombre : l'API et le worker publiaient chacun leur propre
+    ``_num_string``, et rien ne garantissait qu'ils disent la meme chose.
+    """
+    return scenario_grid_cell(value)
 
 
 def _evaluation_grid(request: SimulationPreviewRequest) -> tuple[Decimal, ...]:

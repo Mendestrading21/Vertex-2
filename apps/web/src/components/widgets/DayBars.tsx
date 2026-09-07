@@ -109,7 +109,21 @@ export function DayBars({
                   libellé en dessous : sans eux, une colonne grise ne dit ni
                   de qui elle parle ni combien elle vaut, et la table
                   équivalente restait le seul endroit lisible. */}
-              <span className="vx-w2-daybar-value">{entry.value === null ? 'n. p.' : entry.value}</span>
+              {/*
+                LE `title` PORTE LA VALEUR ENTIÈRE, comme partout ailleurs.
+                Mesuré le 2026-09-07 sur Graphiques : la colonne fait 26 px de
+                moins que le nombre servi, et « 16402956 » se rendait
+                « 164029… ». Le libellé du dessous avait déjà son `title`, la
+                valeur non : un volume abrégé se lit alors comme un volume
+                complet. La table équivalente reste la référence exhaustive ;
+                le survol évite d'avoir à l'ouvrir pour une seule barre.
+              */}
+              <span
+                className="vx-w2-daybar-value"
+                {...(entry.value === null ? {} : { title: entry.value })}
+              >
+                {entry.value === null ? 'n. p.' : entry.value}
+              </span>
               <span className="vx-w2-daybar-track">
                 {value === null ? null : (
                   <span

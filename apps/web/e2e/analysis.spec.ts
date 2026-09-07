@@ -5,6 +5,7 @@
  * PAR VALEUR contre l'API, AdviceCard honnête (INSUFFICIENT_DATA attendu),
  * axe et état hors ligne.
  */
+import { displayNumber } from './format.ts';
 import { expect, expectNoSeriousAxeViolations, screenshotPath, test } from './fixtures.ts';
 
 interface ApiBar {
@@ -216,7 +217,7 @@ test.describe('Page Analyse — chandeliers, table équivalente, AdviceCard', ()
     }
     // L'en-tête porte la dernière clôture PUBLIÉE du dossier et une série tracée.
     const lastClose = analysis.bars!.bars[analysis.bars!.bars.length - 1]!.close;
-    await expect(page.getByTestId('instrument-header-price')).toContainText(lastClose.replace('.', ','));
+    await expect(page.getByTestId('instrument-header-price')).toContainText(displayNumber(lastClose));
     await expect(page.getByTestId('instrument-header').getByTestId('spark-line')).toBeVisible();
     // Faits SEC : aucun snapshot semé → état vide HONNÊTE, rien à la place.
     const sec = await (await page.request.get(`/api/v1/sources/sec/${INSTRUMENT}/fundamentals`)).json();
@@ -226,7 +227,7 @@ test.describe('Page Analyse — chandeliers, table équivalente, AdviceCard', ()
       await expect(page.getByTestId('sec-facts')).toBeVisible();
     }
     // Inspecteur du dossier + panneau d'explication : deux panneaux, le premier est le dossier.
-    await expect(page.locator('.vx-inspector-heading').first()).toHaveText(`Inspecteur — Dossier ${INSTRUMENT}`);
+    await expect(page.locator('.vx-inspector-heading').first()).toHaveAttribute('aria-label', `Inspecteur — Dossier ${INSTRUMENT}`);
     await expect(page.getByTestId('analysis-dossier-facts')).toBeVisible();
   });
 

@@ -1,5 +1,5 @@
 import type { MarketsSector } from '../../api/client.ts';
-import { GROUP_LABELS_FR, flattenTickers, frDecimal, signSymbolOf } from './marketsView.ts';
+import { GROUP_LABELS_FR, flattenTickers, displayPercent, signSymbolOf } from './marketsView.ts';
 
 /**
  * Carte sectorielle — la planche la montre sur Aujourd'hui ET sur Marchés :
@@ -53,7 +53,7 @@ export function SectorGrid({ sectors, selected = null, onSelect }: SectorGridPro
                       <code>{entry.ticker.ticker}</code>
                       <span className="vx-sector-return">
                         <span aria-hidden="true">{signSymbolOf(entry.group)}</span>{' '}
-                        {frDecimal(entry.ticker.return_1d_pct)} %
+                        {displayPercent(entry.ticker.return_1d_pct)}
                       </span>
                       <span className="vx-visually-hidden">({GROUP_LABELS_FR[entry.group]})</span>
                     </>

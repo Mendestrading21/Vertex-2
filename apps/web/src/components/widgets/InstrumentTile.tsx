@@ -5,10 +5,10 @@ import { pageStateOf, useAnalysis, useMarketsOverview } from '../../api/hooks.ts
 import { analysisStateOf, barsViewOf } from '../../pages/analysis/analysisView.ts';
 import { focusInstrumentsOf } from '../../pages/focusView.ts';
 import { opportunitiesFrameStateOf } from '../../pages/opportunities/opportunitiesView.ts';
-import { FreshnessBadge } from '../FreshnessBadge.tsx';
+import { FreshnessBadge, policyProps } from '../FreshnessBadge.tsx';
 import { Sparkline } from '../markets/Sparkline.tsx';
 import type { FlatTicker } from '../markets/marketsView.ts';
-import { GROUP_LABELS_FR, frDecimal, signSymbolOf } from '../markets/marketsView.ts';
+import { GROUP_LABELS_FR, displayNumber, displayPercent, signSymbolOf } from '../markets/marketsView.ts';
 import { MODULE_STATE_LABELS, moduleStateOf } from '../moduleState.ts';
 import { StatusChip } from './StatusChip.tsx';
 
@@ -63,7 +63,13 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
         </div>
         <div className="vx-iw-fresh">
           {data !== undefined && (state === 'ready' || state === 'refreshing' || state === 'stale' || state === 'delayed' || state === 'partial') ? (
-            <FreshnessBadge ageSeconds={data.age_seconds} sourceLabel="dossier" />
+            /* L'échelle servie voyage avec l'âge : sans budget, « il y a 4 h »
+               ne se juge pas. `policyProps` rend `{}` si elle manque. */
+            <FreshnessBadge
+              ageSeconds={data.age_seconds}
+              {...policyProps(data.freshness_policy)}
+              sourceLabel="dossier"
+            />
           ) : (
             <span className="vx-iw-state" data-state={state}>
               {state === 'ready' || state === 'refreshing' ? '' : MODULE_STATE_LABELS[state]}
@@ -74,11 +80,11 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
 
       <div className="vx-iw-price-row">
         <span className="vx-iw-price">
-          {frDecimal(ticker.last_close)}
+          {displayNumber(ticker.last_close)}
           <span className="vx-iw-currency"> {ticker.currency ?? 'devise non publiée'}</span>
         </span>
         <span className="vx-iw-delta" data-sign={entry.group}>
-          <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {frDecimal(ticker.return_1d_pct)} %
+          <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {displayPercent(ticker.return_1d_pct)}
           <span className="vx-visually-hidden"> ({GROUP_LABELS_FR[entry.group]}, rendement 1 j)</span>
         </span>
       </div>
@@ -91,7 +97,7 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
           {previousClose === '' ? (
             <span data-absent="true">non publiée</span>
           ) : (
-            frDecimal(previousClose)
+            displayNumber(previousClose)
           )}
         </span>
         <span>
@@ -99,7 +105,19 @@ export function InstrumentTile({ entry }: { readonly entry: FlatTicker }) {
         </span>
         <StatusChip
           label={quality === '' ? '' : quality}
-          tone={quality === 'OK' ? 'neutral' : 'warning'}
+          /*
+            LE VOCABULAIRE SERVI EST `VALID`, PAS `OK`. Mesuré le 2026-09-06 :
+            `/api/v1/markets/overview` rend `quality: "VALID"` sur les 57
+            instruments, et cette tuile les peignait donc TOUS en ambre — une
+            alerte permanente qui n'alerte plus de rien. La page Options tient
+            déjà la bonne convention au même endroit du contrat
+            (`OptionsPage.tsx`, `group.quality === 'VALID'`).
+            `OK` reste accepté : deux vocabulaires ont coexisté, et retirer le
+            second ferait revenir l'ambre partout si une route l'emploie
+            encore. Tout le reste — y compris une qualité NON SERVIE — garde
+            l'ambre : fail-closed, on ne peint pas en neutre ce qu'on ignore.
+          */
+          tone={quality === 'VALID' || quality === 'OK' ? 'neutral' : 'warning'}
         />
       </p>
 

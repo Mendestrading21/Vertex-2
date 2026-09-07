@@ -48,7 +48,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Sequence
-from decimal import Decimal, localcontext
+from decimal import ROUND_HALF_EVEN, Decimal, localcontext
 from typing import Literal
 
 import QuantLib as _ql
@@ -72,6 +72,7 @@ __all__ = [
     "MATURITY_MAX_YEARS",
     "QUOTE_SIDES",
     "RATE_ABS_MAX",
+    "SCENARIO_GRID_PUBLICATION_QUANTUM",
     "SPOT_STRIKE_MAX",
     "VOLATILITY_MAX",
     "DefinedRiskResult",
@@ -90,6 +91,7 @@ __all__ = [
     "no_arbitrage_bounds",
     "payoff_at_expiry",
     "scenario_grid",
+    "scenario_grid_cell",
 ]
 
 FLOAT64_REL_TOL = 1e-9
@@ -97,6 +99,36 @@ FLOAT64_REL_TOL = 1e-9
 
 FLOAT64_ABS_TOL = 1e-12
 """Documented absolute tolerance for float64 comparisons near zero."""
+
+SCENARIO_GRID_PUBLICATION_QUANTUM = Decimal("0.01")
+"""Publication step of a :func:`scenario_grid` cell, in money units.
+
+MEASURED ON THE LIVE STACK (2026-09-06): the Simulator rendered
+``-479.93893484498733`` next to an exact ``-500.00`` payoff, in the SAME P&L
+column, and the Analysis dossier published the same seventeen digits. Those
+digits are the float64 REPRESENTATION of the model output, not a precision the
+model owns: this module states its own tolerances just above
+(``FLOAT64_REL_TOL`` 1e-9), so anything past them is noise dressed as
+exactness.
+
+The step lives HERE, with the calculation that produces the number, so the API
+and the worker publish the SAME thing — they used to hold one ``_num_string``
+each, and nothing kept them equal. Exact money of the product (payoff at
+expiry, extremes, breakevens and their residual) is untouched: it comes from
+exact ``Decimal`` arithmetic, never from a model.
+"""
+
+
+def scenario_grid_cell(value: float) -> str:
+    """One grid cell as a decimal string at the declared publication step.
+
+    ``ROUND_HALF_EVEN`` (banker's rounding): a grid is read as a row of
+    neighbouring cells, and half-up would bias the whole row one way.
+    """
+    quantized = Decimal(repr(value)).quantize(
+        SCENARIO_GRID_PUBLICATION_QUANTUM, rounding=ROUND_HALF_EVEN
+    )
+    return format(quantized, "f")
 
 SPOT_STRIKE_MAX = 1e12
 """Upper bound of the validated model domain for spot and strike."""
