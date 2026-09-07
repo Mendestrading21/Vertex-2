@@ -47,7 +47,7 @@ financier, aucune lecture de compte/positions IBKR, aucun faux live.
 
 ## Environnement (rappel, sans secret)
 
-- Dépôt : `C:\Users\elio_\OneDrive\Desktop\Vertex 2` (git, `origin` =
+- Dépôt : `%USERPROFILE%\OneDrive\Desktop\Vertex 2` (git, `origin` =
   `Mendestrading21/Vertex-2`, renommage de `Vertex-1.0-Beta-`).
 - Miroir de travail avec `node_modules`/`.venv` : `~/.vertex/app` ; script de
   synchronisation dans le scratchpad de session (robocopy /MIR, exclut .git,

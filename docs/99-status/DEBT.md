@@ -931,7 +931,9 @@ aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
   l'application~~ — **CORRIGÉ** : ordre de compression déclaré.
 - ~~Deux rangées vides à plus d'un tiers, sur `/charts` et `/today`~~ —
   **CORRIGÉ** : superpositions sur huit colonnes, instruments suivis sur la
-  rangée entière. La dette de trou de `/today` est fermée.
+  rangée entière. La rangée trouée de `/today` disparaît sur données réelles ;
+  sa tolérance déclarée reste posée tant qu'elle n'est pas mesurée sur
+  population `SYNTHETIC`.
 - ~~Quatre pages fermaient sur six cartes de 120 px à 1280~~ — **CORRIGÉ** :
   trois ou quatre par rangée.
 - ~~Le volume d'une barre était coupé sans recours~~ — **CORRIGÉ** : `title`.
@@ -946,10 +948,10 @@ aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
   dimensionnée pour des tables servies ; la retoucher sur des données vides
   casserait la mesure CI, qui tourne sur population `SYNTHETIC`. À reprendre
   quand ces pages auront des données réelles — pas avant.
-- **`market-map` porte une hauteur fantôme de 2 733 px** : `scrollHeight` de
-  `.vx-chartframe` inclut la table complète alors que celle-ci défile dans son
-  propre conteneur. Rien n'est perdu à l'écran, rien n'est inatteignable.
-  Dette V4 inchangée — c'est une mesure trompeuse, pas un défaut visible.
+- ~~**`market-map` porte une hauteur fantôme de 2 733 px**~~ — **CORRIGÉE la
+  nuit même** : `contain: paint` sur `.vx-markets-table-scroll` ramène le
+  fantôme à zéro, et `DETTE_CARTE_MAX` passe de 1 à 0. Cette entrée avait été
+  écrite avant la correction et la déclarait encore ouverte ; c'était faux.
 - **`/options` n'est pas auditable sur la pile live** : l'API répond
   `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne, aucun
   collecteur ne publiant de surface. Le comportement fail-closed est correct et
@@ -959,3 +961,62 @@ aux quatre largeurs `1024×768` (contrôle de dégradation laptop), `1280×800`,
 - **Le libellé du champ de recherche est coupé de 13 px** à toutes les
   largeurs (`max-width: 320px`). C'est une invite, pas une donnée servie ; le
   raccourci `⌘K` reste visible. Non traité.
+
+## Audit de pré-fusion du 2026-09-07 — constats ouverts
+
+Six dimensions auditées en parallèle sur le diff complet `main...` de la
+branche (249 fichiers, 74 634 insertions), chaque constat grave soumis à trois
+sceptiques indépendants chargés de le RÉFUTER. Verdict : **aucun bloquant**.
+La dimension « capacités IBKR interdites et autorité financière côté
+TypeScript » ressort propre. Ce qui suit a survécu à la réfutation.
+
+### Majeur — le spot d'une chaîne d'options est daté d'un autre instant
+
+`apps/edge-ibkr/src/vertex_edge_ibkr/options.py` publie explicitement la
+NATURE et l'INSTANT du spot qu'il retient : `underlying_spot_basis`,
+`underlying_spot_observed_at`, `underlying_spot_source_event_id`. Son en-tête
+le dit : « Le spot vient de la dernière clôture quotidienne déjà en base ».
+
+`apps/worker/src/vertex_worker/options.py` jette les trois champs et
+reconstruit le bloc avec `record.as_of` et `record.event_id`, c'est-à-dire
+l'instant de la TRANCHE d'options — le maximum des instants d'observation des
+cotations d'options, pas celui de la clôture qui fournit le spot. Un `git grep`
+des trois champs ne trouve aucun consommateur dans le dépôt.
+
+L'interface rend ensuite ce champ comme l'instant d'observation DU SPOT
+(`optionsView.ts` → `observedAt`, `OptionsModules.tsx` → « observé <time> »),
+sous une carte qui demande « À quel spot OBSERVÉ le calcul d'IV a-t-il été
+fait ? ». Une valeur de la veille est donc affichée sous un horodatage du
+présent : la fraîcheur est fabriquée, pas mesurée. Aucune borne d'âge n'est
+posée sur ce spot. Le même spot alimente les IV et Greeks théoriques, dont la
+lignée hérite du mauvais instant d'entrée.
+
+Contredit `.claude/rules/architecture.md` : « Conserver identité canonique,
+source, droit, unité, devise, timezone, `observed_at`, `received_at`, qualité
+et fraîcheur jusqu'à l'interface. »
+
+**LATENT AUJOURD'HUI, PAS DEMAIN.** Aucune chaîne n'est publiée : l'API répond
+`NO_SNAPSHOT_FOR_SUBJECT` et la page montre son état vide. C'est cette branche
+qui rend le chemin atteignable, en basculant le worker de
+`ibkr.option-chain/` vers `ibkr.option-chain-slice/`. Le défaut devient visible
+le jour où le collecteur tourne. **À corriger AVANT d'activer le collecteur.**
+Correctif borné : propager les trois champs dans `spot_block` et les afficher.
+
+### Mineurs
+
+- **Portefeuille** : la raison serveur d'une source de marques dégradée n'est
+  plus affichée nulle part (`PortfolioSummary.tsx`). L'état dégradé se voit,
+  son motif servi ne se lit plus.
+- **Tuile d'instrument** : son commentaire promet l'ambre pour une qualité NON
+  SERVIE, mais `StatusChip` force `neutral` dès que le libellé est vide — par
+  décision délibérée de la primitive, qui écrit alors « libellé non publié » et
+  pose `data-absent`. L'absence est donc DITE ; c'est le commentaire de la
+  tuile qui décrit un comportement qui n'existe pas. À réaligner.
+- **Graphiques** : un compte de barres non servi est remplacé par la longueur
+  du tableau reçu, puis présenté comme « publiées » (`ChartsPage.tsx`).
+- **`vite.design-preview.config.ts`** : fichier de travail versionné, appelé
+  par aucun script et hors du périmètre de `tsc`.
+- **Deux plafonds de temps de test relevés dans le même diff** parce que la
+  suite est instable sous charge : un plafond relevé masque la cause.
+- **88 % du diff est du contenu tiers** vendu sous `.claude/skills`, que ce
+  même diff retire du périmètre de lint. Le volume n'est pas du produit.

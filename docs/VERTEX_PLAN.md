@@ -23,7 +23,7 @@ Les lots sont ordonnés par valeur pour l'utilisateur et par dépendance.
   Une tâche planifiée `\VertexAutoStart` existe mais pointe sur un ancien
   chemin du projet donneur (`IBKT-DASHBORD\_vertex_autostart.cmd`).
 - **Action humaine** (réglage système, hors périmètre de l'agent) : refaire
-  pointer `\VertexAutoStart` sur `C:\Users\elio_\.vertex\Lancer-Vertex.cmd`
+  pointer `\VertexAutoStart` sur `%USERPROFILE%\.vertex\Lancer-Vertex.cmd`
   (déclencheur « à l'ouverture de session »), après avoir ouvert TWS.
 - **Lot 1** : `stop-vertex.ps1` / `start-vertex.ps1` deviennent idempotents
   (relance des seuls services morts), contrôle de santé unique

@@ -3614,7 +3614,11 @@ correction 3 : le trou n'était pas chez la comparaison mais chez les
 superpositions, qui tenaient quatre colonnes et empilaient leurs trois figures
 sur 1 052 px. Elles passent à huit colonnes, les figures se rangent côte à côte.
 Sur `/today`, les instruments suivis prennent la rangée entière : quatre tuiles
-alignées au lieu de deux par deux, et la dette de trou de la page est fermée.
+alignées au lieu de deux par deux, et la rangée trouée de la page disparaît.
+La TOLÉRANCE déclarée, elle, reste posée (`DETTE_TROU['/today'].max = 1`) :
+elle se mesure en CI sur population `SYNTHETIC`, que cette machine ne peut pas
+reproduire sans occuper les ports de la pile live. La retirer demande cette
+mesure, pas cette observation.
 
 **6. Les absences déclarées se lisent enfin.** Quatre pages fermaient sur une
 rangée de six cartes à 141 px (1440) ou 120 px (1280) : titre sur deux lignes,
@@ -3628,10 +3632,19 @@ Graphiques à 4 puis 1.
 | page | avant | 1280 | 1440 | 1600 |
 | --- | --- | --- | --- | --- |
 | Aujourd'hui | 4 982 | 3 752 | 3 259 | 2 989 |
-| Marchés | 5 230 | — | 4 642 | — |
+| Marchés (1re passe) | 5 230 | — | 4 642 | — |
+
+Les chiffres de Marchés ci-dessus sont ceux de la PREMIÈRE passe, juste après
+la correction de la carte sectorielle. La page a été recomposée une seconde
+fois plus tard dans la nuit ; ses hauteurs finales sont dans « Suite de la
+nuit » et remplacent celles-ci.
 
 ### Exploitation et surveillance
 
+Le chien de garde et les lanceurs vivent HORS DU DÉPÔT, dans `~/.vertex/`
+(`watchdog.ps1`, `live-vertex.ps1`, `stop-vertex.ps1`) : ce sont des outils de
+poste, pas du produit, et aucun commit ne les porte. Ce paragraphe décrit donc
+un travail qu'un lecteur du dépôt ne peut pas vérifier ici.
 Le chien de garde relance api, worker, interface et boucle d'ingestion quand
 l'un d'eux se tait — il l'a fait le 2026-09-06 à 21:24, l'API étant morte sans
 un mot dans son journal. Mais **rien ne le relançait lui**, et l'arrêt
@@ -3646,9 +3659,9 @@ l'arrêt le stoppe en premier et lui seul.
   dette déclarée** ; sur données réelles vides elles montent à 40 % et 37 %.
   Leur composition est dimensionnée pour des tables servies, pas pour des
   absences : la retoucher sur des données vides casserait la mesure CI.
-- `market-map` porte toujours une hauteur fantôme de 2 733 px
-  (`scrollHeight` de `.vx-chartframe`). Le contenu réel défile dans
-  `.vx-markets-table-scroll` et rien n'est perdu à l'écran — dette V4 inchangée.
+- `market-map` portait une hauteur fantôme de 2 733 px (`scrollHeight` de
+  `.vx-chartframe`). **FERMÉE plus bas dans cette même nuit** : voir « Suite de
+  la nuit ». Cette ligne décrit l'état au moment du premier relevé.
 - `/options` ne peut pas être auditée sur la pile live : l'API répond
   `state: "empty"` / `NO_SNAPSHOT_FOR_SUBJECT` pour toute chaîne. Le comportement
   fail-closed est correct ; la mise en page de cette page reste couverte par les

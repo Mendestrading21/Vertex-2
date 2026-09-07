@@ -768,20 +768,21 @@ body {
 .vx-contextbar-meta {
   display: flex;
   /*
-    `1 1 auto` ET NON `0 1 auto`. Avec `justify-content: space-between` sur la
-    barre, un groupe qui ne grandit pas reçoit EXACTEMENT sa largeur de
-    contenu — et la moindre fraction de pixel le fait alors passer à la
-    ligne. Mesuré à 1440 : 530 px de badge + 12 de gouttière + 129 de session
-    = 671, pour une boîte de 671,0 ; l'état de session tombait sur une
-    seconde ligne alors qu'il restait 140 px libres dans la barre. En
-    grandissant, le groupe absorbe l'espace restant et ne se replie que
-    lorsque la place manque VRAIMENT.
+    `1 0 auto` : le groupe GRANDIT avec la place disponible et ne se laisse
+    JAMAIS comprimer aux largeurs de release.
+
+    LES DEUX VALEURS ESSAYÉES AVANT, ET POURQUOI ELLES NE TENAIENT PAS.
+    `0 1 auto` — la valeur d'origine — lui donnait exactement sa largeur de
+    contenu sous `justify-content: space-between`, et la moindre fraction de
+    pixel le faisait passer à la ligne : mesuré à 1440, 530 px de badge + 12
+    de gouttière + 129 de session = 671 pour une boîte de 671,0, et l'état de
+    session tombait sous le badge alors qu'il restait 140 px libres.
+    `1 1 auto` corrigeait ce cas mais pas le suivant : à 1280, flexbox
+    reprenait au groupe les quelques pixels qu'il venait de lui donner,
+    pendant que le champ de recherche voisin gardait les siens.
+    Céder est le rôle de ce champ (facteur de compression 8) et du fil
+    d'Ariane (ellipse) — pas celui de l'état de la donnée.
   */
-  /* `1 0 auto` : le groupe GRANDIT avec la place disponible mais ne se laisse
-     jamais comprimer aux largeurs de release — sinon flexbox lui retire les
-     quelques pixels qui suffisent à faire passer l'état de session sous le
-     badge, pendant que le champ de recherche voisin garde les siens. Céder,
-     c'est le rôle de ce champ (facteur 8) et du fil d'Ariane (ellipse). */
   flex: 1 0 auto;
   min-width: 0;
   align-items: center;
@@ -8475,9 +8476,13 @@ label {
   overflow-x: auto;
 }
 
+/* `.vx-card-foot`, PAS `.vx-card-footer` : la seconde n'existe dans aucun
+   rendu — `Card.tsx` écrit `<footer className="vx-card-foot">`. Le sélecteur
+   fautif ne s'appliquait à rien et laissait croire que le pied de carte était
+   traité ici. */
 .vx-main [data-module][data-density='compact'] .vx-metric-unit,
 .vx-main [data-module][data-density='compact'] .vx-metric-note,
-.vx-main [data-module][data-density='compact'] .vx-card-footer,
+.vx-main [data-module][data-density='compact'] .vx-card-foot,
 .vx-main [data-module][data-density='compact'] code {
   white-space: normal;
   overflow-wrap: anywhere;
