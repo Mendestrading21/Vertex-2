@@ -311,6 +311,8 @@ def test_stop_requested_est_lisible_par_l_appelant() -> None:
     assert backfiller.stop_requested is False
     backfiller.request_stop()
     assert backfiller.stop_requested is True
+
+
 # -- identite des enveloppes brutes ----------------------------------------
 
 
