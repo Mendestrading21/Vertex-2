@@ -1031,7 +1031,7 @@ reproducteur écrit et rouge AVANT la correction :
   (daily_close) »), l'instant DU SPOT, son âge sur la borne servie
   (`FreshnessBadge`) et son statut, sur la carte « Spot publié », le repère de
   la table et l'inspecteur du snapshot. Le générateur SYNTHETIC publie les
-  mêmes trois champs (`synthetic_reference`), sans quoi la population de
+  mêmes trois champs (`synthetic-reference`), sans quoi la population de
   développement n'aurait plus aucune IV.
 - Non fait, hors périmètre : publier `spot` et `assumptions` PAR groupe
   (dette déjà consignée dans `docs/05-design/refonte/option.md`). Le bloc

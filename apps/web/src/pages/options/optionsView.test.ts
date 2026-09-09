@@ -103,8 +103,8 @@ describe('spot — provenance SERVIE, jamais fabriquée', () => {
   it('relaie nature, instant, source, âge et borne du bloc publié', () => {
     const spot = spotViewOf(makeOptionChain());
     expect(spot).not.toBeNull();
-    expect(spot?.basis).toBe('synthetic_reference');
-    expect(spot?.basisLabel).toBe('référence synthétique (synthetic_reference)');
+    expect(spot?.basis).toBe('synthetic-reference');
+    expect(spot?.basisLabel).toBe('référence synthétique (synthetic-reference)');
     expect(spot?.observedAt).toBe('2026-08-25T11:30:00+00:00');
     expect(spot?.sourceEventId).toBe('synthetic-dev:1234:oc0000');
     expect(spot?.provenance).toBe('PUBLISHED');

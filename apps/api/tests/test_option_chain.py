@@ -112,7 +112,7 @@ def chain_content() -> dict:
         "spot": {
             "value": "245.50",
             "currency": "SYN",
-            "basis": "synthetic_reference",
+            "basis": "synthetic-reference",
             "observed_at": (AS_OF - timedelta(minutes=31)).isoformat(),
             "source_event_id": "synthetic-dev:t:oc0001",
             "carried_by_event_id": "synthetic-dev:t:oc0001",

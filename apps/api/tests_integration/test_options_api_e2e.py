@@ -38,7 +38,7 @@ CHAIN_CONTENT = {
     "spot": {
         "value": "245.50",
         "currency": "SYN",
-        "basis": "synthetic_reference",
+        "basis": "synthetic-reference",
         "observed_at": (NOW - timedelta(minutes=31)).isoformat(),
         "source_event_id": "synthetic-dev:e2e:oc0001",
         "carried_by_event_id": "synthetic-dev:e2e:oc0001",

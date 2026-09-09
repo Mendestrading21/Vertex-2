@@ -85,7 +85,7 @@ describe('Page Options — composition (LOT-A5)', () => {
     servir();
     await renderOptions();
     const provenance = screen.getByTestId('options-spot-provenance');
-    expect(provenance.textContent).toContain('référence synthétique (synthetic_reference)');
+    expect(provenance.textContent).toContain('référence synthétique (synthetic-reference)');
     expect(provenance.textContent).toContain('observé 2026-08-25T11:30:00+00:00');
     expect(provenance.querySelector('time')?.getAttribute('dateTime')).toBe('2026-08-25T11:30:00+00:00');
     expect(provenance.textContent).toContain('il y a 31 min');
@@ -94,7 +94,7 @@ describe('Page Options — composition (LOT-A5)', () => {
     expect(provenance.getAttribute('data-provenance')).toBe('PUBLISHED');
     // Le repère de la table porte aussi la nature du spot.
     expect(document.querySelector('.vx-chain-spot-basis')?.textContent).toBe(
-      'référence synthétique (synthetic_reference)',
+      'référence synthétique (synthetic-reference)',
     );
   });
 

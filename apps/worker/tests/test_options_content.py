@@ -637,7 +637,7 @@ def test_synthetic_generator_publishes_the_spot_provenance() -> None:
     envelopes = generate_option_chain_envelopes(seed=1, base_time=NOW - timedelta(minutes=5))
     for envelope in envelopes:
         payload = envelope.payload
-        assert payload["underlying_spot_basis"] == "synthetic_reference"
+        assert payload["underlying_spot_basis"] == "synthetic-reference"
         assert payload["underlying_spot_observed_at"] == envelope.observed_at.isoformat()
         assert payload["underlying_spot_source_event_id"] == envelope.event_id
     content = build_option_chain_content(

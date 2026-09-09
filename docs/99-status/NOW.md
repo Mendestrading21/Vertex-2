@@ -19,7 +19,7 @@ correctif_d1_2026_09_09:
      OptionsConfig.max_spot_age = 120 h ; spot périmé, futur ou non
      mesurable → porte d'IV fermée pour la tranche (stale_spot, future_spot,
      spot_provenance_missing). Lignée IV/Greeks : tranche + observation du
-     spot. Générateur SYNTHETIC : mêmes trois champs (synthetic_reference)."
+     spot. Générateur SYNTHETIC : mêmes trois champs (synthetic-reference)."
   - "Interface : carte « Spot publié », repère de la table et inspecteur du
      snapshot affichent nature (« dernière clôture quotidienne (daily_close) »),
      instant DU SPOT, âge sur la borne servie (FreshnessBadge) et statut.

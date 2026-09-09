@@ -91,7 +91,7 @@ SYNTHETIC_OPTION_SETTLEMENT = "CASH"
 
 SYNTHETIC_OI_STATUS = "OI_DELAYED"
 
-SYNTHETIC_SPOT_BASIS = "synthetic_reference"
+SYNTHETIC_SPOT_BASIS = "synthetic-reference"
 """Nature of the synthetic spot: a generated reference level, neither a close
 nor a quote. Published with its instant and source so the chain builder can
 judge its age instead of guessing it (the real collector publishes

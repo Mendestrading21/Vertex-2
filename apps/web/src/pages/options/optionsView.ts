@@ -442,7 +442,7 @@ export function rowBudgetOf(data: OptionChainResponse): RowBudgetView | null {
  */
 export const SPOT_BASIS_FR: Readonly<Record<string, string>> = {
   daily_close: 'dernière clôture quotidienne',
-  synthetic_reference: 'référence synthétique',
+  'synthetic-reference': 'référence synthétique',
 };
 
 export function spotBasisLabel(basis: string | null): string {
@@ -466,7 +466,7 @@ export function spotBasisLabel(basis: string | null): string {
 export interface SpotView {
   readonly value: string | null;
   readonly currency: string | null;
-  /** Nature servie (`daily_close`, `synthetic_reference`…), verbatim. */
+  /** Nature servie (`daily_close`, `synthetic-reference`…), verbatim. */
   readonly basis: string | null;
   readonly basisLabel: string;
   /** Instant d'observation DU SPOT, jamais celui de la tranche. */
