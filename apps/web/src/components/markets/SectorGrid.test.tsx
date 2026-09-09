@@ -1,3 +1,4 @@
+import { displayPercent } from './marketsView.ts';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -15,7 +16,7 @@ describe('SectorGrid — la carte sectorielle, chaînes serveur verbatim', () =>
       for (const ticker of sector.tickers) {
         const puce = within(tuile).getByText(ticker.ticker).closest('li') as HTMLElement;
         // Le rendement est la chaîne serveur, virgule française, signe conservé.
-        expect(puce.textContent).toContain(`${ticker.return_1d_pct.replace('.', ',')} %`);
+        expect(puce.textContent).toContain(displayPercent(ticker.return_1d_pct));
         expect(puce.getAttribute('data-sign')).toMatch(/^(up|down|flat)$/);
       }
     }

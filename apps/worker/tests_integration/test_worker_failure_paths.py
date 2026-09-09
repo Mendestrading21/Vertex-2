@@ -16,7 +16,7 @@ from vertex_core.synthetic import SYNTHETIC_RIGHTS, SYNTHETIC_SOURCE, generate_e
 from vertex_persistence.enums import OutboxStatus
 from vertex_persistence.models import OutboxMessage
 from vertex_persistence.repository.observations import insert_observation
-from vertex_persistence.repository.outbox import enqueue_outbox
+from vertex_persistence.repository.outbox import claim_outbox_batch, enqueue_outbox
 from vertex_persistence.repository.snapshots import get_current_snapshot
 from vertex_worker.errors import HandlerError
 from vertex_worker.handlers import (
@@ -180,3 +180,63 @@ def test_mixed_population_is_labeled_through_the_real_chain(session_factory) -> 
     assert False in natures.values(), "non-synthetic items must declare themselves"
     assert content["coverage"]["synthetic_observations"] >= 1
     assert content["coverage"]["non_synthetic_observations"] == 2
+
+
+def test_expired_lease_is_reaped_then_reprocessed(session_factory) -> None:
+    """A worker killed mid-batch leaves IN_PROGRESS rows; the next run reaps them.
+
+    Measured on the live base (2026-09-06): eighteen rows stuck since a
+    restart, because nothing in the runtime ever called the reaper. The
+    sequence pinned here: lease valid → nothing happens; lease expired → the
+    lost attempt is recorded (FAILED, backoff); backoff elapsed → the row is
+    claimed and processed to DONE by a normal run.
+    """
+    seen: list[int] = []
+    registry = HandlerRegistry()
+    registry.register("test.reap", lambda session, message: seen.append(message.id))
+    with session_factory() as session:
+        message_id = enqueue_outbox(session, "test.reap", {"k": "v"})
+        session.commit()
+    # A first worker claims, then dies without ack or fail.
+    with session_factory() as session:
+        claimed = claim_outbox_batch(session, ["test.reap"], 1, 60, now=NOW)
+        session.commit()
+    assert [m.id for m in claimed] == [message_id]
+
+    clock = MutableClock(NOW + timedelta(seconds=30))
+    runner = WorkerRunner(
+        session_factory=session_factory,
+        registry=registry,
+        poll_interval_seconds=0.05,
+        clock=clock,
+    )
+    # Lease still valid: neither reaped nor claimable.
+    assert runner.run_once() == 0
+    assert runner.stats().reaped == 0
+
+    # Lease expired: reaped — attempt recorded, FAILED with backoff — but the
+    # backoff keeps it out of THIS claim.
+    clock.now = NOW + timedelta(seconds=61)
+    assert runner.run_once() == 0
+    assert runner.stats().reaped == 1
+    with session_factory() as session:
+        row = session.execute(
+            select(OutboxMessage).where(OutboxMessage.id == message_id)
+        ).scalar_one()
+        assert row.status == OutboxStatus.FAILED.value
+        assert row.attempts == 1
+        assert row.lease_token is None
+        assert "LEASE_EXPIRED" in (row.last_error or "")
+        assert row.lease_until is not None
+        backoff_until = row.lease_until
+
+    # Backoff elapsed: a normal run claims and processes it.
+    clock.now = backoff_until + timedelta(seconds=1)
+    assert runner.run_once() == 1
+    assert seen == [message_id]
+    with session_factory() as session:
+        row = session.execute(
+            select(OutboxMessage).where(OutboxMessage.id == message_id)
+        ).scalar_one()
+        assert row.status == OutboxStatus.DONE.value
+    assert runner.stats().reaped == 1

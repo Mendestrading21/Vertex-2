@@ -7,10 +7,11 @@ import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx
 import { Metric } from '../../components/Metric.tsx';
 import { ModuleStatus } from '../../components/ModuleStatus.tsx';
 import { Sparkline } from '../../components/markets/Sparkline.tsx';
-import { flattenTickers, frDecimal } from '../../components/markets/marketsView.ts';
+import { flattenTickers, displayNumber } from '../../components/markets/marketsView.ts';
 import { moduleShowsContent, moduleStateOf } from '../../components/moduleState.ts';
 import { IvSmile } from '../../components/options/IvSmile.tsx';
 import { InstrumentTile } from '../../components/widgets/InstrumentTile.tsx';
+import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { analysisStateOf, barsViewOf } from '../analysis/analysisView.ts';
 import { optionsModule } from './optionsModules.ts';
 import { groupLabelOf, rowBudgetOf, sourceEventIdsOf, spotViewOf } from './optionsView.ts';
@@ -21,14 +22,24 @@ import { groupLabelOf, rowBudgetOf, sourceEventIdsOf, spotViewOf } from './optio
  * lit Marchés (variation 1 j) et son dossier d'analyse (série) par les hooks
  * des pages propriétaires, chacun avec son état. Aucun calcul : chaînes
  * serveur, comptes publiés, géométrie des points publiés.
+ *
+ * REFONTE UI 2026-09-05 — CE QUI A CHANGÉ, ET POURQUOI.
+ *
+ *   - Le snapshot de chaîne devient une BANDE de synthèse en tête de planche :
+ *     six faits lisibles d'un regard (état, âge contre budget, population et
+ *     nature, groupes, couverture, budget de lignes), les références et la
+ *     version en pied. Mesuré avant : une carte de 547 px, liste verticale de
+ *     sept faits, copie de l'inspecteur ; la dominante n'arrivait qu'après.
+ *   - Spot, taux et dividende perdent leur « triple étiquette » (kicker +
+ *     titre + libellé pour le même mot) : le titre est le libellé, le libellé
+ *     reste accessible. Leur pied tient en une ligne.
+ *   - Les pieds de figure ne portent plus de doctrine (« jamais fusionnés »,
+ *     « aucun point de référence choisi ») : elle vit dans la note de méthode
+ *     de la dominante. Le pied dit ce qui qualifie la valeur, rien d'autre.
  */
 
 const SERIES_WINDOW = 60;
 const VOLUME_WINDOW = 20;
-
-function publie(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === '' ? 'non publié' : String(value);
-}
 
 function assumptionString(data: OptionChainResponse, key: string): string | null {
   const value = data.assumptions?.[key];
@@ -38,6 +49,10 @@ function assumptionString(data: OptionChainResponse, key: string): string | null
 function assumptionInt(data: OptionChainResponse, key: string): number | null {
   const value = data.assumptions?.[key];
   return typeof value === 'number' && Number.isInteger(value) ? value : null;
+}
+
+function nombrePublie(value: number | null, absent: string): string {
+  return value === null ? absent : String(value);
 }
 
 // ---------------------------------------------------------------------------
@@ -89,15 +104,18 @@ export function UnderlyingSeriesModule({ underlying }: { readonly underlying: st
               />,
             footer: (
               <>
-                {lineBars.length} clôtures publiées{bars === null ? '' : ` · dernière ${publie(bars.lastClose)} ${publie(bars.currency)} (${publie(bars.lastTradingDay)})`} ·{' '}
-                <Link to={`/analysis/${encodeURIComponent(underlying)}`}>voir Analyse</Link>
+                {lineBars.length} clôtures publiées
+                {bars === null || bars.lastClose === null
+                  ? ''
+                  : ` · dernière ${bars.lastClose} ${bars.currency ?? 'devise non publiée'} (${bars.lastTradingDay ?? 'séance non publiée'})`}{' '}
+                · <Link to={`/analysis/${encodeURIComponent(underlying)}`}>voir Analyse</Link>
               </>
             ),
           }
         : {})}
     >
       {shows && bars !== null && lineBars.length > 0 ? (
-        <div className="vx-iw-chart" data-testid="options-underlying-series">
+        <div className="vx-iw-chart vx-options-series-chart" data-testid="options-underlying-series">
           <Sparkline
             closes={lineBars.map((bar) => bar.close)}
             volumes={volumeBars.map((bar) => bar.volume)}
@@ -126,48 +144,48 @@ export function UnderlyingSeriesModule({ underlying }: { readonly underlying: st
 
 // ---------------------------------------------------------------------------
 
+/**
+ * LA BANDE DE SYNTHÈSE DU SNAPSHOT.
+ *
+ * Six faits côte à côte, chacun sous son micro-libellé ; la version, le moteur,
+ * l'instant et les références d'observation en pied, en chasse fixe. Le budget
+ * de lignes et les références gardent leurs accroches de test : ce sont les
+ * deux faits que les parcours e2e lisent sur cette carte.
+ */
 export function IdentityStripModule({ data }: { readonly data: OptionChainResponse }) {
   const module = optionsModule('identity-strip');
   const budget = rowBudgetOf(data);
   const sourceEventIds = sourceEventIdsOf(data);
+  const validGroups = data.expirations.filter((group) => group.quality === 'VALID').length;
+  const population = data.population ?? '';
+  const nature = data.value_nature ?? '';
   return (
     <Card
       rank="quiet"
-      kicker="Références publiées"
+      kicker="Snapshot publié"
       title={module.title}
       titleId="vx-options-identity-title"
       footer={
-        <>
-          quotes verbatim ; IV/Greeks <span className="vx-badge vx-badge-theoretical">THÉORIQUE</span> ({data.value_nature ?? 'nature non publiée'})
-        </>
+        <span className="vx-chain-snapshot-refs">
+          version {data.snapshot_version ?? 'non publiée'} · moteur <code>{data.engine_version ?? 'non publié'}</code> ·
+          as_of{' '}
+          {data.as_of === null ? (
+            <span className="vx-cell-absent">instant non publié</span>
+          ) : (
+            <time dateTime={data.as_of}>{data.as_of}</time>
+          )}{' '}
+          · références{' '}
+          <span data-testid="chain-source-references">
+            {sourceEventIds.length === 0 ? 'aucune référence publiée' : <code>{sourceEventIds.join(' · ')}</code>}
+          </span>
+        </span>
       }
     >
-      <dl className="vx-inspector-facts vx-options-facts">
+      <dl className="vx-chain-snapshot-facts vx-options-facts">
         <div>
-          <dt>Références d’observation</dt>
-          <dd data-testid="chain-source-references">
-            {sourceEventIds.length === 0 ? (
-              'aucune référence publiée'
-            ) : (
-              <code>{sourceEventIds.join(' · ')}</code>
-            )}
-          </dd>
-        </div>
-        <div>
-          <dt>Snapshot</dt>
+          <dt>État servi</dt>
           <dd>
-            version {data.snapshot_version ?? 'non publiée'} · moteur{' '}
-            <code>{data.engine_version ?? 'non publié'}</code>
-          </dd>
-        </div>
-        <div>
-          <dt>as_of</dt>
-          <dd>
-            {data.as_of === null ? (
-              <span className="vx-cell-absent">instant non publié</span>
-            ) : (
-              <time dateTime={data.as_of}>{data.as_of}</time>
-            )}
+            <StatusChip label={data.state} tone={data.state === 'ok' ? 'neutral' : 'warning'} testId="chain-state-chip" />
           </dd>
         </div>
         <div>
@@ -176,8 +194,31 @@ export function IdentityStripModule({ data }: { readonly data: OptionChainRespon
             <FreshnessBadge
               ageSeconds={data.age_seconds}
               {...policyProps(data.freshness_policy)}
-              sourceLabel="âge publié par le serveur"
+              sourceLabel="serveur"
             />
+          </dd>
+        </div>
+        <div>
+          <dt>Population · nature</dt>
+          <dd className="vx-chain-snapshot-chips">
+            {population === '' ? (
+              <StatusChip label="NATURE NON DÉCLARÉE" tone="warning" />
+            ) : (
+              <StatusChip label={population} tone="neutral" />
+            )}
+            {nature === 'THEORETICAL' ? (
+              <StatusChip label="THÉORIQUE" tone="option" />
+            ) : nature === '' ? (
+              <StatusChip label="nature non publiée" tone="neutral" />
+            ) : (
+              <StatusChip label={nature} tone="neutral" />
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Groupes</dt>
+          <dd>
+            {data.expirations.length} publié(s) · {validGroups} VALID
           </dd>
         </div>
         <div>
@@ -185,9 +226,9 @@ export function IdentityStripModule({ data }: { readonly data: OptionChainRespon
           <dd>
             {data.coverage === null
               ? 'couverture non publiée'
-              : `${String(data.coverage['groups_published'] ?? 'nombre non publié de')} groupe(s) publié(s) sur ${String(
+              : `${String(data.coverage['groups_published'] ?? 'nombre non publié de')} groupe(s) sur ${String(
                   data.coverage['observations_considered'] ?? 'un nombre non publié d’',
-                )} observation(s) considérée(s)`}
+                )} observation(s)`}
           </dd>
         </div>
         <div>
@@ -200,12 +241,6 @@ export function IdentityStripModule({ data }: { readonly data: OptionChainRespon
                 } construite(s), plafond ${budget.maxRows ?? 'non publié'}, ${
                   budget.truncatedRows ?? 'nombre non publié de'
                 } tronquée(s)`}
-          </dd>
-        </div>
-        <div>
-          <dt>Population</dt>
-          <dd>
-            <code>{publie(data.population)}</code>
           </dd>
         </div>
       </dl>
@@ -221,18 +256,22 @@ export function SpotModule({ data }: { readonly data: OptionChainResponse }) {
   return (
     <Card
       rank="quiet"
-      kicker="Observé"
       title={module.title}
       titleId="vx-options-spot-title"
       footer={
-        spot === null || spot.observedAt === null
-          ? 'instant d’observation non publié'
-          : `observé ${spot.observedAt}`
+        spot === null || spot.observedAt === null ? (
+          'instant d’observation non publié'
+        ) : (
+          <>
+            observé <time dateTime={spot.observedAt}>{spot.observedAt}</time>
+          </>
+        )
       }
     >
       <Metric
         label="Spot"
-        value={spot === null || spot.value === null ? null : frDecimal(spot.value)}
+        labelHidden
+        value={spot === null || spot.value === null ? null : displayNumber(spot.value)}
         {...(spot?.currency === null || spot?.currency === undefined ? {} : { unit: spot.currency })}
         absentLabel="Spot non publié"
         testId="options-spot"
@@ -249,16 +288,22 @@ export function RateModule({ data }: { readonly data: OptionChainResponse }) {
   return (
     <Card
       rank="quiet"
-      kicker="Hypothèse du calcul d’IV"
       title={module.title}
       titleId="vx-options-rate-title"
       footer={
         <>
-          IV calculée sur le côté <code>{publie(side)}</code> · quote admise jusqu’à {maxAge === null ? 'un âge non publié' : `${maxAge} s`}
+          côté <code>{side ?? 'non publié'}</code> · âge admis{' '}
+          {maxAge === null ? 'non publié' : `${maxAge} s`}
         </>
       }
     >
-      <Metric label="Taux annualisé" value={rate === null ? null : frDecimal(rate)} note="décimal, hypothèse déclarée par le worker" testId="options-rate" />
+      <Metric
+        label="Taux annualisé"
+        labelHidden
+        value={rate === null ? null : displayNumber(rate)}
+        note="décimal annualisé"
+        testId="options-rate"
+      />
     </Card>
   );
 }
@@ -267,8 +312,19 @@ export function DividendModule({ data }: { readonly data: OptionChainResponse })
   const module = optionsModule('dividend');
   const dividend = assumptionString(data, 'dividend_yield');
   return (
-    <Card rank="quiet" kicker="Hypothèse du calcul d’IV" title={module.title} titleId="vx-options-dividend-title" footer={<>aucun dividende observé n’est collecté ; ceci est l’hypothèse du calcul</>}>
-      <Metric label="Rendement de dividende" value={dividend === null ? null : frDecimal(dividend)} note="décimal annualisé" testId="options-dividend" />
+    <Card
+      rank="quiet"
+      title={module.title}
+      titleId="vx-options-dividend-title"
+      footer="aucun dividende observé n’est collecté"
+    >
+      <Metric
+        label="Rendement de dividende"
+        labelHidden
+        value={dividend === null ? null : displayNumber(dividend)}
+        note="décimal annualisé"
+        testId="options-dividend"
+      />
     </Card>
   );
 }
@@ -283,7 +339,7 @@ export function IvSmileModule({ group }: { readonly group: OptionChainExpiration
       kicker="IV publiées par contrat"
       title={module.title}
       titleId="vx-options-smile-title"
-      footer={<>{group === null ? 'aucun groupe affiché' : `groupe ${groupLabelOf(group)}`} · géométrie des IV publiées, aucun point de référence choisi</>}
+      footer={<>{group === null ? 'aucun groupe affiché' : `groupe ${groupLabelOf(group)}`} · IV théoriques par strike, aucune IV résumée</>}
     >
       {group === null ? (
         <p className="vx-module-sentence" role="status">
@@ -304,7 +360,7 @@ export function VolStructureModule({ groups }: { readonly groups: readonly Optio
       kicker="Petits multiples"
       title={module.title}
       titleId="vx-options-volstructure-title"
-      footer={<>un sourire par groupe publié, jamais fusionnés ; aucune IV résumée par échéance</>}
+      footer={<>{nombrePublie(groups.length, 'aucun')} groupe(s) publié(s) · un sourire par groupe, jamais fusionnés</>}
     >
       {groups.length === 0 ? (
         <p className="vx-module-sentence" role="status">

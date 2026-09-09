@@ -4,6 +4,7 @@ import type { EChartsInstance } from '../../../charts/echartsLoader.ts';
 import { SIGNED_SCALES } from '../../../design/signedScale.ts';
 import { geometryNumber } from './performanceView.ts';
 import type { HeatmapView } from './performanceView.ts';
+import { cssToken } from '../../../charts/theme.ts';
 
 /**
  * Heatmap mensuelle ECharts (années × mois) + table équivalente rendue par
@@ -27,12 +28,6 @@ import type { HeatmapView } from './performanceView.ts';
  * nouveau de mesurer.
  */
 
-function cssToken(name: string): string {
-  if (typeof window === 'undefined') {
-    return '';
-  }
-  return window.getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 export function MonthlyHeatmap({ heatmap }: { readonly heatmap: HeatmapView }) {
   const containerRef = useRef<HTMLDivElement | null>(null);

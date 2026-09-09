@@ -33,12 +33,21 @@
  * ferme pas le sujet.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 
 const APP_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+/**
+ * Chemin relatif en barres obliques quel que soit l'hôte : `relative` rend des
+ * antislashs sous Windows, et les exemptions — écrites une fois, en barres
+ * obliques — ne matchaient plus. La porte tombait sur un faux positif hors CI.
+ */
+function posixRelative(path: string): string {
+  return relative(APP_ROOT, path).split(sep).join('/');
+}
 const PAGES_ROOT = join(APP_ROOT, 'src', 'pages');
 /**
  * LOT L0 — EXTENSION DU PÉRIMÈTRE. Les primitives du socle v2 vivent dans
@@ -154,7 +163,7 @@ function scan(path: string): Finding[] {
       if (!shape.pattern.test(text)) {
         continue;
       }
-      const relativePath = relative(APP_ROOT, path);
+      const relativePath = posixRelative(path);
       // Comparaison sur le texte NORMALISÉ : un nœud JSX porte son indentation
       // et ses retours à la ligne, qui n'ont rien à voir avec ce que le lecteur
       // voit. Comparer brut obligerait à coller une chaîne indentée dans
@@ -205,10 +214,10 @@ describe('Aucune valeur de planche recopiée dans une page', () => {
       expect(collectPageFiles(root, []).length, `racine vide : ${root}`).toBeGreaterThan(0);
     }
     const balayes = SCANNED_ROOTS.flatMap((root) => collectPageFiles(root, [])).map((file) =>
-      relative(APP_ROOT, file),
+      posixRelative(file),
     );
     // La primitive déplacée au lot L0 reste couverte, à sa nouvelle place.
-    expect(balayes).toContain(join('src', 'components', 'widgets', 'InstrumentTile.tsx'));
+    expect(balayes).toContain('src/components/widgets/InstrumentTile.tsx');
   });
 
   it('la garde voit réellement les formes qu’elle annonce', () => {

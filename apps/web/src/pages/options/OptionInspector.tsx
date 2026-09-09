@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useState } from 'react';
+import { useCallback, useId } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import type { OptionChainContract } from '../../api/client.ts';
@@ -79,8 +79,6 @@ export function OptionInspector({
   const titleId = useId();
   const transferNoteId = useId();
   const navigate = useNavigate();
-  const [sheetNode, setSheetNode] = useState<HTMLDivElement | null>(null);
-
   /**
    * Le focus entre dans le panneau dès que son nœud existe.
    *
@@ -90,33 +88,15 @@ export function OptionInspector({
    * c'est le défaut rencontré en convertissant Aujourd'hui.
    */
   const attacherPanneau = useCallback((node: HTMLDivElement | null) => {
-    setSheetNode(node);
-    node?.querySelector<HTMLElement>('button')?.focus();
+    // REFONTE VAGUE 2 — le bouton « Fermer » vit dans l'en-tête commun de
+    // `InspectorPanel`, hors de la feuille : le focus entrant se pose sur le
+    // PANNEAU entier, pour atteindre « Fermer » en premier.
+    const root = node?.closest<HTMLElement>('.vx-inspector-panel') ?? node;
+    root?.querySelector<HTMLElement>('button')?.focus();
   }, []);
 
-  /**
-   * `Échap` referme depuis n'importe quel élément du panneau.
-   *
-   * Écouteur NATIF sur le nœud plutôt que `onKeyDown` sur le conteneur :
-   * sans `role="dialog"`, ce conteneur est un élément statique, et la règle
-   * d'accessibilité du linter refuse — à juste titre — d'y accrocher un
-   * gestionnaire clavier.
-   */
-  useEffect(() => {
-    if (sheetNode === null) {
-      return;
-    }
-    function onKeyDown(event: KeyboardEvent): void {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onClose();
-      }
-    }
-    sheetNode.addEventListener('keydown', onKeyDown);
-    return () => {
-      sheetNode.removeEventListener('keydown', onKeyDown);
-    };
-  }, [sheetNode, onClose]);
+  // `Échap` est entendu par `InspectorPanel` : un seul écouteur pour les neuf
+  // inspecteurs, posé avec le bouton « Fermer » qu'il double au clavier.
 
   const quote = quoteViewOf(contract);
   const iv = ivViewOf(contract);
@@ -166,20 +146,16 @@ export function OptionInspector({
       subject={`${contract.right ?? 'sens non publié'} ${
         contract.strike ?? 'strike non publié'
       } · ${contract.expiration} · ${contract.trading_class}`}
+      onClose={onClose}
     >
       <div ref={attacherPanneau} className="vx-sheet" data-testid="option-inspector">
-        <div className="vx-sheet-head">
-          {/* Le sujet est déjà rendu par l'inspecteur : ce titre reste pour
-              `aria-labelledby` sans doubler visuellement l'en-tête. */}
-          <h3 id={titleId} className="vx-visually-hidden">
-            {contract.right ?? 'sens non publié'} {contract.strike ?? 'strike non publié'} ·{' '}
-            {contract.expiration} ·{' '}
-            {contract.trading_class}
-          </h3>
-          <button type="button" className="vx-sheet-close" onClick={onClose}>
-            Fermer
-          </button>
-        </div>
+        {/* Le sujet est déjà rendu par l'inspecteur : ce titre reste pour
+            `aria-labelledby` sans doubler visuellement l'en-tête. */}
+        <h3 id={titleId} className="vx-visually-hidden">
+          {contract.right ?? 'sens non publié'} {contract.strike ?? 'strike non publié'} ·{' '}
+          {contract.expiration} ·{' '}
+          {contract.trading_class}
+        </h3>
       {contract.synthetic ? <p className="vx-badge vx-badge-synthetic">SYNTHÉTIQUE</p> : null}
 
       <h3>Identité du contrat</h3>

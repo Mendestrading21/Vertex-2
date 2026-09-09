@@ -104,6 +104,7 @@ from vertex_core.calculations.options import (
     OptionInputError,
     OptionLeg,
     scenario_grid,
+    scenario_grid_cell,
 )
 from vertex_core.contracts import CalculationRecord, make_calculation_record
 from vertex_core.contracts.enums import (
@@ -494,6 +495,14 @@ def load_daily_bar_records(
 
 
 def _num_string(value: float) -> str:
+    """Serie numerique publiee telle que le modele l'a produite.
+
+    NE PAS y appliquer le pas de publication de la grille de scenarios : ce
+    formateur sert aussi les rendements, les bandes, les oscillateurs et la
+    comparaison base 100, dont la precision utile n'est PAS celle de la
+    monnaie. Seules les cellules de ``options.scenario_grid`` — des montants —
+    passent par ``scenario_grid_cell``.
+    """
     return format(Decimal(repr(value)), "f")
 
 
@@ -835,6 +844,7 @@ def _build_indicators(
     *,
     now: datetime,
     source_event_id: str | None,
+    currency: str | None,
 ) -> dict[str, Any]:
     """Indicateurs techniques, calcules par le moteur approuve.
 
@@ -962,6 +972,7 @@ def _build_indicators(
                 "status": "OK",
                 "lookback": ATR_LOOKBACK,
                 "unit": "price",
+                **({} if currency is None else {"display_unit": currency}),
                 "value": _num_string(valeur),
                 "calculation": _calculation_meta(enregistrement),
             }
@@ -971,7 +982,7 @@ def _build_indicators(
 
     # -- overlays et oscillateurs de la page Graphiques (lot S6) --------------
     overlays, oscillators = _build_overlays_and_oscillators(
-        valid_bars, now=now, source_event_id=source_event_id
+        valid_bars, now=now, source_event_id=source_event_id, currency=currency
     )
     indicateurs["overlays"] = overlays
     indicateurs["oscillators"] = oscillators
@@ -995,6 +1006,7 @@ def _bloc_serie(
     calculation_id: str,
     method: str,
     unit: str,
+    display_unit: str | None,
     parameters: Mapping[str, Any],
     required: int,
     closes_text: Sequence[str],
@@ -1047,6 +1059,15 @@ def _bloc_serie(
         "status": "OK",
         **parameters,
         "unit": unit,
+        # UNITE D'AFFICHAGE, publiee par CELUI QUI SAIT. `unit` est un jeton
+        # machine (`price`, `index_0_100`) : l'ecran affichait « price » en
+        # legende d'axe, sans devise. L'interface ne peut pas la deduire — la
+        # devise vit dans le bloc `bars`, un autre bloc avec sa propre lignee,
+        # et joindre les deux cote navigateur serait une derivation interdite.
+        # Le worker, lui, tient les deux : il publie donc l'unite lisible, ou
+        # rien du tout si la devise n'est pas servie. Meme convention que
+        # `markets/overview` (`unit=return_ratio` + `display_unit=%`).
+        **({} if display_unit is None else {"display_unit": display_unit}),
         "method": method,
         **publie,
         "calculation": _calculation_meta(enregistrement),
@@ -1058,6 +1079,7 @@ def _build_overlays_and_oscillators(
     *,
     now: datetime,
     source_event_id: str | None,
+    currency: str | None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """Overlays (SMA, EMA, bandes de Bollinger) et oscillateurs (RSI, MACD)
     de la page Graphiques, calcules par le moteur approuve sur les clotures
@@ -1138,6 +1160,7 @@ def _build_overlays_and_oscillators(
             calculation_id=calculation_id,
             method=method,
             unit=unit,
+            display_unit=currency if unit == "price" else None,
             parameters=parameters,
             required=required,
             closes_text=closes_text,
@@ -1904,7 +1927,14 @@ def _build_scenarios(
         "spot_grid": [format(point, "f") for point in spot_points],
         "time_grid_years": [_num_string(point) for point in time_points],
         "iv_scenarios": [[_num_string(iv_value)]],
-        "grid": [[[_num_string(cell) for cell in row] for row in scenario] for scenario in grid],
+        # PAS DE PUBLICATION DECLARE PAR LE CALCUL : ces cellules sont des
+        # MONTANTS, et le modele est en float64 avec tolerances. Publier sa
+        # representation brute (dix-sept chiffres) suggerait une exactitude
+        # qu'il n'a pas. Le pas vit avec `scenario_grid` dans vertex_core, donc
+        # l'API du Simulateur et ce dossier publient la meme chose.
+        "grid": [
+            [[scenario_grid_cell(cell) for cell in row] for row in scenario] for scenario in grid
+        ],
         "calculation": _calculation_meta(record),
     }
 
@@ -2022,6 +2052,7 @@ def build_analysis_content(
         valid_bars,
         now=now,
         source_event_id=chosen.event_id if chosen is not None else None,
+        currency=_currency_or_none(payload.get("currency")) if chosen is not None else None,
     )
     # Force relative et comparaison base 100 contre l'indice DECLARE par la
     # configuration. Ses barres sortent du meme chargement, et passent la MEME

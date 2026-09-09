@@ -1,6 +1,14 @@
-import { FreshnessBadge } from '../components/FreshnessBadge.tsx';
+import { FreshnessBadge, servedClockOf } from '../components/FreshnessBadge.tsx';
+
+/*
+  `servedClockOf` A DÉMÉNAGÉ dans `components/FreshnessBadge.tsx` : le badge de
+  la barre de contexte en a besoin lui aussi, et une primitive partagée ne peut
+  pas importer la coquille. Il est réexporté ici pour les appelants et les
+  tests qui le nommaient déjà.
+*/
+export { servedClockOf };
 import { resolvePopulationNature } from '../components/SyntheticBanner.tsx';
-import { flattenTickers, frDecimal } from '../components/markets/marketsView.ts';
+import { flattenTickers, displayNumber, displayPercent } from '../components/markets/marketsView.ts';
 import { pageStateOf, useMarketsOverview } from '../api/hooks.ts';
 import type { PageDataState } from '../api/hooks.ts';
 
@@ -135,22 +143,6 @@ export function tickerFrameOf(
  * Ce n'est pas un calcul financier : aucune quantité de marché n'est dérivée,
  * seul un instant déjà servi change de représentation.
  */
-export function servedClockOf(asOf: string | null | undefined): string | null {
-  if (asOf === null || asOf === undefined || asOf === '') {
-    return null;
-  }
-  const instant = new Date(asOf);
-  if (Number.isNaN(instant.getTime())) {
-    return null;
-  }
-  const deuxChiffres = (valeur: number): string => String(valeur).padStart(2, '0');
-  const jour = deuxChiffres(instant.getUTCDate());
-  const mois = deuxChiffres(instant.getUTCMonth() + 1);
-  const annee = String(instant.getUTCFullYear()).padStart(4, '0');
-  const heures = deuxChiffres(instant.getUTCHours());
-  const minutes = deuxChiffres(instant.getUTCMinutes());
-  return `${jour}/${mois}/${annee} ${heures}:${minutes} UTC`;
-}
 
 export function ShellTicker() {
   const query = useMarketsOverview();
@@ -254,7 +246,7 @@ export function ShellTicker() {
               >
                 <span className="vx-ticker-symbol">{entry.ticker.ticker}</span>
                 <span className="vx-ticker-close">
-                  {frDecimal(entry.ticker.last_close)}
+                  {displayNumber(entry.ticker.last_close)}
                   {entry.ticker.currency !== null ? (
                     <span className="vx-ticker-currency"> {entry.ticker.currency}</span>
                   ) : null}
@@ -264,7 +256,17 @@ export function ShellTicker() {
                   la couleur n'est donc jamais le seul vecteur, comme l'exige
                   `.claude/rules/frontend.md`.
                 */}
-                <span className="vx-ticker-return">{frDecimal(entry.ticker.return_1d_pct)} %</span>
+                <span className="vx-ticker-return">{displayPercent(entry.ticker.return_1d_pct)}</span>
+                {/*
+                  CHAQUE COURS PORTE SA SÉANCE. Le bandeau affichait des
+                  clôtures du 4 septembre sous une horloge du 6 : rien ne
+                  disait de quel jour venait le prix. `trading_day` est servi
+                  PAR TICKER (contrat `MarketsTicker`) — on le date donc item
+                  par item, jamais par une légende de bande, qui supposerait un
+                  jour commun aux 57 instruments et serait une dérivation
+                  interdite côté interface.
+                */}
+                <span className="vx-ticker-day">clôture {entry.ticker.trading_day}</span>
               </li>
             ))}
           </ul>

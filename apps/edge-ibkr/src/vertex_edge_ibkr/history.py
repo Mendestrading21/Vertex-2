@@ -33,7 +33,11 @@ from typing import Any
 
 from vertex_core.contracts import DataEnvelope
 from vertex_core.contracts.market_quote import UNCLASSIFIED_SECTOR_CODE
-from vertex_edge_ibkr.normalize import daily_bars_envelope, daily_quote_envelopes
+from vertex_edge_ibkr.normalize import (
+    daily_bars_envelope,
+    daily_quote_envelopes,
+    raw_bars_event_id,
+)
 from vertex_edge_ibkr.pacing import SlidingWindowPacer
 from vertex_edge_ibkr.port import (
     BarsPayload,
@@ -231,6 +235,28 @@ class HistoryBackfiller:
         a_ecrire: list[DataEnvelope[Any]] = [enveloppe]
         charge = enveloppe.payload
         if isinstance(charge, BarsPayload):
+            # IDENTITE STABLE DE LA BRUTE. L'adaptateur tire un `uuid4` pour
+            # chaque enveloppe : c'est juste pour une observation ponctuelle
+            # (une cotation, une depeche), faux pour un HISTORIQUE, qui rend la
+            # meme fenetre a chaque passe. Mesure du 2026-09-06 : 969 lignes
+            # pour 59 contenus. Des qu'une fenetre existe, l'identite en
+            # decoule et le puits fait son travail. Une reponse VIDE garde son
+            # identifiant tire au sort : ne rien recevoir a un instant donne
+            # EST une observation datee, et deux silences ne sont pas le meme.
+            jours = sorted({barre.time.date().isoformat() for barre in charge.bars})
+            if jours:
+                a_ecrire[0] = enveloppe.model_copy(
+                    update={
+                        "event_id": raw_bars_event_id(
+                            charge.con_id,
+                            charge.bar_size,
+                            charge.what_to_show,
+                            charge.use_rth,
+                            jours[0],
+                            jours[-1],
+                        )
+                    }
+                )
             # La page Marches lit une COTATION QUOTIDIENNE, pas une barre. La
             # transformation vit dans `normalize.py` : elle refuse tout ce qui
             # n'est pas une cloture de seance, et l'identite derivee est stable

@@ -287,3 +287,20 @@ describe('Widget — surbrillance d’une valeur mise à jour', () => {
     expect(container.textContent).toContain('contenu servi');
   });
 });
+
+describe('Widget — densité de composition', () => {
+  it('pose data-density sur sa racine quand la page le demande, rien sinon', () => {
+    const { container, rerender } = render(
+      <Widget id="spot" size="S" title="Spot" state="ready" density="compact">
+        <p>corps</p>
+      </Widget>,
+    );
+    expect(container.querySelector('[data-module="spot"]')?.getAttribute('data-density')).toBe('compact');
+    rerender(
+      <Widget id="spot" size="S" title="Spot" state="ready">
+        <p>corps</p>
+      </Widget>,
+    );
+    expect(container.querySelector('[data-module="spot"]')?.hasAttribute('data-density')).toBe(false);
+  });
+});

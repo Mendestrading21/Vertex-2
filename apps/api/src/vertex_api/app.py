@@ -10,7 +10,7 @@ applications always render byte-identical OpenAPI output (see
 import logging
 from typing import Any
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
@@ -296,6 +296,35 @@ def create_app() -> FastAPI:
             ", ".join(kinds) or "unknown",
         )
         return _snapshot_content_response()
+
+    @app.middleware("http")
+    async def _security_headers(request: Request, call_next: Any) -> Response:
+        """Trois en-têtes de refus par défaut sur CHAQUE réponse.
+
+        Mesuré sur la pile en direct le 2026-09-06 : l'API répondait avec
+        `date`, `server`, `content-length` et `content-type`, et rien d'autre.
+        Sans effet aujourd'hui — tout écoute sur la boucle locale — mais
+        `.claude/rules/security.md` demande de refuser par défaut ce qui n'est
+        pas déclaré, et ces trois lignes valent le jour où une exposition est
+        décidée. Aucune n'ajoute de dépendance ni ne change un corps de
+        réponse.
+
+        - `X-Content-Type-Options: nosniff` : le navigateur ne devine JAMAIS
+          le type d'un corps ; un JSON reste un JSON.
+        - `Referrer-Policy: no-referrer` : aucune URL d'origine ne fuit vers
+          un tiers, y compris les identifiants de chemin.
+        - `Content-Security-Policy: frame-ancestors 'none'` : l'API ne peut
+          pas être enchâssée dans une page tierce (clickjacking).
+
+        Ce n'est PAS une politique de contenu complète : l'interface est
+        servie par un autre processus, et sa propre politique relève de son
+        serveur, pas d'ici.
+        """
+        response: Response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault("Content-Security-Policy", "frame-ancestors 'none'")
+        return response
 
     def custom_openapi() -> dict[str, Any]:
         if app.openapi_schema is None:

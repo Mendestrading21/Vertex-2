@@ -9,6 +9,7 @@ import { CensusBars } from '../../components/CensusBars.tsx';
 import type { CensusEntry } from '../../components/CensusBars.tsx';
 import { FreshnessBadge } from '../../components/FreshnessBadge.tsx';
 import type { ModuleState } from '../../components/moduleState.ts';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { Metric } from '../../components/Metric.tsx';
 import { sourcesModule } from './sourcesModules.ts';
@@ -18,6 +19,12 @@ import { sourcesModule } from './sourcesModules.ts';
  * porté par la page). Tous lisent la même réponse `system/capabilities`
  * déjà validée par la page. Aucun calcul : dénombrements de statuts sondés,
  * âges publiés, versions publiées, liste des exports réellement servis.
+ *
+ * REFONTE UI 2026-09-05 — les kickers disent la NATURE du fait (publié,
+ * observé, dénombré, servi, déclaré), les pieds tiennent en une ligne et
+ * les identifiants de champ sont rendus en `<code>`, jamais en backticks
+ * littéraux. Les absences passent par `ModuleCell` en densité compacte : une
+ * carte de motif n'a pas besoin du chrome d'une figure.
  */
 
 const SSE_LABELS: Readonly<Record<SseConnectionState, string>> = {
@@ -38,10 +45,11 @@ export function AbsentSourcesModule({ id }: { readonly id: string }) {
   }
   return (
     // `data-size` vient du catalogue comme pour un module servi : la planche
-    // compose de la même façon un module absent et un module servi.
-    <div data-module={id} data-size={module.size}>
+    // compose de la même façon un module absent et un module servi. La
+    // densité compacte est une décision de COMPOSITION de la page.
+    <ModuleCell id={id} size={module.size} density="compact">
       <AbsentModule title={module.title} question={module.question} reason={module.status.reason} note={module.status.note} />
-    </div>
+    </ModuleCell>
   );
 }
 
@@ -64,12 +72,12 @@ export function StatusCensusModule({ data, state }: { readonly data: SystemCapab
     <Widget
       id="status-census"
       size={module.size}
-      kicker="Dénombrement"
+      kicker="Dénombré"
       title={module.title}
       titleId="vx-src-census-title"
       state={state}
       action={<>{data.total} déclarée(s)</>}
-      footer={<>une capacité jamais sondée reste ERROR / NEVER_TESTED : {neverTested} sur {data.total} — jamais une disponibilité supposée</>}
+      footer={<>jamais sondée = ERROR / NEVER_TESTED : {neverTested} sur {data.total}, jamais une disponibilité supposée</>}
     >
       <CensusBars entries={statusCensusOf(data)} ariaLabel="Dénombrement par statut sondé" testIdPrefix="src-status" emptyLabel="Aucune capacité déclarée." />
     </Widget>
@@ -84,11 +92,15 @@ export function FreshnessModule({ health, state }: { readonly health: SystemHeal
     <Widget
       id="freshness"
       size={module.size}
-      kicker="Âges publiés"
+      kicker="Publié"
       title={module.title}
       titleId="vx-src-freshness-title"
       state={state}
-      footer={<>le worker est observé par « heartbeat_proxy » : l’âge de son dernier snapshot, pas le processus lui-même</>}
+      footer={
+        <>
+          worker observé par <code>heartbeat_proxy</code> : l’âge de son dernier snapshot, pas le processus
+        </>
+      }
     >
       <dl className="vx-inspector-facts" data-testid="src-freshness">
         <div>
@@ -118,11 +130,15 @@ export function LastSyncModule({ data, state }: { readonly data: SystemCapabilit
     <Widget
       id="last-sync"
       size={module.size}
-      kicker="Instant de réponse"
+      kicker="Publié"
       title={module.title}
       titleId="vx-src-lastsync-title"
       state={state}
-      footer={<>`checked_at` est l’instant de la réponse ; `as_of` celui du snapshot de capacités publié</>}
+      footer={
+        <>
+          <code>checked_at</code> = réponse · <code>as_of</code> = snapshot
+        </>
+      }
     >
       <dl className="vx-inspector-facts" data-testid="src-last-sync">
         <div>
@@ -157,11 +173,11 @@ export function VersionsModule({ health, state }: { readonly health: SystemHealt
     <Widget
       id="versions"
       size={module.size}
-      kicker="Versions et flux"
+      kicker="Publié"
       title={module.title}
       titleId="vx-src-versions-title"
       state={state}
-      footer={<>versions publiées par le serveur ; l’état du flux SSE est celui du client</>}
+      footer={<>versions serveur · flux SSE observé côté client</>}
     >
       <div className="vx-metrics-row" data-testid="src-versions">
         <Metric label="Attention" value={health.attention_snapshot.present ? `v${health.attention_snapshot.version}` : null} absentLabel="jamais publié" size="compact" testId="src-version-attention" />
@@ -180,22 +196,32 @@ export function ExportsModule({ state }: { readonly state: ModuleState }) {
     <Widget
       id="exports"
       size={module.size}
-      kicker="Servis par l’API"
+      kicker="Servi"
       title={module.title}
       titleId="vx-src-exports-title"
       state={state}
-      footer={<>chaque export est une fonction pure d’un snapshot publié ; rien n’est généré dans le navigateur</>}
+      footer={<>dérivé d’un snapshot publié, rien de généré ici</>}
     >
+      {/*
+        UNE ROUTE EXPOSÉE N'EST PAS UN FICHIER DISPONIBLE. Cette carte listait
+        trois « exports servis » ; deux répondent 404 tant qu'aucun snapshot de
+        performance n'est publié, ce qui est le cas par défaut. Le catalogue des
+        capacités ne publie pas cette présence, et y brancher un appel serait un
+        changement plus lourd que le défaut : on dit donc ce qu'on sait — la
+        route existe, et à quelle condition elle rend un fichier.
+      */}
       <ul className="vx-inspector-list" data-testid="src-exports">
         <li>
           Journal du registre manuel (CSV) — <code>GET /api/v1/portfolio/export</code> · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
         <li>
           Points quotidiens de performance (CSV) — <code>GET /api/v1/performance/{'{portfolio_id}'}/export</code> ·{' '}
-          <Link to="/portfolio">depuis Portefeuille</Link>
+          route exposée ; le fichier n’existe que si un snapshot de performance est publié,
+          sinon <code>404</code> · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
         <li>
-          Manifeste d’audit de performance (JSON : méthodes, versions, hashes) — même route · <Link to="/portfolio">depuis Portefeuille</Link>
+          Manifeste d’audit de performance (JSON : méthodes, versions, hashes) — même route,
+          même condition · <Link to="/portfolio">depuis Portefeuille</Link>
         </li>
       </ul>
     </Widget>
@@ -267,11 +293,11 @@ export function UnknownProbesModule({ data, state }: { readonly data: SystemCapa
     <Widget
       id="unknown-probes"
       size={module.size}
-      kicker="Relayées telles quelles"
+      kicker="Observé"
       title={module.title}
       titleId="vx-src-probes-title"
       state={state}
-      footer={<>identifiants sondés absents du manifeste déclaré — jamais fusionnés ni ignorés</>}
+      footer={<>sondes hors manifeste relayées telles quelles · jamais fusionnées ni ignorées</>}
     >
       {data.unknown_probed_capability_ids.length === 0 ? (
         <p className="vx-module-sentence" role="status" data-testid="src-unknown-probes-empty">

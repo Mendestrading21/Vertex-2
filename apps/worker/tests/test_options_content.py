@@ -153,9 +153,7 @@ def test_schema_predicate_and_registry_topic() -> None:
 
 def test_sane_quote_resolves_iv_and_greeks_with_lineage() -> None:
     records = [slice_record(contracts=[contract(1, "100.00", "CALL")])]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     assert content["schema_version"] == OPTION_CHAIN_SCHEMA_VERSION
     assert content["population"] == "SYNTHETIC"
     assert content["value_nature"] == "THEORETICAL"
@@ -236,15 +234,9 @@ def test_iv_assumptions_relay_the_admitted_observation_without_population_claim(
         event_id="admitted-option-slice",
     )
 
-    build_option_chain_content(
-        [record], underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    build_option_chain_content([record], underlying="SYN-TECH-01", now=NOW, config=CONFIG)
 
-    iv_call = next(
-        call
-        for call in calls
-        if call["calculation_id"] == "options.implied_volatility"
-    )
+    iv_call = next(call for call in calls if call["calculation_id"] == "options.implied_volatility")
     assert iv_call["source_event_ids"] == ("admitted-option-slice",)
     assert iv_call["assumptions"] == (
         "rate and dividend yield relayed from the admitted option-chain observation",
@@ -277,9 +269,7 @@ def test_iv_assumptions_relay_the_admitted_observation_without_population_claim(
 )
 def test_unsane_quotes_never_get_an_iv(kwargs, status, reason) -> None:
     records = [slice_record(contracts=[contract(1, "100.00", "CALL", **kwargs)])]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     (group,) = content["expirations"]
     (entry,) = group["contracts"]
     assert entry["quote"]["status"] == status
@@ -293,14 +283,8 @@ def test_unsane_quotes_never_get_an_iv(kwargs, status, reason) -> None:
 
 def test_price_outside_bounds_is_an_explicit_iv_refusal() -> None:
     # A "quote" way above the no-arbitrage ceiling: sane spread, absurd level.
-    records = [
-        slice_record(
-            contracts=[contract(1, "100.00", "CALL", bid="150.00", ask="151.00")]
-        )
-    ]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    records = [slice_record(contracts=[contract(1, "100.00", "CALL", bid="150.00", ask="151.00")])]
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     (entry,) = content["expirations"][0]["contracts"]
     assert entry["quote"]["status"] == QUOTE_STATUS_OK
     assert entry["iv"]["status"] == "ABSENT"
@@ -311,9 +295,7 @@ def test_incomplete_identity_blocks_every_calculation() -> None:
     broken = contract(1, "100.00", "CALL")
     del broken["con_id"]
     records = [slice_record(contracts=[broken])]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     (entry,) = content["expirations"][0]["contracts"]
     assert entry["iv"] == {"status": "ABSENT", "reason": REASON_INCOMPLETE_IDENTITY}
 
@@ -325,9 +307,7 @@ def test_expired_contracts_are_discarded_not_priced() -> None:
             contracts=[contract(1, "100.00", "CALL")],
         )
     ]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     (entry,) = content["expirations"][0]["contracts"]
     assert entry["iv"] == {"status": "ABSENT", "reason": REASON_CONTRACT_EXPIRED}
 
@@ -345,12 +325,8 @@ def test_same_expiration_two_trading_classes_stay_separated() -> None:
             event_id="e2",
         ),
     ]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
-    groups = [
-        (g["expiration"], g["trading_class"]) for g in content["expirations"]
-    ]
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
+    groups = [(g["expiration"], g["trading_class"]) for g in content["expirations"]]
     assert groups == [
         (EXPIRY.isoformat(), "SYN-TECH-01"),
         (EXPIRY.isoformat(), "SYN-TECH-01W"),
@@ -372,9 +348,7 @@ def test_latest_record_wins_per_group() -> None:
             as_of=NOW - timedelta(minutes=5),
         ),
     ]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     (group,) = content["expirations"]
     assert group["source_event_id"] == "new"
     assert group["contracts"][0]["con_id"] == 2
@@ -398,13 +372,10 @@ def test_deny_by_default_source_rights_and_invalid_payload() -> None:
             spot="not-a-number",
         ),
     ]
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     assert content["expirations"] == []
     reasons = {
-        entry["event_id"]: entry["reason"]
-        for entry in content["coverage"]["rejected_records"]
+        entry["event_id"]: entry["reason"] for entry in content["coverage"]["rejected_records"]
     }
     assert reasons == {
         "bad-source": REASON_SOURCE_NOT_ALLOWED,
@@ -415,15 +386,11 @@ def test_deny_by_default_source_rights_and_invalid_payload() -> None:
 
 def test_undeclared_underlying_is_refused_by_the_builder() -> None:
     with pytest.raises(ValueError):
-        build_option_chain_content(
-            [], underlying="SYN-UTIL-01", now=NOW, config=CONFIG
-        )
+        build_option_chain_content([], underlying="SYN-UTIL-01", now=NOW, config=CONFIG)
 
 
 def test_row_budget_truncates_and_reports() -> None:
-    contracts = [
-        contract(i, f"{90 + i}.00", "CALL") for i in range(1, 6)
-    ]
+    contracts = [contract(i, f"{90 + i}.00", "CALL") for i in range(1, 6)]
     records = [slice_record(contracts=contracts)]
     small = OptionsConfig(
         underlyings=CONFIG.underlyings,
@@ -431,9 +398,7 @@ def test_row_budget_truncates_and_reports() -> None:
         usable_rights=CONFIG.usable_rights,
         max_chain_rows=3,
     )
-    content = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=small
-    )
+    content = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=small)
     (group,) = content["expirations"]
     assert len(group["contracts"]) == 3
     assert group["coverage"]["expected"] == 5  # coverage stays honest
@@ -446,9 +411,7 @@ def test_row_budget_truncates_and_reports() -> None:
 
 
 def test_no_records_for_underlying_is_empty_population() -> None:
-    content = build_option_chain_content(
-        [], underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    content = build_option_chain_content([], underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     assert content["population"] == "EMPTY"
     assert content["expirations"] == []
     assert content["spot"] is None
@@ -491,9 +454,7 @@ def test_determinism_regardless_of_record_order() -> None:
             event_id="e2",
         ),
     ]
-    forward = build_option_chain_content(
-        records, underlying="SYN-TECH-01", now=NOW, config=CONFIG
-    )
+    forward = build_option_chain_content(records, underlying="SYN-TECH-01", now=NOW, config=CONFIG)
     backward = build_option_chain_content(
         list(reversed(records)), underlying="SYN-TECH-01", now=NOW, config=CONFIG
     )
@@ -509,18 +470,24 @@ def test_dev_config_is_synthetic_only() -> None:
 def test_ingest_routes_option_chain_envelopes_to_the_topic(monkeypatch) -> None:
     import vertex_worker.ingest as ingest_module
     from vertex_core.synthetic import generate_option_chain_envelopes
+    from vertex_persistence.repository.outbox import CoalescedEnqueue
     from vertex_worker.ingest import TOPIC_OBSERVATION_INGESTED, ingest_envelope
 
     envelope = generate_option_chain_envelopes(seed=1, base_time=NOW)[0]
     topics: list[str] = []
 
-    monkeypatch.setattr(
-        ingest_module, "insert_observation", lambda session, **kwargs: True
-    )
+    monkeypatch.setattr(ingest_module, "insert_observation", lambda session, **kwargs: True)
     monkeypatch.setattr(
         ingest_module,
         "enqueue_outbox",
         lambda session, topic, payload: topics.append(topic) or 1,
+    )
+    monkeypatch.setattr(
+        ingest_module,
+        "enqueue_outbox_coalesced",
+        lambda session, topic, payload, *, coalesce_key: (
+            topics.append(topic) or CoalescedEnqueue(message_id=1, enqueued=True)
+        ),
     )
 
     class _Session:
@@ -543,3 +510,15 @@ def test_ingest_routes_option_chain_envelopes_to_the_topic(monkeypatch) -> None:
         TOPIC_OPPORTUNITIES_REFRESH,
         TOPIC_REVIEW_QUEUE_REFRESH,
     ]
+
+
+def test_real_slice_family_is_admitted_and_definition_family_is_not() -> None:
+    """The IBKR collector publishes TRANCHES (`ibkr.option-chain-slice/`); the
+    chain DEFINITION (`ibkr.option-chain-definition/`, no quotes) must never
+    reach the chain handler — it was rejected `invalid_payload` (2026-09-06)."""
+    from vertex_worker.options import is_option_chain_schema
+
+    assert is_option_chain_schema("ibkr.option-chain-slice/1") is True
+    assert is_option_chain_schema("synthetic-option-chain/1.0") is True
+    assert is_option_chain_schema("ibkr.option-chain-definition/1") is False
+    assert is_option_chain_schema("ibkr.option-chain/1") is False

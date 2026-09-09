@@ -129,7 +129,17 @@ _REASON_BY_FLAG = (
     ("novelty", "NOVELTY"),
 )
 
-_REASON_FRESHNESS = "FRESHNESS"
+_REASON_NO_POSITIVE_FACTOR = "NO_POSITIVE_FACTOR"
+"""Reason emitted when NO declared positive factor applies to an item.
+
+Replaces the former ``FRESHNESS`` filler (2026-09-06). That token was
+appended to every item with fewer than three factors, WITHOUT ever reading
+the age this module already computes: an item published three days earlier
+carried a badge claiming freshness, next to the page's own measured
+freshness badge. ``relevance_reasons`` now names only factors that actually
+applied; when none did, this single token says exactly that, and the item's
+real age travels — as it always did — in ``subscores.age_seconds``.
+"""
 
 _ACCEPTED_QUALITIES = frozenset({EnvelopeQuality.VALID, EnvelopeQuality.PARTIAL})
 
@@ -340,9 +350,15 @@ def _priority_class(item: RelevanceInput) -> int:
 
 
 def _relevance_reasons(item: RelevanceInput) -> tuple[str, ...]:
+    """Declared factors that ACTUALLY applied, at most three, in policy order.
+
+    The contract requires at least one reason (``min_length=1``): an item
+    with no applicable factor gets ``NO_POSITIVE_FACTOR`` — the truthful
+    statement — instead of a claim nobody measured.
+    """
     reasons = [reason for flag_name, reason in _REASON_BY_FLAG if getattr(item, flag_name)]
-    if len(reasons) < MAX_RELEVANCE_REASONS:
-        reasons.append(_REASON_FRESHNESS)
+    if not reasons:
+        return (_REASON_NO_POSITIVE_FACTOR,)
     return tuple(reasons[:MAX_RELEVANCE_REASONS])
 
 

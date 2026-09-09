@@ -193,7 +193,7 @@ test.describe('Simulateur — parcours complet et refus honnêtes', () => {
     for (const corps of await page.locator('.vx-absent-body').allTextContents()) {
       expect(corps).not.toMatch(/\d/);
     }
-    await expect(page.locator('.vx-inspector-heading')).toHaveText('Inspecteur — Étude');
+    await expect(page.locator('.vx-inspector-heading')).toHaveAttribute('aria-label', 'Inspecteur — Étude');
 
     await page.getByLabel('Strike (décimal)').fill('300');
     await page.getByLabel('Prime unitaire déclarée (décimal)').fill('10');

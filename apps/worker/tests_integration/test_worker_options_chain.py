@@ -70,7 +70,7 @@ def test_option_chains_end_to_end(session_factory) -> None:
             .select_from(OutboxMessage)
             .where(OutboxMessage.topic == TOPIC_OPTION_CHAINS_INGESTED)
         ).scalar_one()
-    assert chain_jobs == inserted
+    assert chain_jobs == 1  # 12 slices, one coalesced chain job
 
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
@@ -106,9 +106,7 @@ def test_option_chains_end_to_end(session_factory) -> None:
 
         # Three (expiration, trading_class) groups; the near expiration is
         # shared by two DISTINCT trading classes and never merged.
-        groups = [
-            (g["expiration"], g["trading_class"]) for g in content["expirations"]
-        ]
+        groups = [(g["expiration"], g["trading_class"]) for g in content["expirations"]]
         assert len(groups) == len(set(groups)) == 3
         expirations = [expiration for expiration, _ in groups]
         shared = [x for x in set(expirations) if expirations.count(x) == 2]
@@ -127,9 +125,7 @@ def test_option_chains_end_to_end(session_factory) -> None:
             coverage = group["coverage"]
             assert coverage["expected"] == 24
             assert coverage["iv_resolved"] == 24 - len(coverage["discarded"])
-            discard_reasons.extend(
-                entry["reason"] for entry in coverage["discarded"]
-            )
+            discard_reasons.extend(entry["reason"] for entry in coverage["discarded"])
             resolved += coverage["iv_resolved"]
             for entry in group["contracts"]:
                 assert entry["trading_class"] == group["trading_class"]
@@ -141,10 +137,7 @@ def test_option_chains_end_to_end(session_factory) -> None:
                     assert calc["calculation_id"] == "options.implied_volatility"
                     assert calc["input_hash"].startswith("sha256:")
                     assert entry["greeks"]["status"] == "OK"
-                    assert (
-                        entry["greeks"]["calculation"]["calculation_id"]
-                        == "options.greeks"
-                    )
+                    assert entry["greeks"]["calculation"]["calculation_id"] == "options.greeks"
                 else:
                     assert entry["iv"]["reason"]
                     assert entry["greeks"]["status"] == "ABSENT"

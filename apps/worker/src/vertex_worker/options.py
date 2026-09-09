@@ -109,8 +109,12 @@ OPTION_CHAIN_SCHEMA_VERSION = "vertex.option-chain/1.0"
 
 OPTION_CHAIN_SCHEMA_PREFIXES: tuple[str, ...] = (
     "synthetic-option-chain/",
-    # Source REELLE : meme raison que pour les cotations.
-    "ibkr.option-chain/",
+    # Source REELLE : la TRANCHE cotée produite par
+    # `vertex_edge_ibkr.options` (contrats avec bid/ask, spot, hypothèses).
+    # La DÉFINITION de chaîne (`reqSecDefOptParams`, sans cotation) porte un
+    # autre schéma, `ibkr.option-chain-definition/`, et n'entre pas ici :
+    # elle était rejetée `invalid_payload` (mesuré 2026-09-06).
+    "ibkr.option-chain-slice/",
 )
 """Schema families recognized as option chains (extensible; deny by default)."""
 

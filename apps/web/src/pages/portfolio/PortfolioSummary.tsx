@@ -164,7 +164,7 @@ export function PortfolioSummary({ valuation }: { readonly valuation: ValuationC
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot du worker"
+      kicker="Publié"
       title={module.title}
       titleId="vx-pf-summary-title"
       className="vx-pf-value"
@@ -179,6 +179,10 @@ export function PortfolioSummary({ valuation }: { readonly valuation: ValuationC
           </span>
         )
       }
+      // REFONTE UI 2026-09-05 — le pied ne garde que l'instant et le moteur :
+      // méthode de lots et marques (statut, version, tickers) sont déjà dans
+      // `pf-snapshot-facts` de l'inspecteur, et la population des marques
+      // dans le bandeau et le badge. Un pied de quatre lignes doublait tout.
       footer={
         <>
           <code>as_of</code>{' '}
@@ -187,26 +191,7 @@ export function PortfolioSummary({ valuation }: { readonly valuation: ValuationC
           ) : (
             'non publié'
           )}
-          {' · '}lots <code>{valuation.lotMethod ?? 'non publiés'}</code>
           {' · '}moteur <code>{valuation.engineVersion ?? 'non publié'}</code>
-          {' · '}marques :{' '}
-          {valuation.marks.status === 'OK' ? (
-            <>
-              snapshot marchés v{valuation.marks.snapshotVersion ?? 'non publiée'} (
-              {valuation.marks.tickersMarked ?? 'nombre non publié'} tickers,{' '}
-              {valuation.marks.asOf !== null ? (
-                <time dateTime={valuation.marks.asOf}>{valuation.marks.asOf}</time>
-              ) : (
-                'as_of non publié'
-              )}
-              )
-            </>
-          ) : (
-            <span className="vx-cell-absent">
-              {valuation.marks.status ?? 'ABSENT'}
-              {valuation.marks.reason !== null ? ` — ${valuation.marks.reason}` : null}
-            </span>
-          )}
         </>
       }
     >

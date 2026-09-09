@@ -8,6 +8,8 @@ main. Ce que chaque test protège est nommé dans sa docstring.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -15,7 +17,13 @@ from fakes import make_envelope
 
 from vertex_edge_ibkr.history import HistoryBackfiller
 from vertex_edge_ibkr.pacing import SlidingWindowPacer
-from vertex_edge_ibkr.port import ContractSpec, EdgeIbkrError, ProviderError
+from vertex_edge_ibkr.port import (
+    BarObservation,
+    BarsPayload,
+    ContractSpec,
+    EdgeIbkrError,
+    ProviderError,
+)
 
 SPEC_A = ContractSpec(sec_type="STK", con_id=1001, symbol="AAA", exchange="SMART")
 SPEC_B = ContractSpec(sec_type="STK", con_id=1002, symbol="BBB", exchange="SMART")
@@ -292,3 +300,76 @@ def test_mille_titres_prennent_bien_environ_deux_heures_cinquante() -> None:
     # 60 immédiates, puis 6/min : ~2 h 37 simulées. On vérifie l'ordre de
     # grandeur annoncé, pas une valeur au centième.
     assert 2.4 <= heures <= 3.0, f"{heures:.2f} h"
+
+
+# -- identite des enveloppes brutes ----------------------------------------
+
+
+def _barres_de(con_id: int, *jours: str) -> BarsPayload:
+    """Charge de barres SYNTHETIQUE : aucune observation de marche reelle."""
+    return BarsPayload(
+        con_id=con_id,
+        bar_size="1 day",
+        what_to_show="TRADES",
+        use_rth=True,
+        bars=tuple(
+            BarObservation(
+                time=datetime.fromisoformat(jour).replace(tzinfo=UTC),
+                open=Decimal("100.10"),
+                high=Decimal("103.40"),
+                low=Decimal("99.80"),
+                close=Decimal("102.25"),
+                volume=Decimal("12000.0"),
+                average=Decimal("101.875"),
+                bar_count=240,
+            )
+            for jour in jours
+        ),
+    )
+
+
+def test_deux_passes_ecrivent_la_meme_identite_brute() -> None:
+    """La MEME fenetre relue ne s'ecrit qu'une fois.
+
+    Mesure du 2026-09-06 sur la base reelle : 969 lignes `ibkr.bars/1` pour
+    59 contenus distincts. Le puits est idempotent SUR `event_id`, et
+    l'adaptateur tirait un `uuid4` par enveloppe : chaque passe reecrivait le
+    meme historique sous une identite neuve. Les deux enveloppes DERIVEES
+    avaient deja une identite stable ; celle-ci l'a maintenant aussi.
+    """
+    charge = _barres_de(1001, "2025-08-28", "2025-08-29")
+    port = FauxPort({1001: make_envelope(charge, con_id=1001)})
+
+    b1, puits1, _, _ = monter(port)
+    asyncio.run(b1.run())
+    b2, puits2, _, _ = monter(port)
+    asyncio.run(b2.run())
+
+    brute1 = puits1.lots[0][0]
+    brute2 = puits2.lots[0][0]
+    assert brute1.event_id == brute2.event_id
+    assert brute1.event_id == "ibkr:bars:1001:1 day:TRADES:rth:2025-08-28:2025-08-29"
+
+
+def test_une_fenetre_differente_reste_une_observation_differente() -> None:
+    """Deux demandes distinctes ne se confondent jamais."""
+    port_a = FauxPort({1001: make_envelope(_barres_de(1001, "2025-08-28"), con_id=1001)})
+    port_b = FauxPort({1001: make_envelope(_barres_de(1001, "2025-08-29"), con_id=1001)})
+    b1, puits1, _, _ = monter(port_a)
+    asyncio.run(b1.run())
+    b2, puits2, _, _ = monter(port_b)
+    asyncio.run(b2.run())
+    assert puits1.lots[0][0].event_id != puits2.lots[0][0].event_id
+
+
+def test_une_reponse_vide_garde_son_identite_ponctuelle() -> None:
+    """Ne rien recevoir EST une observation datee : deux silences different.
+
+    Sans barre, aucune fenetre n'existe — fabriquer une identite stable
+    ferait passer deux tentatives distinctes pour la meme observation.
+    """
+    vide = _barres_de(1001)
+    port = FauxPort({1001: make_envelope(vide, con_id=1001)})
+    b1, puits1, _, _ = monter(port)
+    asyncio.run(b1.run())
+    assert not puits1.lots[0][0].event_id.startswith("ibkr:bars:")

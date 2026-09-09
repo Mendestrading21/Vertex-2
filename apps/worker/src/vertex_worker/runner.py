@@ -43,6 +43,7 @@ from vertex_persistence.repository.outbox import (
     ack_outbox,
     claim_outbox_batch,
     fail_outbox,
+    reap_expired_leases,
 )
 from vertex_worker.errors import GENERIC_HANDLER_CODE, HandlerError, UnregisteredTopicError
 from vertex_worker.registry import HandlerRegistry
@@ -84,6 +85,7 @@ class WorkerStats:
     failed: int
     dead: int
     lease_lost: int
+    reaped: int = 0
 
 
 class RepositoryOutboxGateway:
@@ -105,6 +107,9 @@ class RepositoryOutboxGateway:
         self, session: Session, message_id: int, *, lease_token: str, now: datetime
     ) -> None:
         ack_outbox(session, message_id, lease_token=lease_token, now=now)
+
+    def reap(self, session: Session, *, now: datetime, max_attempts: int) -> int:
+        return reap_expired_leases(session, now=now, max_attempts=max_attempts)
 
     def fail(
         self,
@@ -172,6 +177,7 @@ class WorkerRunner:
         self._failed = 0
         self._dead = 0
         self._lease_lost = 0
+        self._reaped = 0
 
     # -- introspection ----------------------------------------------------
 
@@ -185,6 +191,7 @@ class WorkerRunner:
                 failed=self._failed,
                 dead=self._dead,
                 lease_lost=self._lease_lost,
+                reaped=self._reaped,
             )
 
     @property
@@ -220,7 +227,15 @@ class WorkerRunner:
         return _require_aware_utc_now(self._clock())
 
     def run_once(self) -> int:
-        """Claim and fully process one batch; return how many were claimed.
+        """Reap expired leases, then claim and fully process one batch.
+
+        Returns how many messages were claimed. The reap comes FIRST and in
+        the same transaction as the claim: a worker killed mid-batch (crash,
+        restart, ``stop-vertex``) leaves its rows IN_PROGRESS with a lease
+        that nobody will ever ack — measured on the live base on 2026-09-06,
+        eighteen rows stuck since the previous evening's restart. The reaper
+        records the lost attempt (FAILED with backoff, or DEAD) so the claim
+        below can re-offer them; without it, nothing in the runtime ever did.
 
         The claim is committed before any handler runs (the lease must be
         visible to concurrent workers and to the reaper). Every claimed
@@ -229,6 +244,13 @@ class WorkerRunner:
         """
         now = self._now()
         with self._session_factory() as session:
+            reaped = self._gateway.reap(session, now=now, max_attempts=self._max_attempts)
+            if reaped:
+                log.warning(
+                    "reaped %d expired lease(s): attempts recorded, rows re-offered", reaped
+                )
+                with self._lock:
+                    self._reaped += reaped
             messages = self._gateway.claim(
                 session,
                 self._registry.topics,

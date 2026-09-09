@@ -59,9 +59,7 @@ def test_analysis_dossiers_end_to_end(session_factory) -> None:
     chains = generate_option_chain_envelopes(seed=SEED, base_time=BASE_TIME)
     bars = generate_daily_bar_envelopes(seed=SEED, base_time=BASE_TIME)
     with session_factory() as session:
-        inserted = sum(
-            1 for e in (*chains, *bars) if ingest_envelope(session, e).inserted
-        )
+        inserted = sum(1 for e in (*chains, *bars) if ingest_envelope(session, e).inserted)
         session.commit()
     assert inserted == len(chains) + len(bars) == 16
 
@@ -71,8 +69,9 @@ def test_analysis_dossiers_end_to_end(session_factory) -> None:
             .select_from(OutboxMessage)
             .where(OutboxMessage.topic == TOPIC_ANALYSIS_INGESTED)
         ).scalar_one()
-    # Chains AND bars both feed the analysis topic (12 + 4 messages).
-    assert analysis_jobs == 16
+    # Chains AND bars both feed the analysis topic; the 16 envelopes are
+    # coalesced into ONE pending job (the handler recomputes every dossier).
+    assert analysis_jobs == 1
 
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
@@ -92,9 +91,7 @@ def test_analysis_dossiers_end_to_end(session_factory) -> None:
     hashes: dict[str, str] = {}
     for instrument in SYNTHETIC_FOCUS_TICKERS:
         with session_factory() as session:
-            snapshot = get_current_snapshot(
-                session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument
-            )
+            snapshot = get_current_snapshot(session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument)
         assert snapshot is not None, instrument
         content = snapshot.content
         versions[instrument] = snapshot.version
@@ -119,9 +116,7 @@ def test_analysis_dossiers_end_to_end(session_factory) -> None:
         assert scenarios["value_nature"] == "THEORETICAL"
         assert scenarios["basis"]["premium_side"] == "ASK"
         assert scenarios["basis"]["chain_snapshot_version"] is not None
-        assert (
-            scenarios["calculation"]["calculation_id"] == "options.scenario_grid"
-        )
+        assert scenarios["calculation"]["calculation_id"] == "options.scenario_grid"
         assert len(scenarios["grid"]) == 1
         assert len(scenarios["grid"][0]) == 3
         assert all(len(row) == 5 for row in scenarios["grid"][0])
@@ -157,9 +152,7 @@ def test_analysis_dossiers_end_to_end(session_factory) -> None:
     assert replay_runner.drain(max_batches=5) == 1
     for instrument in SYNTHETIC_FOCUS_TICKERS:
         with session_factory() as session:
-            replayed = get_current_snapshot(
-                session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument
-            )
+            replayed = get_current_snapshot(session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument)
         assert replayed is not None
         assert replayed.version == versions[instrument]
         assert replayed.content_hash == hashes[instrument]
@@ -179,9 +172,7 @@ def test_bars_without_chain_publish_scenarioless_dossier(session_factory) -> Non
 
     instrument = SYNTHETIC_FOCUS_TICKERS[0]
     with session_factory() as session:
-        snapshot = get_current_snapshot(
-            session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument
-        )
+        snapshot = get_current_snapshot(session, kind=SNAPSHOT_KIND_ANALYSIS, key=instrument)
     assert snapshot is not None
     scenarios = snapshot.content["scenarios"]
     assert scenarios == {

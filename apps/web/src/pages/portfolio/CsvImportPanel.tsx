@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../../components/number.ts';
 import { useState } from 'react';
 
 import { isApiError } from '../../api/client.ts';
@@ -234,7 +235,7 @@ export function CsvImportPanel({ onImported }: { readonly onImported: () => void
                             row.price
                           )}
                         </td>
-                        <td className="vx-num">{row.amount}</td>
+                        <td className="vx-num">{formatServedNumber(row.amount)}</td>
                         <td className="vx-num">
                           {row.fees === '' ? (
                             <AbsentCell quoi="frais" nature="not_entered" reason={null} />

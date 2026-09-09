@@ -13,6 +13,7 @@ import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
 import type { DataState } from '../../components/DataStateBoundary.tsx';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { SyntheticBanner } from '../../components/SyntheticBanner.tsx';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import {
   AbsentCalendarModule,
@@ -321,7 +322,7 @@ export function CalendarPage() {
               titleId="vx-cal-window-title"
               state="ready"
               className="vx-cal-window"
-              footer={<>le serveur valide les bornes et borne la profondeur à 90 jours ; aucune borne n’est corrigée par l’interface</>}
+              footer={<>bornes validées par le serveur ; profondeur 90 jours</>}
             >
                 <div className="vx-matrix-filters">
                   <label>
@@ -385,7 +386,7 @@ export function CalendarPage() {
               state={moduleState}
             />
 
-            <div data-module="agenda">
+            <ModuleCell id="agenda" size={calendarModule('agenda').size}>
               <AgendaModule
                 frame={frame}
                 visible={visible}
@@ -396,20 +397,29 @@ export function CalendarPage() {
                   setSelectedEventId((previous) => (previous === eventId ? null : eventId));
                 }}
               />
-            </div>
+            </ModuleCell>
+            {/*
+              REFONTE UI 2026-09-06 — l'ordre du DOM est l'ordre de lecture de
+              la grille nommée (`.vx-cal-grid`, global.css) : signal (bornes,
+              fuseau) → dominante flanquée du prochain événement et des
+              conflits → dénombrements et règle → registre et densité →
+              révisions et provenance → les deux absences déclarées, groupées
+              en dernier pour ne pas interrompre la lecture des modules servis.
+            */}
             <NextEventModule events={agendaEvents === null ? null : visible} displayTimeZone={displayTimeZone} state={moduleState} />
+            <ConflictsModule events={agendaEvents} state={moduleState} />
+
             <CountersModule served={served} state={moduleState} />
+            <ImportanceRuleModule served={served} state={moduleState} />
 
             <DailyExposureModule events={agendaEvents} state={moduleState} />
             <DensityModule events={agendaEvents} state={moduleState} />
 
+            <RevisionsModule events={agendaEvents} state={moduleState} />
+            <ProvenanceModule served={served} state={moduleState} />
+
             <AbsentCalendarModule id="reminders" />
             <AbsentCalendarModule id="changes-since-visit" />
-            <RevisionsModule events={agendaEvents} state={moduleState} />
-            <ConflictsModule events={agendaEvents} state={moduleState} />
-
-            <ImportanceRuleModule served={served} state={moduleState} />
-            <ProvenanceModule served={served} state={moduleState} />
           </div>
 
           {selected === null ? (

@@ -271,8 +271,11 @@ describe('Page Analyse — état nominal', () => {
     await renderAnalysis();
     await screen.findByText(/Aucun cluster pertinent/);
     const absent = await screen.findByTestId('scenarios-absent');
-    expect(absent.textContent).toBe(scenarioAbsentLabel('no_healthy_contract'));
-    expect(absent.textContent).toContain('no_healthy_contract');
+    // Le code servi est traduit — il ne sortait jamais tant que le
+    // dictionnaire portait une clé que le worker ne publie pas.
+    expect(absent.textContent).toBe(scenarioAbsentLabel('no_healthy_option_contract'));
+    expect(absent.textContent).toContain('no_healthy_option_contract');
+    expect(absent.textContent).toContain('aucun contrat sain');
     expect(absent.textContent).toContain('aucun contrat sain');
   });
 });
@@ -341,7 +344,15 @@ describe('Page Analyse — états', () => {
     await renderAnalysis('/analysis/AAPL');
 
     await screen.findByText('Données différées');
-    expect(screen.getByText('DONNÉES RETARDÉES')).toBeDefined();
+    /*
+      DEUX FOIS, ET C'EST VOULU : la nature est dite par la PAGE (son bandeau)
+      et par la COQUILLE (la barre de contexte, qui lit la même tête depuis
+      qu'elle sait la nommer pour Analyse). C'était déjà le cas sur Marchés et
+      Aujourd'hui. L'assertion vise donc la planche, pas le document entier.
+    */
+    const planche = screen.getByRole('main');
+    expect(within(planche).getByText('DONNÉES RETARDÉES')).toBeDefined();
+    expect(screen.getAllByText('DONNÉES RETARDÉES').length).toBe(2);
     expect(screen.getByText(/Population DELAYED publiée par le worker/)).toBeDefined();
     expect(screen.getByRole('table', { name: /OHLCV/ })).toBeDefined();
   });

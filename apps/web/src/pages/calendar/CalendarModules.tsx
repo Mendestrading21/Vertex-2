@@ -146,7 +146,7 @@ export function ImportanceRuleModule({ served, state }: { readonly served: Calen
       titleId="vx-cal-rule-title"
       state={state}
       {...(view === null ? {} : { action: <code>{view.version ?? 'non publiée'}</code> })}
-      footer={<>l’interface n’attribue aucune importance : elle affiche le rang et le code que le worker a appliqués</>}
+      footer={<>rang et code d’importance appliqués par le worker</>}
     >
       {view === null ? (
         <AgendaAbsence state={state} />
@@ -202,7 +202,7 @@ export function CountersModule({ served, state }: { readonly served: CalendarRes
       title={module.title}
       titleId="vx-cal-counters-title"
       state={state}
-      footer={<>la liste réellement servie (après fenêtre) et les totaux du snapshot entier ne se remplacent jamais</>}
+      footer={<>liste servie après fenêtre ; totaux du snapshot entier</>}
     >
       {served === null ? <AgendaAbsence state={state} /> : <CountersTable served={served} />}
     </Widget>
@@ -278,7 +278,7 @@ export function ProvenanceModule({ served, state }: { readonly served: CalendarR
       title={module.title}
       titleId="vx-cal-provenance-title"
       state={state}
-      footer={<>fenêtre bornée par le serveur ; observations, supplantés et périmés comptés par le worker</>}
+      footer={<>fenêtre et comptes publiés par le worker</>}
     >
       {served === null ? (
         <AgendaAbsence state={state} />
@@ -387,7 +387,7 @@ export function TimezoneModule({
        * du navigateur.
        */
       state="ready"
-      footer={<>l’instant UTC publié reste affiché ; la conversion se fait dans un fuseau IANA nommé, jamais deviné</>}
+      footer={<>instant UTC publié ; fuseau IANA nommé, jamais deviné</>}
     >
       {events === null ? <AgendaAbsence state={state} /> : null}
       <label className="vx-cal-tz-label">
@@ -454,7 +454,7 @@ export function DensityModule({ events, state }: { readonly events: readonly Cal
       title={module.title}
       titleId="vx-cal-density-title"
       state={state}
-      footer={<>événements servis par journée UTC ; les journées sans événement ne sont pas inventées</>}
+      footer={<>par journée UTC ; aucune journée inventée</>}
     >
       {events === null ? (
         <AgendaAbsence state={state} />
@@ -481,7 +481,7 @@ export function DailyExposureModule({ events, state }: { readonly events: readon
       title={module.title}
       titleId="vx-cal-exposure-title"
       state={state}
-      footer={<>événements dont le contexte croisé nomme une position déclarée par vous ; aucun montant, aucun poids</>}
+      footer={<>contexte croisé sur vos positions déclarées ; aucun montant</>}
     >
       {exposed === null ? (
         <AgendaAbsence state={state} />
@@ -519,7 +519,7 @@ export function NextEventModule({
       title={module.title}
       titleId="vx-cal-next-title"
       state={state}
-      footer={<>aucun compte à rebours : une horloge vivante n’est pas une donnée servie</>}
+      footer={<>aucun compte à rebours : l’horloge n’est pas servie</>}
     >
       {events === null ? (
         <AgendaAbsence state={state} />
@@ -559,7 +559,7 @@ export function RevisionsModule({ events, state }: { readonly events: readonly C
       title={module.title}
       titleId="vx-cal-revisions-title"
       state={state}
-      footer={<>drapeau et détail sont deux champs distincts du snapshot ; les valeurs antérieures restent lisibles dans l’agenda</>}
+      footer={<>drapeau et détail servis ; valeurs antérieures dans l’agenda</>}
     >
       {events === null ? (
         <AgendaAbsence state={state} />
@@ -594,7 +594,7 @@ export function ConflictsModule({ events, state }: { readonly events: readonly C
       title={module.title}
       titleId="vx-cal-conflicts-title"
       state={state}
-      footer={<>un conflit n’est jamais résolu ici ; la version affichée suit l’ordre stable publié</>}
+      footer={<>jamais résolu ici ; ordre stable publié</>}
     >
       {events === null ? (
         <AgendaAbsence state={state} />

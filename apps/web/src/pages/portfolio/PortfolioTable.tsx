@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../../components/number.ts';
 import { AbsentCell } from '../../components/absence.tsx';
 import { exclusionReasonLabel } from './portfolioView.ts';
 import type { ExcludedLotRow, ValuedLotRow } from './portfolioView.ts';
@@ -60,9 +61,9 @@ export function PortfolioTable({
                     <code>{lot.lotId}</code>
                   </td>
                   <td className="vx-num">{lot.quantity}</td>
-                  <td className="vx-num">{lot.unitCost}</td>
-                  <td className="vx-num">{lot.mark}</td>
-                  <td className="vx-num">{lot.marketValue}</td>
+                  <td className="vx-num">{formatServedNumber(lot.unitCost)}</td>
+                  <td className="vx-num">{formatServedNumber(lot.mark)}</td>
+                  <td className="vx-num">{formatServedNumber(lot.marketValue)}</td>
                   {/*
                     UN P&L LATENT SERVI `0.00` ÉTAIT PEINT EN VERT. La règle
                     binaire d'ici — « commence par `-` sinon positif » —
@@ -78,7 +79,7 @@ export function PortfolioTable({
                       ? {}
                       : { 'data-sign': signGroupOfText(lot.unrealizedPnl) })}
                   >
-                    {lot.unrealizedPnl}
+                    {formatServedNumber(lot.unrealizedPnl)}
                   </td>
                   <td>
                     <code>{lot.currency}</code>
