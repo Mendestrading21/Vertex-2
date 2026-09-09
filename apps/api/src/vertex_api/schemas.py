@@ -506,6 +506,16 @@ class OptionChainResponse(ContractModel):
     datables — son absence faisait passer un instantané de trois jours
     pour un instantané d'une minute. ``freshness_policy`` publie le budget
     contre lequel cet âge est jugé (``FreshnessPolicyView``).
+
+    ``spot`` relaie le bloc du worker VERBATIM : ``value``, ``currency``,
+    puis la provenance PROPRE du spot — ``basis`` (``daily_close`` pour le
+    collecteur réel), ``observed_at`` (l'instant DU SPOT, jamais celui de
+    la tranche d'options), ``source_event_id`` (l'observation qui l'a
+    fourni), ``carried_by_event_id`` (la tranche qui l'a porté),
+    ``provenance`` (``PUBLISHED`` | ``PARTIAL`` | ``NOT_PUBLISHED``),
+    ``age_seconds``, ``max_age_seconds`` (borne DÉCLARÉE par le worker) et
+    ``age_status`` (``OK`` | ``STALE`` | ``FUTURE`` | ``UNKNOWN``). Un
+    champ absent est ``null`` et le dit ; l'API ne le comble pas.
     """
 
     state: Literal["ok", "stale", "empty"]

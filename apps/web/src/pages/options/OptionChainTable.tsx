@@ -54,7 +54,10 @@ export interface OptionChainTableProps {
   readonly selectedConId?: number | null;
   /** Spot SERVI, verbatim, pour le repère. `null` = aucun repère tracé. */
   readonly spotValue?: string | null;
+  /** Instant d'observation DU SPOT (pas de la tranche), servi. */
   readonly spotObservedAt?: string | null;
+  /** Nature servie du spot, déjà mise en phrase (`spotBasisLabel`). */
+  readonly spotBasisLabel?: string | null;
   /**
    * Sélection de colonnes CONTRÔLÉE par la page (persistée dans l'URL). Sans
    * ces deux props, la table garde un état local — les tests unitaires la
@@ -269,6 +272,7 @@ export function OptionChainTable({
   selectedConId = null,
   spotValue = null,
   spotObservedAt = null,
+  spotBasisLabel = null,
   columns,
   onColumnsChange,
 }: OptionChainTableProps) {
@@ -440,8 +444,11 @@ export function OptionChainTable({
                           <span className="vx-chain-spot-label">spot servi</span>
                           <code className="vx-num">{spotValue}</code>
                           <span className="vx-chain-spot-unit">{group.currency}</span>
+                          {spotBasisLabel === null ? null : (
+                            <span className="vx-chain-spot-basis">{spotBasisLabel}</span>
+                          )}
                           {spotObservedAt === null ? (
-                            <span className="vx-chain-spot-when">instant d’observation non publié</span>
+                            <span className="vx-chain-spot-when">instant d’observation du spot non publié</span>
                           ) : (
                             <time className="vx-chain-spot-when" dateTime={spotObservedAt}>
                               observé {spotObservedAt}

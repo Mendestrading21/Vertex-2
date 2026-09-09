@@ -32,7 +32,17 @@ export function ChainSnapshotInspector({ data }: { readonly data: OptionChainRes
           { label: 'Population', value: <code>{publishedOr(data.population)}</code> },
           {
             label: 'Spot',
-            value: spot === null || spot.value === null ? 'non publié' : `${spot.value} ${spot.currency ?? ''} · ${spot.observedAt ?? 'instant non publié'}`,
+            value:
+              spot === null || spot.value === null
+                ? 'non publié'
+                : `${spot.value} ${spot.currency ?? ''} · ${spot.basisLabel} · ${spot.observedAt ?? 'instant du spot non publié'}`,
+          },
+          {
+            label: 'Provenance du spot',
+            value:
+              spot === null
+                ? 'non publiée'
+                : `${spot.provenance ?? 'non publiée'} · âge ${spot.ageStatus ?? 'non publié'} · source ${spot.sourceEventId ?? 'non publiée'}`,
           },
           {
             label: 'Groupes',

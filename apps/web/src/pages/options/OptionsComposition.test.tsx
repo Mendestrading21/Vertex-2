@@ -81,6 +81,77 @@ describe('Page Options — composition (LOT-A5)', () => {
     }
   });
 
+  it('le spot dit sa nature, son instant et son âge sur la borne servie — jamais l’as_of du snapshot', async () => {
+    servir();
+    await renderOptions();
+    const provenance = screen.getByTestId('options-spot-provenance');
+    expect(provenance.textContent).toContain('référence synthétique (synthetic_reference)');
+    expect(provenance.textContent).toContain('observé 2026-08-25T11:30:00+00:00');
+    expect(provenance.querySelector('time')?.getAttribute('dateTime')).toBe('2026-08-25T11:30:00+00:00');
+    expect(provenance.textContent).toContain('il y a 31 min');
+    expect(provenance.textContent).toContain('budget 5 j');
+    expect(provenance.textContent).toContain('âge OK');
+    expect(provenance.getAttribute('data-provenance')).toBe('PUBLISHED');
+    // Le repère de la table porte aussi la nature du spot.
+    expect(document.querySelector('.vx-chain-spot-basis')?.textContent).toBe(
+      'référence synthétique (synthetic_reference)',
+    );
+  });
+
+  it('une clôture quotidienne réelle se lit comme telle, sous SON instant, avec sa borne', async () => {
+    const base = makeOptionChain();
+    servir(
+      makeOptionChain({
+        population: 'REAL',
+        spot: {
+          value: '366.08',
+          currency: 'USD',
+          basis: 'daily_close',
+          observed_at: '2026-09-05T20:00:00+00:00',
+          source_event_id: 'ibkr:daily-quote:265598:2026-09-05',
+          carried_by_event_id: 'ibkr:option-chain-slice:265598:2026-09-19',
+          provenance: 'PUBLISHED',
+          age_seconds: 234000,
+          max_age_seconds: 432000,
+          age_status: 'OK',
+        },
+        expirations: base.expirations.map((group, index) => ({
+          ...group,
+          source_event_id: `ibkr:option-chain-slice:265598:${index}`,
+          contracts: group.contracts.map((contract) => ({ ...contract, synthetic: false })),
+        })),
+      }),
+    );
+    await renderOptions();
+    const provenance = screen.getByTestId('options-spot-provenance');
+    expect(provenance.textContent).toContain('dernière clôture quotidienne (daily_close)');
+    expect(provenance.textContent).toContain('observé 2026-09-05T20:00:00+00:00');
+    expect(provenance.textContent).toContain('il y a 2 j');
+    expect(provenance.textContent).toContain('budget 5 j');
+    // La source du spot (la clôture) entre dans les références, distincte des tranches.
+    expect(screen.getByTestId('chain-source-references').textContent).toContain(
+      'ibkr:daily-quote:265598:2026-09-05',
+    );
+  });
+
+  it('une provenance non publiée est DITE : aucun instant, aucun âge, aucune nature inventés', async () => {
+    const chain = makeOptionChain({
+      spot: { value: '102.50', currency: 'SYN', provenance: 'NOT_PUBLISHED', age_status: 'UNKNOWN' },
+    });
+    servir(chain);
+    await renderOptions();
+    const provenance = screen.getByTestId('options-spot-provenance');
+    expect(provenance.textContent).toContain('nature du spot non publiée');
+    expect(provenance.textContent).toContain('instant d’observation du spot non publié');
+    expect(provenance.textContent).toContain('âge inconnu');
+    expect(provenance.textContent).toContain('âge UNKNOWN');
+    expect(provenance.textContent).toContain('provenance NOT_PUBLISHED');
+    expect(provenance.textContent).not.toContain('budget');
+    expect(provenance.textContent).not.toContain(chain.as_of ?? 'jamais');
+    expect(provenance.querySelector('time')).toBeNull();
+    expect(screen.getByTestId('options-spot').textContent).toContain('102.50');
+  });
+
   it('spot, taux et dividende sont les chaînes PUBLIÉES du snapshot ; le budget et les références restent lisibles', async () => {
     servir();
     await renderOptions();

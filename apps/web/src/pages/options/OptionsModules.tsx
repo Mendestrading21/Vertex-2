@@ -14,7 +14,7 @@ import { InstrumentTile } from '../../components/widgets/InstrumentTile.tsx';
 import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { analysisStateOf, barsViewOf } from '../analysis/analysisView.ts';
 import { optionsModule } from './optionsModules.ts';
-import { groupLabelOf, rowBudgetOf, sourceEventIdsOf, spotViewOf } from './optionsView.ts';
+import { type SpotView, groupLabelOf, rowBudgetOf, sourceEventIdsOf, spotViewOf } from './optionsView.ts';
 
 /**
  * Les modules SERVIS de la planche §5, hors la dominante (la chaîne). Le
@@ -250,6 +250,44 @@ export function IdentityStripModule({ data }: { readonly data: OptionChainRespon
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Provenance SERVIE du spot : sa nature, son instant, son âge sur la borne
+ * déclarée. Le lecteur doit voir qu'un spot est une clôture quotidienne, pas
+ * une cotation de l'instant — et que son âge est mesuré, pas fabriqué.
+ */
+export function SpotProvenance({ spot }: { readonly spot: SpotView | null }) {
+  if (spot === null) {
+    return <span data-testid="options-spot-provenance">provenance du spot non publiée</span>;
+  }
+  return (
+    <span data-testid="options-spot-provenance" data-provenance={spot.provenance ?? 'absent'}>
+      {spot.basisLabel}
+      {' · '}
+      {spot.observedAt === null ? (
+        'instant d’observation du spot non publié'
+      ) : (
+        <>
+          observé <time dateTime={spot.observedAt}>{spot.observedAt}</time>
+        </>
+      )}
+      {' · '}
+      <FreshnessBadge ageSeconds={spot.ageSeconds} budgetSeconds={spot.maxAgeSeconds} sourceLabel="spot" />
+      {spot.ageStatus === null ? null : (
+        <>
+          {' · âge '}
+          <code>{spot.ageStatus}</code>
+        </>
+      )}
+      {spot.provenance === null || spot.provenance === 'PUBLISHED' ? null : (
+        <>
+          {' · provenance '}
+          <code>{spot.provenance}</code>
+        </>
+      )}
+    </span>
+  );
+}
+
 export function SpotModule({ data }: { readonly data: OptionChainResponse }) {
   const module = optionsModule('spot');
   const spot = spotViewOf(data);
@@ -258,15 +296,7 @@ export function SpotModule({ data }: { readonly data: OptionChainResponse }) {
       rank="quiet"
       title={module.title}
       titleId="vx-options-spot-title"
-      footer={
-        spot === null || spot.observedAt === null ? (
-          'instant d’observation non publié'
-        ) : (
-          <>
-            observé <time dateTime={spot.observedAt}>{spot.observedAt}</time>
-          </>
-        )
-      }
+      footer={<SpotProvenance spot={spot} />}
     >
       <Metric
         label="Spot"

@@ -34,6 +34,16 @@ from vertex_worker.options import (
     REASON_QUOTE_STALE,
     REASON_RIGHTS_NOT_USABLE,
     REASON_SOURCE_NOT_ALLOWED,
+    REASON_SPOT_FUTURE,
+    REASON_SPOT_PROVENANCE_MISSING,
+    REASON_SPOT_STALE,
+    SPOT_AGE_FUTURE,
+    SPOT_AGE_OK,
+    SPOT_AGE_STALE,
+    SPOT_AGE_UNKNOWN,
+    SPOT_PROVENANCE_NOT_PUBLISHED,
+    SPOT_PROVENANCE_PARTIAL,
+    SPOT_PROVENANCE_PUBLISHED,
     TOPIC_OPTION_CHAINS_INGESTED,
     OptionChainRecord,
     OptionsConfig,
@@ -48,6 +58,11 @@ EXPIRY = date(2026, 9, 22)  # 28 days after NOW
 MATURITY_YEARS = 28 / 365.0
 
 SPOT = "100.00"
+# Le spot d'une tranche est la DERNIÈRE CLÔTURE QUOTIDIENNE déjà en base : son
+# instant est celui de la clôture (la veille), jamais celui de la tranche.
+SPOT_BASIS = "daily_close"
+SPOT_OBSERVED_AT = NOW - timedelta(hours=20)
+SPOT_SOURCE_EVENT_ID = "synthetic-dev:t:close0001"
 RATE = "0.02"
 DIVIDEND_YIELD = "0.00"
 KNOWN_VOL = 0.25
@@ -115,7 +130,15 @@ def slice_record(
     rights: str = SYNTHETIC_RIGHTS,
     as_of: datetime | None = None,
     spot: str = SPOT,
+    spot_basis: str | None = SPOT_BASIS,
+    spot_observed_at: str | None = SPOT_OBSERVED_AT.isoformat(),
+    spot_source_event_id: str | None = SPOT_SOURCE_EVENT_ID,
 ) -> OptionChainRecord:
+    provenance = {
+        "underlying_spot_basis": spot_basis,
+        "underlying_spot_observed_at": spot_observed_at,
+        "underlying_spot_source_event_id": spot_source_event_id,
+    }
     return OptionChainRecord(
         event_id=event_id,
         source=source,
@@ -129,6 +152,9 @@ def slice_record(
             "synthetic": True,
             "underlying": underlying,
             "underlying_spot": spot,
+            # Une clé ABSENTE (pas None) reproduit un producteur qui ne
+            # publie pas la provenance du spot.
+            **{key: value for key, value in provenance.items() if value is not None},
             "currency": "SYN",
             "expiration": expiration,
             "trading_class": trading_class or underlying,
@@ -237,10 +263,12 @@ def test_iv_assumptions_relay_the_admitted_observation_without_population_claim(
     build_option_chain_content([record], underlying="SYN-TECH-01", now=NOW, config=CONFIG)
 
     iv_call = next(call for call in calls if call["calculation_id"] == "options.implied_volatility")
-    assert iv_call["source_event_ids"] == ("admitted-option-slice",)
+    # La lignée de l'IV nomme la tranche ET l'observation qui a fourni le spot.
+    assert iv_call["source_event_ids"] == ("admitted-option-slice", SPOT_SOURCE_EVENT_ID)
     assert iv_call["assumptions"] == (
         "rate and dividend yield relayed from the admitted option-chain observation",
         "ACT/365F maturity from the expiration date",
+        "spot relayed with the basis and instant declared by the admitted observation",
     )
     assert all("synthetic" not in text.lower() for text in iv_call["assumptions"])
 
@@ -439,6 +467,204 @@ def test_records_present_but_all_rejected_yield_empty_population() -> None:
     assert content["population"] == "EMPTY"
     assert content["expirations"] == []
     assert content["spot"] is None
+
+
+# ---------------------------------------------------------------------------
+# Provenance du spot — audit de pré-fusion du 2026-09-07 (constat MAJEUR)
+# ---------------------------------------------------------------------------
+
+
+def _spot_of(**overrides) -> dict:
+    kwargs = {"contracts": [contract(1, "100.00", "CALL")]}
+    kwargs.update(overrides)
+    return build_option_chain_content(
+        [slice_record(**kwargs)], underlying="SYN-TECH-01", now=NOW, config=CONFIG
+    )
+
+
+def test_spot_block_carries_the_close_instant_never_the_slice_instant() -> None:
+    """REPRODUCTEUR. Le worker datait le spot avec ``record.as_of`` (l'instant
+    de la TRANCHE) et le référençait par ``record.event_id`` : une clôture de
+    la veille était affichée sous un horodatage du présent."""
+    slice_as_of = NOW - timedelta(minutes=29)
+    content = _spot_of(as_of=slice_as_of, event_id="slice-0001")
+    spot = content["spot"]
+    assert spot["value"] == SPOT and spot["currency"] == "SYN"
+    assert spot["observed_at"] == SPOT_OBSERVED_AT.isoformat()
+    assert spot["observed_at"] != slice_as_of.isoformat()
+    assert spot["basis"] == SPOT_BASIS
+    assert spot["source_event_id"] == SPOT_SOURCE_EVENT_ID
+    assert spot["source_event_id"] != "slice-0001"
+    # La tranche qui a PORTÉ le spot reste nommée, distinctement.
+    assert spot["carried_by_event_id"] == "slice-0001"
+    assert spot["provenance"] == SPOT_PROVENANCE_PUBLISHED
+    assert spot["age_seconds"] == 20 * 3600
+    assert spot["max_age_seconds"] == int(CONFIG.max_spot_age.total_seconds())
+    assert spot["age_status"] == SPOT_AGE_OK
+    (entry,) = content["expirations"][0]["contracts"]
+    assert entry["iv"]["status"] == "OK"
+
+
+def test_spot_without_published_provenance_is_typed_absent_and_closes_the_iv_gate() -> None:
+    """Aucun des trois champs : l'absence est DITE, jamais remplacée par
+    l'instant de la tranche, et aucune IV n'est résolue sur un spot dont
+    l'âge ne peut pas être mesuré."""
+    content = _spot_of(
+        as_of=NOW - timedelta(minutes=29),
+        spot_basis=None,
+        spot_observed_at=None,
+        spot_source_event_id=None,
+    )
+    spot = content["spot"]
+    assert spot["value"] == SPOT
+    assert spot["basis"] is None
+    assert spot["observed_at"] is None
+    assert spot["source_event_id"] is None
+    assert spot["provenance"] == SPOT_PROVENANCE_NOT_PUBLISHED
+    assert spot["age_seconds"] is None
+    assert spot["age_status"] == SPOT_AGE_UNKNOWN
+    (group,) = content["expirations"]
+    (entry,) = group["contracts"]
+    assert entry["quote"]["status"] == QUOTE_STATUS_OK  # la cotation reste publiée verbatim
+    assert entry["iv"] == {"status": "ABSENT", "reason": REASON_SPOT_PROVENANCE_MISSING}
+    assert entry["greeks"] == {"status": "ABSENT", "reason": REASON_IV_UNRESOLVED}
+    assert group["coverage"]["iv_resolved"] == 0
+    assert group["coverage"]["discarded"] == [
+        {"con_id": 1, "strike": "100.00", "right": "CALL", "reason": REASON_SPOT_PROVENANCE_MISSING}
+    ]
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"spot_observed_at": None},
+        {"spot_basis": None},
+        {"spot_source_event_id": None},
+        {"spot_observed_at": "not-a-datetime"},
+        {"spot_observed_at": SPOT_OBSERVED_AT.replace(tzinfo=None).isoformat()},  # naïf
+        {"spot_basis": ""},
+    ],
+)
+def test_partial_spot_provenance_is_partial_and_never_priced(overrides) -> None:
+    content = _spot_of(**overrides)
+    spot = content["spot"]
+    assert spot["provenance"] == SPOT_PROVENANCE_PARTIAL
+    (entry,) = content["expirations"][0]["contracts"]
+    assert entry["iv"] == {"status": "ABSENT", "reason": REASON_SPOT_PROVENANCE_MISSING}
+    if "spot_observed_at" in overrides:
+        assert spot["observed_at"] is None
+        assert spot["age_seconds"] is None
+        assert spot["age_status"] == SPOT_AGE_UNKNOWN
+
+
+def test_spot_older_than_the_declared_bound_closes_the_iv_gate() -> None:
+    too_old = NOW - CONFIG.max_spot_age - timedelta(seconds=1)
+    content = _spot_of(spot_observed_at=too_old.isoformat())
+    spot = content["spot"]
+    assert spot["provenance"] == SPOT_PROVENANCE_PUBLISHED
+    assert spot["observed_at"] == too_old.isoformat()
+    assert spot["age_seconds"] == int(CONFIG.max_spot_age.total_seconds()) + 1
+    assert spot["age_status"] == SPOT_AGE_STALE
+    (group,) = content["expirations"]
+    (entry,) = group["contracts"]
+    assert entry["iv"] == {"status": "ABSENT", "reason": REASON_SPOT_STALE}
+    assert group["coverage"]["discarded"][0]["reason"] == REASON_SPOT_STALE
+
+
+def test_spot_exactly_at_the_bound_is_still_admitted() -> None:
+    at_bound = NOW - CONFIG.max_spot_age
+    content = _spot_of(spot_observed_at=at_bound.isoformat())
+    assert content["spot"]["age_status"] == SPOT_AGE_OK
+    (entry,) = content["expirations"][0]["contracts"]
+    assert entry["iv"]["status"] == "OK"
+
+
+def test_spot_from_the_future_is_contradictory_and_closes_the_iv_gate() -> None:
+    future = NOW + timedelta(minutes=1)
+    content = _spot_of(spot_observed_at=future.isoformat())
+    spot = content["spot"]
+    assert spot["age_status"] == SPOT_AGE_FUTURE
+    assert spot["age_seconds"] == -60
+    (entry,) = content["expirations"][0]["contracts"]
+    assert entry["iv"] == {"status": "ABSENT", "reason": REASON_SPOT_FUTURE}
+
+
+def test_spot_age_bound_is_declared_and_positive() -> None:
+    assert CONFIG.max_spot_age == timedelta(hours=120)
+    with pytest.raises(ValueError, match="max_spot_age"):
+        OptionsConfig(
+            underlyings=("SYN-TECH-01",),
+            allowed_sources=frozenset({SYNTHETIC_SOURCE}),
+            usable_rights=frozenset({SYNTHETIC_RIGHTS}),
+            max_spot_age=timedelta(0),
+        )
+
+
+def test_spot_gate_is_evaluated_per_record_not_from_the_first_group() -> None:
+    """Deux tranches : la première porte un spot admis, la seconde un spot
+    périmé. Le bloc publié vient de la première (comportement documenté), mais
+    la porte d'IV de la seconde se ferme sur SON spot."""
+    fresh = slice_record(
+        trading_class="SYN-TECH-01",
+        contracts=[contract(1, "100.00", "CALL")],
+        event_id="fresh-slice",
+    )
+    stale = slice_record(
+        trading_class="SYN-TECH-01W",
+        contracts=[contract(2, "100.00", "CALL")],
+        event_id="stale-slice",
+        spot_observed_at=(NOW - timedelta(days=30)).isoformat(),
+        spot_source_event_id="synthetic-dev:t:close-old",
+    )
+    content = build_option_chain_content(
+        [stale, fresh], underlying="SYN-TECH-01", now=NOW, config=CONFIG
+    )
+    assert content["spot"]["age_status"] == SPOT_AGE_OK
+    assert content["spot"]["carried_by_event_id"] == "fresh-slice"
+    by_class = {group["trading_class"]: group for group in content["expirations"]}
+    assert by_class["SYN-TECH-01"]["contracts"][0]["iv"]["status"] == "OK"
+    assert by_class["SYN-TECH-01W"]["contracts"][0]["iv"] == {
+        "status": "ABSENT",
+        "reason": REASON_SPOT_STALE,
+    }
+
+
+def test_synthetic_generator_publishes_the_spot_provenance() -> None:
+    """Le générateur SYNTHETIC porte lui aussi les trois champs : sans eux, la
+    population de développement n'aurait plus aucune IV (porte fermée)."""
+    from vertex_core.synthetic import generate_option_chain_envelopes
+
+    envelopes = generate_option_chain_envelopes(seed=1, base_time=NOW - timedelta(minutes=5))
+    for envelope in envelopes:
+        payload = envelope.payload
+        assert payload["underlying_spot_basis"] == "synthetic_reference"
+        assert payload["underlying_spot_observed_at"] == envelope.observed_at.isoformat()
+        assert payload["underlying_spot_source_event_id"] == envelope.event_id
+    content = build_option_chain_content(
+        [
+            OptionChainRecord(
+                event_id=e.event_id,
+                source=e.source,
+                instrument_ref=e.instrument_id,
+                as_of=e.as_of,
+                quality_status=e.quality_status.value,
+                rights=e.rights,
+                schema_version=e.schema_version,
+                payload=e.payload,
+            )
+            for e in envelopes
+        ],
+        underlying="SYN-TECH-01",
+        now=NOW,
+        config=DEV_SYNTHETIC_OPTIONS_CONFIG,
+    )
+    assert content["spot"]["provenance"] == SPOT_PROVENANCE_PUBLISHED
+    assert content["spot"]["age_status"] == SPOT_AGE_OK
+    assert any(
+        entry["iv"]["status"] == "OK"
+        for group in content["expirations"]
+        for entry in group["contracts"]
+    )
 
 
 def test_determinism_regardless_of_record_order() -> None:

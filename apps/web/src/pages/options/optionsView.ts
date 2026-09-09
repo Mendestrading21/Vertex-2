@@ -436,21 +436,71 @@ export function rowBudgetOf(data: OptionChainResponse): RowBudgetView | null {
   };
 }
 
-/** Spot publié du snapshot (bloc verbatim). */
+/**
+ * Nature SERVIE du spot → phrase française. Le code serveur reste affiché
+ * verbatim : une nature inconnue n'est pas traduite, elle est montrée.
+ */
+export const SPOT_BASIS_FR: Readonly<Record<string, string>> = {
+  daily_close: 'dernière clôture quotidienne',
+  synthetic_reference: 'référence synthétique',
+};
+
+export function spotBasisLabel(basis: string | null): string {
+  if (basis === null) {
+    return 'nature du spot non publiée';
+  }
+  const explained = SPOT_BASIS_FR[basis];
+  return explained === undefined ? `nature ${basis}` : `${explained} (${basis})`;
+}
+
+/**
+ * Spot publié du snapshot (bloc verbatim).
+ *
+ * L'instant, la nature et la source sont ceux DU SPOT — le worker les relaie
+ * depuis la tranche (`underlying_spot_observed_at`, `underlying_spot_basis`,
+ * `underlying_spot_source_event_id`) et ne date plus le spot avec l'instant
+ * de la tranche (audit du 2026-09-07 : une clôture de la veille était affichée
+ * sous un horodatage du présent). Un champ absent reste `null` ; `provenance`
+ * et `ageStatus` disent alors l'absence, et rien ne la comble ici.
+ */
 export interface SpotView {
   readonly value: string | null;
   readonly currency: string | null;
+  /** Nature servie (`daily_close`, `synthetic_reference`…), verbatim. */
+  readonly basis: string | null;
+  readonly basisLabel: string;
+  /** Instant d'observation DU SPOT, jamais celui de la tranche. */
   readonly observedAt: string | null;
+  /** Observation qui a fourni le spot (une clôture, pas la tranche). */
+  readonly sourceEventId: string | null;
+  /** Tranche qui a PORTÉ le spot — nommée distinctement. */
+  readonly carriedByEventId: string | null;
+  /** `PUBLISHED` | `PARTIAL` | `NOT_PUBLISHED`, servi. */
+  readonly provenance: string | null;
+  readonly ageSeconds: number | null;
+  /** Borne d'âge DÉCLARÉE par le worker (`max_spot_age`), servie. */
+  readonly maxAgeSeconds: number | null;
+  /** `OK` | `STALE` | `FUTURE` | `UNKNOWN`, servi. */
+  readonly ageStatus: string | null;
 }
 
 export function spotViewOf(data: OptionChainResponse): SpotView | null {
   if (data.spot === null) {
     return null;
   }
+  const basis = blockString(data.spot, 'basis');
   return {
     value: blockString(data.spot, 'value'),
     currency: blockString(data.spot, 'currency'),
+    basis,
+    basisLabel: spotBasisLabel(basis),
     observedAt: blockString(data.spot, 'observed_at'),
+    sourceEventId: blockString(data.spot, 'source_event_id'),
+    carriedByEventId: blockString(data.spot, 'carried_by_event_id'),
+    provenance: blockString(data.spot, 'provenance'),
+    ageSeconds: blockInt(data.spot, 'age_seconds'),
+    maxAgeSeconds: blockInt(data.spot, 'max_age_seconds'),
+    ageStatus: blockString(data.spot, 'age_status'),
   };
 }
 
@@ -466,6 +516,9 @@ export const IV_ABSENT_REASONS_FR: Readonly<Record<string, string>> = {
   incomplete_identity: 'identité de contrat incomplète : aucun calcul lancé',
   iv_unresolved: 'IV non résolue : aucun Greek calculé',
   price_outside_no_arbitrage_bounds: 'prix hors des bornes de non-arbitrage',
+  stale_spot: 'spot plus vieux que sa borne d’âge déclarée : entrée IV refusée',
+  future_spot: 'spot daté dans le futur : entrée IV refusée',
+  spot_provenance_missing: 'provenance du spot non publiée : âge non mesurable, entrée IV refusée',
 };
 
 /** Phrase française d'une raison d'absence + code verbatim (jamais 0). */

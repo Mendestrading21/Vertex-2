@@ -50,7 +50,14 @@ définition porte `ibkr.option-chain-definition/1` (jamais routée vers le
 handler de chaîne) et le consommateur admet `ibkr.option-chain-slice/1`,
 produit par `vertex_edge_ibkr.options.OptionChainCollector`
 (`tools/run_edge_options.py`, client 75) : contrats avec `bid`/`ask` verbatim,
-`underlying_spot` = dernière clôture en base (`underlying_spot_basis`),
+`underlying_spot` = dernière clôture en base, avec SA provenance
+(`underlying_spot_basis` = `daily_close`, `underlying_spot_observed_at` =
+l'instant de la clôture, `underlying_spot_source_event_id` = l'observation qui
+l'a fournie) — le worker relaie les trois verbatim dans `spot`, ne date jamais
+le spot avec l'instant de la tranche, et juge son âge contre une borne
+DÉCLARÉE (`OptionsConfig.max_spot_age` = 120 h, publiée `max_age_seconds`) :
+périmé, futur ou non mesurable, le spot ferme la porte d'IV de la tranche
+(correctif du 2026-09-09) ;
 `rate` et `dividend_yield` **déclarés** (`assumptions_declared`), Greeks
 fournisseur conservés comme preuve, jamais substitués aux calculs `vertex_core`.
 

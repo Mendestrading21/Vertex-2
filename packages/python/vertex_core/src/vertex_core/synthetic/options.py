@@ -57,6 +57,7 @@ __all__ = [
     "SYNTHETIC_OPTION_STYLE",
     "SYNTHETIC_OPTION_UNDERLYINGS",
     "SYNTHETIC_SCHEMA_OPTION_CHAIN",
+    "SYNTHETIC_SPOT_BASIS",
     "generate_option_chain_envelopes",
 ]
 
@@ -89,6 +90,12 @@ SYNTHETIC_OPTION_SETTLEMENT = "CASH"
 """Settlement type of every synthetic option contract."""
 
 SYNTHETIC_OI_STATUS = "OI_DELAYED"
+
+SYNTHETIC_SPOT_BASIS = "synthetic_reference"
+"""Nature of the synthetic spot: a generated reference level, neither a close
+nor a quote. Published with its instant and source so the chain builder can
+judge its age instead of guessing it (the real collector publishes
+``daily_close`` the same way)."""
 """Open-interest status label: synthetic OI is always presented as delayed,
 never as an intraday measure."""
 
@@ -272,11 +279,18 @@ def generate_option_chain_envelopes(
                     )
                     contract_index += 1
 
+            event_id = f"{SYNTHETIC_SOURCE}:{seed}:oc{envelope_index:04d}"
             payload = {
                 "type": "option_chain_slice",
                 "synthetic": True,
                 "underlying": underlying,
                 "underlying_spot": _cents_text(spot_cents),
+                # The spot's OWN provenance: nature, instant, source. The
+                # synthetic spot is generated with the slice, so its source
+                # is the slice itself and its instant the observation time.
+                "underlying_spot_basis": SYNTHETIC_SPOT_BASIS,
+                "underlying_spot_observed_at": fresh_observed.isoformat(),
+                "underlying_spot_source_event_id": event_id,
                 "currency": SYNTHETIC_MARKET_CURRENCY,
                 "expiration": expiry.isoformat(),
                 "trading_class": trading_class,
@@ -295,7 +309,7 @@ def generate_option_chain_envelopes(
             quality = EnvelopeQuality.PARTIAL if degraded_slice else EnvelopeQuality.VALID
             envelopes.append(
                 DataEnvelope[dict[str, Any]](
-                    event_id=f"{SYNTHETIC_SOURCE}:{seed}:oc{envelope_index:04d}",
+                    event_id=event_id,
                     schema_version=SYNTHETIC_SCHEMA_OPTION_CHAIN,
                     source=SYNTHETIC_SOURCE,
                     source_event_id=(f"syn-oc-{underlying}-{expiry.isoformat()}-{trading_class}"),

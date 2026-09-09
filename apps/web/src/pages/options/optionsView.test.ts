@@ -22,6 +22,8 @@ import {
   ivViewOf,
   quoteViewOf,
   rowBudgetOf,
+  spotBasisLabel,
+  spotViewOf,
 } from './optionsView.ts';
 
 describe('groupes (expiration, trading_class) — jamais fusionnés', () => {
@@ -94,6 +96,50 @@ describe('IV absente ≠ 0', () => {
     expect(quote.bid).toBe('4.40');
     expect(quote.ask).toBe('4.20');
     expect(quote.status).toBe('CROSSED');
+  });
+});
+
+describe('spot — provenance SERVIE, jamais fabriquée', () => {
+  it('relaie nature, instant, source, âge et borne du bloc publié', () => {
+    const spot = spotViewOf(makeOptionChain());
+    expect(spot).not.toBeNull();
+    expect(spot?.basis).toBe('synthetic_reference');
+    expect(spot?.basisLabel).toBe('référence synthétique (synthetic_reference)');
+    expect(spot?.observedAt).toBe('2026-08-25T11:30:00+00:00');
+    expect(spot?.sourceEventId).toBe('synthetic-dev:1234:oc0000');
+    expect(spot?.provenance).toBe('PUBLISHED');
+    expect(spot?.ageSeconds).toBe(1860);
+    expect(spot?.maxAgeSeconds).toBe(432000);
+    expect(spot?.ageStatus).toBe('OK');
+  });
+
+  it('une clôture quotidienne se dit comme telle, une nature inconnue reste verbatim', () => {
+    expect(spotBasisLabel('daily_close')).toBe('dernière clôture quotidienne (daily_close)');
+    expect(spotBasisLabel('vendor_mark')).toBe('nature vendor_mark');
+    expect(spotBasisLabel(null)).toBe('nature du spot non publiée');
+  });
+
+  it('un champ absent reste null : ni l’as_of du snapshot ni une valeur par défaut ne le comblent', () => {
+    const chain = makeOptionChain({
+      spot: { value: '102.50', currency: 'SYN', provenance: 'NOT_PUBLISHED', age_status: 'UNKNOWN' },
+    });
+    const spot = spotViewOf(chain);
+    expect(spot?.value).toBe('102.50');
+    expect(spot?.basis).toBeNull();
+    expect(spot?.basisLabel).toBe('nature du spot non publiée');
+    expect(spot?.observedAt).toBeNull();
+    expect(spot?.observedAt).not.toBe(chain.as_of);
+    expect(spot?.sourceEventId).toBeNull();
+    expect(spot?.ageSeconds).toBeNull();
+    expect(spot?.maxAgeSeconds).toBeNull();
+    expect(spot?.provenance).toBe('NOT_PUBLISHED');
+    expect(spot?.ageStatus).toBe('UNKNOWN');
+  });
+
+  it('les refus d’IV liés au spot ont une phrase française et gardent leur code', () => {
+    expect(ivAbsentLabel('stale_spot')).toContain('(stale_spot)');
+    expect(ivAbsentLabel('future_spot')).toContain('(future_spot)');
+    expect(ivAbsentLabel('spot_provenance_missing')).toContain('(spot_provenance_missing)');
   });
 });
 

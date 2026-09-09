@@ -476,8 +476,14 @@ export function makeOptionChain(
     spot: {
       value: '102.50',
       currency: 'SYN',
+      basis: 'synthetic_reference',
       observed_at: '2026-08-25T11:30:00+00:00',
       source_event_id: 'synthetic-dev:1234:oc0000',
+      carried_by_event_id: 'synthetic-dev:1234:oc0000',
+      provenance: 'PUBLISHED',
+      age_seconds: 1860,
+      max_age_seconds: 432000,
+      age_status: 'OK',
     },
     assumptions: {
       rate: '0.02',
