@@ -970,7 +970,7 @@ sceptiques indépendants chargés de le RÉFUTER. Verdict : **aucun bloquant**.
 La dimension « capacités IBKR interdites et autorité financière côté
 TypeScript » ressort propre. Ce qui suit a survécu à la réfutation.
 
-### Majeur — le spot d'une chaîne d'options est daté d'un autre instant
+### ~~Majeur — le spot d'une chaîne d'options est daté d'un autre instant~~ — CORRIGÉ le 2026-09-09
 
 `apps/edge-ibkr/src/vertex_edge_ibkr/options.py` publie explicitement la
 NATURE et l'INSTANT du spot qu'il retient : `underlying_spot_basis`,
@@ -1001,6 +1001,42 @@ qui rend le chemin atteignable, en basculant le worker de
 `ibkr.option-chain/` vers `ibkr.option-chain-slice/`. Le défaut devient visible
 le jour où le collecteur tourne. **À corriger AVANT d'activer le collecteur.**
 Correctif borné : propager les trois champs dans `spot_block` et les afficher.
+
+**CORRIGÉ le 2026-09-09** (branche `lot/d1-spot-provenance-20260909`, test
+reproducteur écrit et rouge AVANT la correction :
+`test_spot_block_carries_the_close_instant_never_the_slice_instant`).
+
+- Le worker relaie désormais `underlying_spot_basis`,
+  `underlying_spot_observed_at` et `underlying_spot_source_event_id` dans
+  `spot` (`basis`, `observed_at`, `source_event_id`) ; la tranche qui a PORTÉ
+  le spot reste nommée à part (`carried_by_event_id`). `record.as_of` et
+  `record.event_id` ne datent plus jamais le spot.
+- Un champ manquant ou illisible est une absence TYPÉE : `provenance =
+  PARTIAL | NOT_PUBLISHED`, `observed_at = null`, `age_status = UNKNOWN`.
+  Rien ne comble le trou, ni côté worker, ni côté API (relais verbatim), ni
+  côté interface (« instant d'observation du spot non publié »).
+- **Borne d'âge DÉCLARÉE** : `OptionsConfig.max_spot_age = 120 h`, publiée
+  dans le bloc (`max_age_seconds`) et jugée PAR TRANCHE (`age_seconds`,
+  `age_status = OK | STALE | FUTURE | UNKNOWN`). Motif de la valeur : le
+  collecteur réel prend la dernière clôture quotidienne en base ; 120 h
+  admet une clôture du jeudi utilisée le mardi après un lundi férié
+  (~114 h) et refuse une base dont les barres quotidiennes se sont arrêtées.
+  C'est un filet calendaire, pas un contrôle à la séance près.
+- **Porte fail-closed** : un spot périmé, futur ou d'âge non mesurable ferme
+  la porte d'IV de TOUS les contrats de la tranche, avec une raison typée
+  (`stale_spot`, `future_spot`, `spot_provenance_missing`) ; la cotation
+  reste publiée verbatim, aucun Greek n'est calculé. La lignée de l'IV et des
+  Greeks nomme désormais la tranche ET l'observation qui a fourni le spot.
+- L'interface affiche la nature (« dernière clôture quotidienne
+  (daily_close) »), l'instant DU SPOT, son âge sur la borne servie
+  (`FreshnessBadge`) et son statut, sur la carte « Spot publié », le repère de
+  la table et l'inspecteur du snapshot. Le générateur SYNTHETIC publie les
+  mêmes trois champs (`synthetic-reference`), sans quoi la population de
+  développement n'aurait plus aucune IV.
+- Non fait, hors périmètre : publier `spot` et `assumptions` PAR groupe
+  (dette déjà consignée dans `docs/05-design/refonte/option.md`). Le bloc
+  `spot` reste celui du premier groupe publié ; la porte, elle, est bien
+  évaluée sur le spot de CHAQUE tranche.
 
 ### Mineurs
 

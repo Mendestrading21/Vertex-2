@@ -422,6 +422,7 @@ function ChainFrame({
                 selectedConId={selectedConId}
                 spotValue={spotViewOf(data)?.value ?? null}
                 spotObservedAt={spotViewOf(data)?.observedAt ?? null}
+                spotBasisLabel={spotViewOf(data)?.basisLabel ?? null}
                 onInspect={(contract) => {
                   onInspect(contract, pendingTrigger.current);
                 }}

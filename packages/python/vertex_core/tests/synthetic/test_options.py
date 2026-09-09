@@ -26,6 +26,7 @@ from vertex_core.synthetic.options import (
     SYNTHETIC_OPTION_MULTIPLIER,
     SYNTHETIC_OPTION_UNDERLYINGS,
     SYNTHETIC_SCHEMA_OPTION_CHAIN,
+    SYNTHETIC_SPOT_BASIS,
 )
 
 SEED = 20260829
@@ -60,6 +61,15 @@ class TestDeterminismAndMarkers:
             assert envelope.rights == SYNTHETIC_RIGHTS
             assert envelope.schema_version == SYNTHETIC_SCHEMA_OPTION_CHAIN
             assert envelope.payload["synthetic"] is True
+
+    def test_spot_provenance_is_published_with_the_slice(self, envelopes) -> None:
+        # The chain builder judges the spot's age from THESE fields; without
+        # them the synthetic population would price nothing (gate closed).
+        for envelope in envelopes:
+            payload = envelope.payload
+            assert payload["underlying_spot_basis"] == SYNTHETIC_SPOT_BASIS
+            assert payload["underlying_spot_observed_at"] == envelope.observed_at.isoformat()
+            assert payload["underlying_spot_source_event_id"] == envelope.event_id
 
     def test_naive_base_time_rejected(self) -> None:
         with pytest.raises(ValueError):

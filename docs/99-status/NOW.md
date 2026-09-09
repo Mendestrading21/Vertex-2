@@ -2,9 +2,37 @@
 
 ```yaml
 phase: alimentation_reelle_et_refonte_ui
-lot: "Nuit du 5 au 6 septembre — refonte UI (12 pages), coalescence outbox, collecteur de chaînes"
-branch: agent/vertex-total-audit-ultimate-polish
-status: pile_live_en_marche_correctifs_verifies_en_direct_pr_76_ouverte_aucun_merge
+lot: "D1 — provenance du spot d'une chaîne d'options (constat MAJEUR de l'audit du 2026-09-07)"
+branch: lot/d1-spot-provenance-20260909
+status: correctif_ecrit_tests_verts_pr_a_ouvrir_aucun_merge_collecteur_options_toujours_inactif
+correctif_d1_2026_09_09:
+  - "Défaut : apps/worker/src/vertex_worker/options.py datait le spot d'une
+     tranche avec record.as_of (l'instant des cotations d'options) et le
+     référençait par record.event_id, en jetant underlying_spot_basis,
+     underlying_spot_observed_at et underlying_spot_source_event_id publiés
+     par apps/edge-ibkr. L'interface rendait cet instant comme celui DU SPOT.
+     Reproduit sur main (f8a56ec) par un test rouge avant correction."
+  - "Correction : les trois champs voyagent verbatim jusqu'au bloc `spot`
+     (basis, observed_at, source_event_id, carried_by_event_id, provenance,
+     age_seconds, max_age_seconds, age_status) ; absence typée (PARTIAL /
+     NOT_PUBLISHED, UNKNOWN), jamais comblée. Borne d'âge DÉCLARÉE
+     OptionsConfig.max_spot_age = 120 h ; spot périmé, futur ou non
+     mesurable → porte d'IV fermée pour la tranche (stale_spot, future_spot,
+     spot_provenance_missing). Lignée IV/Greeks : tranche + observation du
+     spot. Générateur SYNTHETIC : mêmes trois champs (synthetic-reference)."
+  - "Interface : carte « Spot publié », repère de la table et inspecteur du
+     snapshot affichent nature (« dernière clôture quotidienne (daily_close) »),
+     instant DU SPOT, âge sur la borne servie (FreshnessBadge) et statut.
+     Contrat API : bloc `spot` relayé verbatim, docstring OpenAPI mise à jour,
+     openapi.json et schema.d.ts régénérés."
+  - "Preuves : pytest worker+core+api+edge ciblés verts (nouveaux tests :
+     11 worker, 1 core, 4 vitest vue, 3 vitest page) ; suites complètes
+     Python et web lancées, résultats dans la PR. mypy : 2 erreurs
+     PRÉEXISTANTES sous Windows dans tools/build_performance_report.py
+     (os.sysconf), hors périmètre."
+  - "Reste : le collecteur d'options n'est PAS activé (décision humaine,
+     runbook). Dette maintenue : spot et hypothèses publiés depuis le premier
+     groupe seulement (docs/05-design/refonte/option.md)."
 corrections_du_2026_09_06_apres_midi:
   - "Sept correctifs issus du balayage en direct, tous poussés, CI verte à
      chaque étape : Échap ferme l'inspecteur sur les neuf pages (ca8664b) ;

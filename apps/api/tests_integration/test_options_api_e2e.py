@@ -38,8 +38,14 @@ CHAIN_CONTENT = {
     "spot": {
         "value": "245.50",
         "currency": "SYN",
-        "observed_at": NOW.isoformat(),
+        "basis": "synthetic-reference",
+        "observed_at": (NOW - timedelta(minutes=31)).isoformat(),
         "source_event_id": "synthetic-dev:e2e:oc0001",
+        "carried_by_event_id": "synthetic-dev:e2e:oc0001",
+        "provenance": "PUBLISHED",
+        "age_seconds": 1860,
+        "max_age_seconds": 432000,
+        "age_status": "OK",
     },
     "assumptions": {
         "rate": "0.02",

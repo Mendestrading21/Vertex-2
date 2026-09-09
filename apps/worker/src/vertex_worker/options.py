@@ -31,7 +31,20 @@ declared underlying present in the recent observation window:
   with per-contract discard reasons; a global row budget is applied and
   displayed (truncation is counted, never silent);
 - ``population`` propagates ``SYNTHETIC`` as soon as one record is
-  synthetic.
+  synthetic;
+- the underlying SPOT keeps ITS OWN provenance. A slice publishes the
+  nature (``underlying_spot_basis``, e.g. ``daily_close``), the instant
+  (``underlying_spot_observed_at``) and the source observation
+  (``underlying_spot_source_event_id``) of the spot it priced against; the
+  snapshot relays the three VERBATIM and never dates the spot with the
+  slice's own ``as_of`` (audit 2026-09-07: a previous-day close was shown
+  under the present instant). A missing field is a TYPED absence
+  (``provenance = PARTIAL | NOT_PUBLISHED``, ``age_status = UNKNOWN``).
+  The spot's age is judged against a DECLARED bound
+  (``OptionsConfig.max_spot_age``, published as ``max_age_seconds``): a
+  stale, future or unmeasurable spot closes the IV gate of every contract
+  of that slice with a typed reason — the spot is an input of the IV, and
+  an input of unknown age is never priced.
 
 Publication follows the same publish-if-changed semantics as the other
 handlers; identical inputs and clock republish nothing.
@@ -83,8 +96,18 @@ __all__ = [
     "REASON_QUOTE_STALE",
     "REASON_RIGHTS_NOT_USABLE",
     "REASON_SOURCE_NOT_ALLOWED",
+    "REASON_SPOT_FUTURE",
+    "REASON_SPOT_PROVENANCE_MISSING",
+    "REASON_SPOT_STALE",
     "REASON_UNDERLYING_NOT_DECLARED",
     "SNAPSHOT_KIND_OPTION_CHAIN",
+    "SPOT_AGE_FUTURE",
+    "SPOT_AGE_OK",
+    "SPOT_AGE_STALE",
+    "SPOT_AGE_UNKNOWN",
+    "SPOT_PROVENANCE_NOT_PUBLISHED",
+    "SPOT_PROVENANCE_PARTIAL",
+    "SPOT_PROVENANCE_PUBLISHED",
     "TOPIC_OPTION_CHAINS_INGESTED",
     "VALUE_NATURE_THEORETICAL",
     "OptionChainRecord",
@@ -138,6 +161,26 @@ REASON_SOURCE_NOT_ALLOWED = "source_not_allowed"
 REASON_RIGHTS_NOT_USABLE = "rights_not_usable"
 REASON_UNDERLYING_NOT_DECLARED = "underlying_not_declared"
 
+# Provenance of the underlying spot, relayed from the slice's three fields.
+SPOT_PROVENANCE_PUBLISHED = "PUBLISHED"
+"""``basis``, ``observed_at`` and ``source_event_id`` are all published and
+readable."""
+SPOT_PROVENANCE_PARTIAL = "PARTIAL"
+"""At least one of the three fields is missing or unreadable."""
+SPOT_PROVENANCE_NOT_PUBLISHED = "NOT_PUBLISHED"
+"""The producer published none of the three fields."""
+
+# Age of the spot against the declared bound (``OptionsConfig.max_spot_age``).
+SPOT_AGE_OK = "OK"
+SPOT_AGE_STALE = "STALE"
+SPOT_AGE_FUTURE = "FUTURE"
+SPOT_AGE_UNKNOWN = "UNKNOWN"
+"""No readable ``observed_at``: the age cannot be measured, so it is not."""
+
+REASON_SPOT_STALE = "stale_spot"
+REASON_SPOT_FUTURE = "future_spot"
+REASON_SPOT_PROVENANCE_MISSING = "spot_provenance_missing"
+
 _CODE_SHA = f"module:vertex_core.calculations.options@{ENGINE_VERSION}"
 _IV_QUOTE_SIDE = "MID"
 
@@ -175,14 +218,20 @@ class OptionsConfig:
     underlying is rejected and counted, never silently added.
     ``max_quote_age`` is the staleness gate of the IV input: a quote older
     than this (relative to the evaluation clock) is ``STALE`` and never
-    priced. ``max_chain_rows`` is the displayed row budget of one published
-    chain.
+    priced. ``max_spot_age`` is the SAME gate for the underlying spot: the
+    real collector prices against the last DAILY CLOSE already in base, so
+    the bound is a calendar safety net, not a session-precision check —
+    120 h admits a Thursday close used on the Tuesday after a holiday
+    Monday (about 114 h) and refuses a base whose daily bars stopped
+    days ago. ``max_chain_rows`` is the displayed row budget of one
+    published chain.
     """
 
     underlyings: tuple[str, ...]
     allowed_sources: frozenset[str]
     usable_rights: frozenset[str]
     max_quote_age: timedelta = timedelta(hours=6)
+    max_spot_age: timedelta = timedelta(hours=120)
     lookback: timedelta = timedelta(hours=72)
     max_observations: int = 200
     max_chain_rows: int = 240
@@ -192,6 +241,8 @@ class OptionsConfig:
             raise ValueError("underlyings: at least one underlying required")
         if self.max_quote_age <= timedelta(0):
             raise ValueError("max_quote_age: must be a positive duration")
+        if self.max_spot_age <= timedelta(0):
+            raise ValueError("max_spot_age: must be a positive duration")
         if self.lookback <= timedelta(0):
             raise ValueError("lookback: must be a positive duration")
         if not isinstance(self.max_observations, int) or self.max_observations < 1:
@@ -368,6 +419,84 @@ _IV_REFUSAL_BY_QUOTE_STATUS = {
     QUOTE_STATUS_STALE: REASON_QUOTE_STALE,
 }
 
+_IV_REFUSAL_BY_SPOT_AGE = {
+    SPOT_AGE_STALE: REASON_SPOT_STALE,
+    SPOT_AGE_FUTURE: REASON_SPOT_FUTURE,
+    SPOT_AGE_UNKNOWN: REASON_SPOT_PROVENANCE_MISSING,
+}
+
+
+def _aware_datetime(value: Any) -> datetime | None:
+    """An ISO-8601 text as an AWARE datetime; anything else is ``None``."""
+    if not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None or parsed.tzinfo.utcoffset(parsed) is None:
+        return None
+    return parsed
+
+
+def _non_empty_text(value: Any) -> str | None:
+    return value if isinstance(value, str) and value else None
+
+
+@dataclass(frozen=True)
+class _SpotProvenance:
+    """What the slice says about ITS spot, judged against the bound."""
+
+    basis: str | None
+    observed_at: datetime | None
+    source_event_id: str | None
+    provenance: str
+    age_seconds: int | None
+    age_status: str
+    gate_reason: str | None
+    """Typed reason closing the IV gate of the whole slice, or ``None``."""
+
+
+def _spot_provenance(
+    payload: Mapping[str, Any], *, now: datetime, max_spot_age: timedelta
+) -> _SpotProvenance:
+    basis = _non_empty_text(payload.get("underlying_spot_basis"))
+    observed_at = _aware_datetime(payload.get("underlying_spot_observed_at"))
+    source_event_id = _non_empty_text(payload.get("underlying_spot_source_event_id"))
+    published = sum(field is not None for field in (basis, observed_at, source_event_id))
+    if published == 3:
+        provenance = SPOT_PROVENANCE_PUBLISHED
+    elif published == 0:
+        provenance = SPOT_PROVENANCE_NOT_PUBLISHED
+    else:
+        provenance = SPOT_PROVENANCE_PARTIAL
+
+    age_seconds: int | None = None
+    if observed_at is None:
+        age_status = SPOT_AGE_UNKNOWN
+    else:
+        age_seconds = int((now - observed_at).total_seconds())
+        if observed_at > now:
+            age_status = SPOT_AGE_FUTURE
+        elif now - observed_at > max_spot_age:
+            age_status = SPOT_AGE_STALE
+        else:
+            age_status = SPOT_AGE_OK
+
+    if provenance != SPOT_PROVENANCE_PUBLISHED:
+        gate_reason: str | None = REASON_SPOT_PROVENANCE_MISSING
+    else:
+        gate_reason = _IV_REFUSAL_BY_SPOT_AGE.get(age_status)
+    return _SpotProvenance(
+        basis=basis,
+        observed_at=observed_at,
+        source_event_id=source_event_id,
+        provenance=provenance,
+        age_seconds=age_seconds,
+        age_status=age_status,
+        gate_reason=gate_reason,
+    )
+
 
 def _build_contract_entry(
     raw: Mapping[str, Any],
@@ -380,13 +509,16 @@ def _build_contract_entry(
     now: datetime,
     config: OptionsConfig,
     source_event_id: str,
+    spot_provenance: _SpotProvenance,
     synthetic: bool,
 ) -> tuple[dict[str, Any], str | None]:
     """Build one contract entry; returns (entry, discard_reason_or_None).
 
     The discard reason names why NO Vertex IV exists for the contract; the
     contract row itself stays published with its verbatim quote (a chain
-    shows partial coverage honestly, it does not hide rows).
+    shows partial coverage honestly, it does not hide rows). The spot gate
+    (``spot_provenance.gate_reason``) is shared by every contract of the
+    slice: a spot of unknown, stale or future age prices nothing.
     """
     con_id = raw.get("con_id")
     strike_text = raw.get("strike")
@@ -413,15 +545,7 @@ def _build_contract_entry(
         ask = _optional_decimal(raw.get("ask"))
     except (ValueError, InvalidOperation):
         bid = ask = None
-    observed_at: datetime | None = None
-    observed_text = raw.get("observed_at")
-    if isinstance(observed_text, str):
-        try:
-            parsed = datetime.fromisoformat(observed_text)
-        except ValueError:
-            parsed = None
-        if parsed is not None and parsed.tzinfo is not None:
-            observed_at = parsed
+    observed_at = _aware_datetime(raw.get("observed_at"))
 
     status = _quote_status(
         bid=bid,
@@ -467,12 +591,14 @@ def _build_contract_entry(
         "synthetic": synthetic,
     }
 
-    # ---- fail-closed calculation gates: identity, expiry, quote sanity ----
+    # ---- fail-closed calculation gates: identity, expiry, spot, quote ----
     reason: str | None = None
     if not identity_complete:
         reason = REASON_INCOMPLETE_IDENTITY
     elif maturity_years <= 0.0:
         reason = REASON_CONTRACT_EXPIRED
+    elif spot_provenance.gate_reason is not None:
+        reason = spot_provenance.gate_reason
     elif status != QUOTE_STATUS_OK:
         reason = _IV_REFUSAL_BY_QUOTE_STATUS[status]
 
@@ -482,6 +608,9 @@ def _build_contract_entry(
         return entry, reason
 
     assert strike is not None and bid is not None and ask is not None  # noqa: S101 (narrowing mypy, garde réelle au-dessus)
+    assert spot_provenance.source_event_id is not None  # noqa: S101 (gate above: PUBLISHED only)
+    # The lineage names the slice AND the observation that provided the spot.
+    lineage = (source_event_id, spot_provenance.source_event_id)
     mid = (bid + ask) / 2
     try:
         iv_value = implied_volatility(
@@ -518,10 +647,11 @@ def _build_contract_entry(
         result=iv_value,
         started_at=now,
         completed_at=now,
-        source_event_ids=(source_event_id,),
+        source_event_ids=lineage,
         assumptions=(
             "rate and dividend yield relayed from the admitted option-chain observation",
             "ACT/365F maturity from the expiration date",
+            "spot relayed with the basis and instant declared by the admitted observation",
         ),
     )
     entry["iv"] = {
@@ -556,7 +686,7 @@ def _build_contract_entry(
         result=greeks_result.model_dump(),
         started_at=now,
         completed_at=now,
-        source_event_ids=(source_event_id,),
+        source_event_ids=lineage,
         assumptions=("greeks computed on the Vertex IV resolved from the MID",),
     )
     entry["greeks"] = {
@@ -664,13 +794,30 @@ def build_option_chain_content(
         assert spot is not None and rate is not None and dividend_yield is not None  # noqa: S101 (narrowing mypy, garde réelle au-dessus)
         days_to_expiry = (identity.expiration - now.date()).days
         maturity_years = days_to_expiry / 365.0
+        # Judged PER RECORD: each slice prices against ITS OWN spot.
+        spot_provenance = _spot_provenance(
+            payload, now=now, max_spot_age=config.max_spot_age
+        )
 
         if spot_block is None:
+            # The spot's instant and source are the SPOT's — never the
+            # slice's ``as_of`` / ``event_id`` (those name the option quotes).
+            # The slice that carried the spot stays named, distinctly.
             spot_block = {
                 "value": payload["underlying_spot"],
                 "currency": identity.currency,
-                "observed_at": record.as_of.isoformat(),
-                "source_event_id": record.event_id,
+                "basis": spot_provenance.basis,
+                "observed_at": (
+                    spot_provenance.observed_at.isoformat()
+                    if spot_provenance.observed_at is not None
+                    else None
+                ),
+                "source_event_id": spot_provenance.source_event_id,
+                "carried_by_event_id": record.event_id,
+                "provenance": spot_provenance.provenance,
+                "age_seconds": spot_provenance.age_seconds,
+                "max_age_seconds": int(config.max_spot_age.total_seconds()),
+                "age_status": spot_provenance.age_status,
             }
             assumptions_block = {
                 "rate": payload["rate"],
@@ -704,6 +851,7 @@ def build_option_chain_content(
                 now=now,
                 config=config,
                 source_event_id=record.event_id,
+                spot_provenance=spot_provenance,
                 synthetic=_is_synthetic(record),
             )
             entries.append(entry)

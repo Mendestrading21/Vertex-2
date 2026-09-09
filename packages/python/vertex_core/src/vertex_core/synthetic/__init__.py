@@ -46,6 +46,7 @@ from vertex_core.synthetic.market import (
 from vertex_core.synthetic.options import (
     SYNTHETIC_OPTION_UNDERLYINGS,
     SYNTHETIC_SCHEMA_OPTION_CHAIN,
+    SYNTHETIC_SPOT_BASIS,
     generate_option_chain_envelopes,
 )
 
@@ -76,6 +77,7 @@ __all__ = [
     "SYNTHETIC_SECTOR_LABELS_FR",
     "SYNTHETIC_SECTOR_TICKERS",
     "SYNTHETIC_SOURCE",
+    "SYNTHETIC_SPOT_BASIS",
     "SYNTHETIC_TITLE_PREFIX",
     "generate_calendar_event_envelopes",
     "generate_daily_bar_envelopes",
