@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 
 import { pageStateOf, queryKeyForResource } from '../../api/hooks.ts';
 import { usePortfolio } from '../../api/portfolioApi.ts';
@@ -13,6 +14,8 @@ import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
 import type { DataState } from '../../components/DataStateBoundary.tsx';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { SyntheticBanner } from '../../components/SyntheticBanner.tsx';
+import { ModuleCell as SharedModuleCell } from '../../components/widgets/ModuleCell.tsx';
+import type { ModuleDensity } from '../../components/widgets/ModuleCell.tsx';
 import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { Widget } from '../../components/widgets/Widget.tsx';
 import { ConcentrationPanel } from './ConcentrationPanel.tsx';
@@ -56,10 +59,37 @@ import type { ExcludedLotRow, ValuationContentView } from './portfolioView.ts';
  * alertes de concentration, attribution — ils tiennent leur place avec le
  * motif mesuré de leur absence. Rien n'est sommé ni converti côté client.
  *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE (même motif qu'Options). La
+ * planche se lit SIGNAL (valorisation, performance totale, devises) →
+ * CONCENTRATION (la dominante, à côté des dividendes) → LOTS → PERFORMANCE
+ * → JOURNAL / SAISIE → absences regroupées. Le DOM suit cet ordre ; la
+ * composition vit dans `.vx-pf-grid` (`widgets.css`). Chaque cellule nue
+ * passe par `ModuleCell` et pose `data-size` depuis le catalogue ; les cartes
+ * d'une valeur et les absences portent `data-density="compact"`. Les pieds ne
+ * répètent plus la nature des marques : elle vient du bandeau et de
+ * l'inspecteur, une seule fois chacun. Catalogue, titres et testids inchangés.
+ *
  * L'INSPECTEUR MONTRE LE LOT OUVERT depuis la table — provenance manuelle,
  * poids publié, faits du journal et corrections, catalyseurs — sinon la
  * vérité du snapshot de valorisation.
  */
+
+/** La cellule d'un module de CETTE planche : la taille vient du catalogue. */
+function ModuleCell({
+  id,
+  density,
+  children,
+}: {
+  readonly id: string;
+  readonly density?: ModuleDensity;
+  readonly children: ReactNode;
+}) {
+  return (
+    <SharedModuleCell id={id} size={portfolioModule(id).size} {...(density === undefined ? {} : { density })}>
+      {children}
+    </SharedModuleCell>
+  );
+}
 
 /** État du CADRE de valorisation (les modules dérivés du snapshot). */
 export function valuationFrameStateOf(
@@ -112,12 +142,13 @@ function ConcentrationModule({
       size={module.size}
       rank="dominant"
       className="vx-pf-concentration"
-      kicker="Calculée par le serveur"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-pf-concentration-title"
       state={state}
+      {...(reason === null ? {} : { stateDetail: reason })}
       action={view === null ? undefined : <StatusChip label={`${view.blocks.length} devise(s) publiée(s)`} tone="neutral" />}
-      footer={<>poids normalisés et indice de Herfindahl publiés par le worker ; la barre n’est qu’une géométrie de la chaîne exacte</>}
+      footer={<>poids et Herfindahl publiés par le worker</>}
     >
       {view === null ? <ValuationAbsence state={state} reason={reason} /> : <ConcentrationPanel blocks={view.blocks} />}
     </Widget>
@@ -168,36 +199,31 @@ function PortfolioBoard({
       ) : null}
 
       <div className="vx-pf-grid vx-board" data-testid="portfolio-grid">
-        <div data-module="value">
+        {/* Rangée de SIGNAL : la valorisation, la performance totale et les
+            devises — ce que vaut le registre, avant comment il est réparti. */}
+        <ModuleCell id="value">
           {view === null ? (
-            <Card rank="quiet" kicker="Snapshot du worker" title={portfolioModule('value').title} titleId="vx-pf-summary-title" className="vx-pf-value">
+            <Card rank="quiet" kicker="Publié" title={portfolioModule('value').title} titleId="vx-pf-summary-title" className="vx-pf-value">
               <ValuationAbsence state={moduleState} reason={reason} withReason />
             </Card>
           ) : (
             <PortfolioSummary valuation={view} />
           )}
-        </div>
-        <AbsentPortfolioModule id="day-performance" />
-        <div data-module="total-performance">
+        </ModuleCell>
+        <ModuleCell id="total-performance" density="compact">
           <TotalPerformanceModule portfolioId={data.portfolio.id} />
-        </div>
-        <AbsentPortfolioModule id="cash" />
-
-        <div data-module="performance">
-          <PerformanceSection />
-        </div>
-        <AbsentPortfolioModule id="benchmark" />
-        <AbsentPortfolioModule id="allocation" />
-
-        <ConcentrationModule view={view} state={moduleState} reason={reason} />
-        <AbsentPortfolioModule id="sector-exposure" />
-        <AbsentPortfolioModule id="country-exposure" />
-        <div data-module="currency-exposure">
+        </ModuleCell>
+        <ModuleCell id="currency-exposure" density="compact">
           <CurrencyExposureModule view={view} state={moduleState} reason={reason} />
-        </div>
-        <AbsentPortfolioModule id="concentration-alerts" />
+        </ModuleCell>
 
-        <div data-module="positions">
+        {/* La DOMINANTE, à côté des dividendes déclarés (module rendu par
+            `Widget` : il pose lui-même sa cellule et sa densité). */}
+        <ConcentrationModule view={view} state={moduleState} reason={reason} />
+        <DividendsModule transactions={data.transactions} />
+
+        {/* Les LOTS, puis la PERFORMANCE, chacun sur sa rangée. */}
+        <ModuleCell id="positions">
           <PositionsModule
             view={view}
             state={moduleState}
@@ -208,21 +234,37 @@ function PortfolioBoard({
               setSelectedLot((previous) => (previous === lotId ? null : lotId));
             }}
           />
-        </div>
-        <AbsentPortfolioModule id="attribution" />
-        <div data-module="dividends">
-          <DividendsModule transactions={data.transactions} />
-        </div>
+        </ModuleCell>
+        <ModuleCell id="performance">
+          <PerformanceSection />
+        </ModuleCell>
 
-        <div data-module="ledger">
-          <LedgerPanel transactions={data.transactions} onCompensated={onWrite} />
-        </div>
-        <div data-module="record-transaction">
+        {/* SAISIE et JOURNAL : les deux façons de déclarer un fait, puis les
+            faits déjà déclarés.
+            L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE : la planche pose le
+            formulaire à gauche, l'import à sa droite et le journal SOUS
+            l'import. Mesuré le 2026-09-07, le document donnait le journal en
+            premier — un lecteur au clavier l'atteignait avant deux cartes
+            placées au-dessus de lui. */}
+        <ModuleCell id="record-transaction">
           <TransactionForm onRecorded={onWrite} />
-        </div>
-        <div data-module="csv-import">
+        </ModuleCell>
+        <ModuleCell id="csv-import">
           <CsvImportPanel onImported={onWrite} />
-        </div>
+        </ModuleCell>
+        <ModuleCell id="ledger">
+          <LedgerPanel transactions={data.transactions} onCompensated={onWrite} />
+        </ModuleCell>
+
+        {/* Les absences, regroupées : leur régularité est le message. */}
+        <AbsentPortfolioModule id="day-performance" />
+        <AbsentPortfolioModule id="cash" />
+        <AbsentPortfolioModule id="benchmark" />
+        <AbsentPortfolioModule id="allocation" />
+        <AbsentPortfolioModule id="sector-exposure" />
+        <AbsentPortfolioModule id="country-exposure" />
+        <AbsentPortfolioModule id="concentration-alerts" />
+        <AbsentPortfolioModule id="attribution" />
       </div>
 
       {/*
@@ -292,7 +334,17 @@ export function PortfolioPage() {
         <DataStateBoundary state="error" detail="Réponse absente — rien n'est affiché à la place." />
       ) : (
         <>
-          <SyntheticBanner population={frame.view?.markPopulation ?? null} />
+          {/*
+            LE BANDEAU NE PARLE QUE S'IL A QUELQUE CHOSE À DIRE. Avec un
+            portefeuille vide, `markPopulation` est absent : on passait `null`,
+            et `SyntheticBanner` criait « NATURE NON DÉCLARÉE » en rouge — une
+            alerte sur une valorisation qui n'existe pas, alors que chaque
+            carte dit déjà proprement son absence. Les quatre autres pages qui
+            traitent ce cas ne rendent le bandeau que sur une vue présente.
+          */}
+          {frame.view?.markPopulation == null ? null : (
+            <SyntheticBanner population={frame.view.markPopulation} />
+          )}
           <PortfolioBoard data={data} frame={frame} onWrite={refetchPortfolio} />
         </>
       )}

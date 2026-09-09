@@ -51,3 +51,15 @@ describe('IvSmile', () => {
     expect(caption).not.toMatch(/ATM|référence/);
   });
 });
+
+describe('IvSmile — un point reste un disque', () => {
+  it('ne déforme jamais la figure : rapport d’aspect préservé, boîte à la hauteur CSS', () => {
+    const { container } = render(<IvSmile group={makeChainGroup()} label="Sourire" />);
+    const svg = container.querySelector('svg.vx-smile-svg');
+    expect(svg?.getAttribute('preserveAspectRatio')).not.toBe('none');
+    // Hauteur de la boîte de coordonnées = hauteur CSS de la figure (120 px).
+    expect(svg?.getAttribute('viewBox')?.split(' ')[3]).toBe('120');
+    const { container: compact } = render(<IvSmile compact group={makeChainGroup()} label="Sourire" />);
+    expect(compact.querySelector('svg.vx-smile-svg')?.getAttribute('viewBox')?.split(' ')[3]).toBe('56');
+  });
+});

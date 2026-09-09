@@ -665,15 +665,52 @@ class TestIndicateurs:
     def test_une_serie_suffisante_produit_les_deux_indicateurs(self):
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id="evt-1")
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id="evt-1",
+            currency="USD",
+        )
         assert indicateurs["realized_volatility"]["status"] == "OK"
         assert indicateurs["atr"]["status"] == "OK"
+
+    def test_une_serie_en_prix_publie_son_unite_d_affichage(self):
+        """L'ecran affichait « price » en legende d'axe, sans devise.
+
+        `unit` est un jeton machine ; l'interface ne peut PAS le traduire en
+        devise, qui vit dans un autre bloc avec sa propre lignee. Le worker,
+        lui, tient les deux : il publie donc `display_unit`, comme
+        `markets/overview` le fait deja. Sans devise servie, aucune unite
+        d'affichage n'est publiee — jamais une devise devinee.
+        """
+        from vertex_worker.analysis import _build_indicators
+
+        avec = _build_indicators(
+            _barres_croissantes(60), now=NOW, source_event_id=None, currency="USD"
+        )
+        assert avec["atr"]["display_unit"] == "USD"
+        assert avec["overlays"]["sma"]["display_unit"] == "USD"
+        assert avec["overlays"]["sma"]["unit"] == "price"
+        # Un oscillateur borne n'est pas un prix : aucune devise ne s'y colle.
+        assert "display_unit" not in avec["oscillators"]["rsi"]
+
+        sans = _build_indicators(
+            _barres_croissantes(60), now=NOW, source_event_id=None, currency=None
+        )
+        assert "display_unit" not in sans["atr"]
+        assert "display_unit" not in sans["overlays"]["sma"]
+        assert sans["overlays"]["sma"]["unit"] == "price"
 
     def test_chaque_valeur_porte_sa_tracabilite(self):
         """Une valeur financiere sans lignee n'est pas publiable."""
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id="evt-1")
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id="evt-1",
+            currency="USD",
+        )
         for nom in ("realized_volatility", "atr"):
             calcul = indicateurs[nom]["calculation"]
             assert calcul["status"] == "OK"
@@ -686,7 +723,12 @@ class TestIndicateurs:
         supposerait un seuil, et aucun seuil n'est declare."""
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         interdits = {"level", "severity", "regime", "signal", "verdict", "score"}
         for bloc in indicateurs.values():
             assert not (interdits & set(bloc)), "un indicateur ne publie qu'une valeur et sa lignee"
@@ -700,7 +742,12 @@ class TestIndicateurs:
             _build_indicators,
         )
 
-        indicateurs = _build_indicators(_barres_croissantes(5), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(5),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         vol = indicateurs["realized_volatility"]
         assert vol["status"] == REASON_INSUFFICIENT_SAMPLE
         assert vol["available_bars"] == 5
@@ -711,14 +758,20 @@ class TestIndicateurs:
         """Un instrument sans barre est un cas NORMAL, pas une panne."""
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators([], now=NOW, source_event_id=None)
+        indicateurs = _build_indicators([], now=NOW, source_event_id=None, currency="USD")
+
         assert indicateurs["realized_volatility"]["available_bars"] == 0
         assert indicateurs["atr"]["available_bars"] == 0
 
     def test_l_evenement_source_est_relaye_dans_la_lignee(self):
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id="evt-42")
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id="evt-42",
+            currency="USD",
+        )
         assert indicateurs["realized_volatility"]["status"] == "OK"
 
 
@@ -894,7 +947,12 @@ class TestSeriesGlissantes:
     def test_chaque_indicateur_porte_sa_serie(self):
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id="evt-1")
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id="evt-1",
+            currency="USD",
+        )
         for nom in ("realized_volatility", "atr"):
             bloc = indicateurs[nom]
             serie = bloc["series"]
@@ -910,7 +968,8 @@ class TestSeriesGlissantes:
         from vertex_worker.analysis import ATR_LOOKBACK, VOLATILITY_WINDOW, _build_indicators
 
         barres = _barres_croissantes(60)
-        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None, currency="USD")
+
 
         vol = indicateurs["realized_volatility"]["series"]
         assert vol["window"] == VOLATILITY_WINDOW
@@ -932,7 +991,12 @@ class TestSeriesGlissantes:
         """Mêmes clôtures, mêmes rendements, même moteur : la même chaîne."""
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         vol = indicateurs["realized_volatility"]
         assert vol["series"]["points"][-1]["value"] == vol["value"]
         assert vol["series"]["points"][-1]["value_pct"] == vol["value_pct"]
@@ -946,7 +1010,12 @@ class TestSeriesGlissantes:
         from vertex_worker.analysis import _build_indicators
 
         decimal = re.compile(r"^-?[0-9]+(\.[0-9]+)?$")
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         for point in indicateurs["realized_volatility"]["series"]["points"]:
             assert isinstance(point["value"], str) and decimal.fullmatch(point["value"])
             assert isinstance(point["value_pct"], str) and decimal.fullmatch(point["value_pct"])
@@ -958,7 +1027,12 @@ class TestSeriesGlissantes:
         avec le compte réel de barres."""
         from vertex_worker.analysis import REASON_INSUFFICIENT_SAMPLE, _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(5), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(5),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         for nom in ("realized_volatility", "atr"):
             serie = indicateurs[nom]["series"]
             assert serie["status"] == REASON_INSUFFICIENT_SAMPLE
@@ -969,7 +1043,8 @@ class TestSeriesGlissantes:
     def test_une_serie_vide_ne_leve_pas(self):
         from vertex_worker.analysis import REASON_INSUFFICIENT_SAMPLE, _build_indicators
 
-        indicateurs = _build_indicators([], now=NOW, source_event_id=None)
+        indicateurs = _build_indicators([], now=NOW, source_event_id=None, currency="USD")
+
         for nom in ("realized_volatility", "atr"):
             assert indicateurs[nom]["series"]["status"] == REASON_INSUFFICIENT_SAMPLE
 
@@ -978,7 +1053,12 @@ class TestSeriesGlissantes:
         plus. Une valeur financière sans lignée n'est pas publiable."""
         from vertex_worker.analysis import _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id="evt-7")
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id="evt-7",
+            currency="USD",
+        )
         for nom in ("realized_volatility", "atr"):
             calcul = indicateurs[nom]["series"]["calculation"]
             assert calcul["status"] == "OK"
@@ -1010,7 +1090,12 @@ class TestSeriesGlissantes:
         """
         from vertex_worker.analysis import MACD_LINES, _build_indicators
 
-        indicateurs = _build_indicators(_barres_croissantes(60), now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(
+            _barres_croissantes(60),
+            now=NOW,
+            source_event_id=None,
+            currency="USD",
+        )
         interdits = {"level", "severity", "regime", "signal", "verdict", "score", "trend"}
 
         blocs: list[tuple[str, dict]] = []
@@ -1049,7 +1134,8 @@ class TestSeriesGlissantes:
 
         barres = _barres_croissantes(60)
         barres[3] = dict(barres[3], trading_day=barres[2]["trading_day"])
-        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None, currency="USD")
+
         amplitude = indicateurs["atr"]
         assert amplitude["status"] == "OK"
         assert amplitude["series"]["status"] == "REFUSED"
@@ -1074,7 +1160,8 @@ class TestSeriesGlissantes:
 
         barres = _barres_croissantes(60)
         barres[30] = dict(barres[30], trading_day=barres[29]["trading_day"])
-        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None, currency="USD")
+
         vol = indicateurs["realized_volatility"]
         assert vol["status"] == "OK"
         serie = vol["series"]
@@ -1095,7 +1182,8 @@ class TestSeriesGlissantes:
 
         barres = _barres_croissantes(60)
         barres[58] = dict(barres[58], trading_day=barres[57]["trading_day"])
-        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None)
+        indicateurs = _build_indicators(barres, now=NOW, source_event_id=None, currency="USD")
+
         vol = indicateurs["realized_volatility"]
         assert vol["status"] == "REFUSED"
         assert vol["reason"] == "unordered_bars"
@@ -1649,7 +1737,7 @@ class TestOverlaysEtOscillateurs:
     def _indicateurs(barres):
         from vertex_worker.analysis import _build_indicators
 
-        return _build_indicators(barres, now=NOW, source_event_id="evt-1")
+        return _build_indicators(barres, now=NOW, source_event_id="evt-1", currency="USD")
 
     @staticmethod
     def _cinq_blocs(indicateurs):

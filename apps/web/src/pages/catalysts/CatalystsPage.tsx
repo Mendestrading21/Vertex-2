@@ -10,6 +10,7 @@ import { Card } from '../../components/Card.tsx';
 import { DataStateBoundary } from '../../components/DataStateBoundary.tsx';
 import type { DataState } from '../../components/DataStateBoundary.tsx';
 import type { ModuleState } from '../../components/moduleState.ts';
+import { ModuleCell } from '../../components/widgets/ModuleCell.tsx';
 import { calendarEventsOf } from '../calendar/calendarView.ts';
 import { CatalystInspector } from './CatalystInspector.tsx';
 import {
@@ -54,6 +55,16 @@ import type { QueueContentView } from './review/followUpView.ts';
  * source : impact moyen, confiance, surprises, historique des surprises,
  * consensus, alertes d'événement — ils tiennent leur place avec le motif de
  * leur absence. Rien n'est pondéré, rien n'est prédit.
+ *
+ * REFONTE UI 2026-09-05 — ORDRE DE LECTURE. La planche se lit SIGNAL →
+ * CHRONOLOGIE → EXPOSITION → REVUE → ABSENCES : une bande de comptes
+ * (reliés, révisions, conflits, fenêtre), la dominante avec ses filtres, sa
+ * répartition et ses sources en colonne droite, l'exposition du registre et
+ * les thèses orphelines, la file de revue en bande, puis les six absences
+ * regroupées — où leur régularité est le message. L'ordre du DOM est celui
+ * de la lecture ; la composition vit dans `.vx-cat-grid` (`global.css`). Le
+ * catalogue est inchangé ; chaque cellule pose `data-size` (lu par le socle)
+ * et les absences `data-density="compact"`.
  *
  * Elle absorbe l'ancienne destination `/follow-up`
  * (docs/05-design/PAGE_ARBITRATION.md) : une thèse est mise en revue PARCE
@@ -124,12 +135,12 @@ function TimelineModule({
   return (
     <Card
       rank="dominant"
-      kicker="Ordre publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-cat-timeline-title"
       className="vx-cat-timeline-card"
       aside={selection === null ? undefined : <>{shown.length} sur {selection.catalysts.length} événement(s) relié(s)</>}
-      footer={<>seuls les événements que le snapshot relie à une thèse déclarée ou à une position du registre manuel figurent ici</>}
+      footer={<>événements reliés à une thèse ou une position</>}
     >
       {frameState === 'empty' ? (
         <DataStateBoundary
@@ -208,16 +219,17 @@ function CatalystsBoard({
   return (
     <>
       <div className="vx-cat-grid vx-board" data-testid="catalysts-grid">
+        {/* SIGNAL : les comptes du croisement publié. Rendus par `Widget`,
+            qui pose déjà `data-module`/`data-size` : pas de cellule autour. */}
         <UpcomingCountModule selection={selection} state={moduleState} reason={data?.reason ?? null} />
-        <AbsentCatalystsModule id="mean-impact" />
-        <AbsentCatalystsModule id="confidence" />
         <RevisionsModule selection={selection} state={moduleState} />
+        <ConflictsModule selection={selection} state={moduleState} />
+        <WindowModule data={data} populationTheses={queueView?.populationTheses ?? null} state={moduleState} />
 
-        <FiltersModule selection={selection} state={moduleState} filters={filters} onToggleCategory={toggleCategory} onToggleLink={toggleLink} shown={shown.length} />
-        <AbsentCatalystsModule id="surprises" />
-        <AbsentCatalystsModule id="consensus" />
-
-        <div data-module="timeline">
+        {/* CHRONOLOGIE : la DOMINANTE, avec ses filtres, sa répartition et
+            ses sources en colonne droite. Rendue par `Card` : la cellule
+            porte la taille `XL` du catalogue, lue par `align-self: stretch`. */}
+        <ModuleCell id="timeline" size={catalystsModule('timeline').size}>
           <TimelineModule
             data={data}
             frameState={frameState}
@@ -228,21 +240,32 @@ function CatalystsBoard({
               setSelectedEventId((previous) => (previous === eventId ? null : eventId));
             }}
           />
-        </div>
+        </ModuleCell>
+        <FiltersModule selection={selection} state={moduleState} filters={filters} onToggleCategory={toggleCategory} onToggleLink={toggleLink} shown={shown.length} />
         <CategorySplitModule selection={selection} state={moduleState} />
-        <AbsentCatalystsModule id="surprise-history" />
-
-        <PortfolioExposureModule selection={selection} state={moduleState} />
-        <AbsentCatalystsModule id="event-alerts" />
         <SourcesFreshnessModule selection={selection} state={moduleState} />
 
-        <WindowModule data={data} populationTheses={queueView?.populationTheses ?? null} state={moduleState} />
-        <ConflictsModule selection={selection} state={moduleState} />
+        {/* EXPOSITION et REVUE : le registre touché, la file en bande à sa
+            droite, puis les thèses sans événement.
+            L'ORDRE DU DOM SUIT L'ORDRE DE LECTURE : la revue occupe la
+            colonne de droite sur deux rangées, donc l'œil la rencontre avant
+            les thèses orphelines placées sous l'exposition. Mesuré le
+            2026-09-07, le document donnait l'inverse. */}
+        <PortfolioExposureModule selection={selection} state={moduleState} />
+
+        <ModuleCell id="review" size={catalystsModule('review').size}>
+          <ReviewQueueSection />
+        </ModuleCell>
+
         <OrphanThesesModule theses={selection === null ? null : selection.thesesWithoutCatalyst} state={moduleState} />
 
-        <div data-module="review">
-          <ReviewQueueSection />
-        </div>
+        {/* ABSENCES, regroupées : leur régularité est le message. */}
+        <AbsentCatalystsModule id="mean-impact" />
+        <AbsentCatalystsModule id="confidence" />
+        <AbsentCatalystsModule id="surprises" />
+        <AbsentCatalystsModule id="consensus" />
+        <AbsentCatalystsModule id="surprise-history" />
+        <AbsentCatalystsModule id="event-alerts" />
       </div>
 
       {/*

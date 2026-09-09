@@ -148,3 +148,20 @@ export function FreshnessBadge({
     </span>
   );
 }
+
+export function servedClockOf(asOf: string | null | undefined): string | null {
+  if (asOf === null || asOf === undefined || asOf === '') {
+    return null;
+  }
+  const instant = new Date(asOf);
+  if (Number.isNaN(instant.getTime())) {
+    return null;
+  }
+  const deuxChiffres = (valeur: number): string => String(valeur).padStart(2, '0');
+  const jour = deuxChiffres(instant.getUTCDate());
+  const mois = deuxChiffres(instant.getUTCMonth() + 1);
+  const annee = String(instant.getUTCFullYear()).padStart(4, '0');
+  const heures = deuxChiffres(instant.getUTCHours());
+  const minutes = deuxChiffres(instant.getUTCMinutes());
+  return `${jour}/${mois}/${annee} ${heures}:${minutes} UTC`;
+}

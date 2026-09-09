@@ -1,3 +1,4 @@
+import { formatServedNumber } from '../number.ts';
 import type { SignGroup } from '../markets/marketsView.ts';
 import { Glyph } from './Glyph.tsx';
 import type { GlyphName } from './Glyph.tsx';
@@ -116,8 +117,8 @@ export function KpiTile({
         </p>
       ) : (
         <p className="vx-w2-kpi-figure">
-          <span className="vx-metric-value" data-testid="kpi-tile-value">
-            {value}
+          <span className="vx-metric-value" data-testid="kpi-tile-value" title={value}>
+            {formatServedNumber(value)}
           </span>
           {unit === null ? null : (
             <span className="vx-w2-kpi-unit" data-testid="kpi-tile-unit">

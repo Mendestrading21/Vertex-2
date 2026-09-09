@@ -198,8 +198,8 @@ describe('Page Simulateur — parcours', () => {
     // Gain/perte max sur la grille (résultats certifiés) + risque défini.
     const kpi = within(screen.getByTestId('sim-kpi'));
     expect(kpi.getByText(/Gain max/)).toBeDefined();
-    expect(kpi.getByText('600,00')).toBeDefined();
-    expect(kpi.getByText('-400,00')).toBeDefined();
+    expect(kpi.getByText('600.00')).toBeDefined();
+    expect(kpi.getByText('−400.00')).toBeDefined();
     expect(kpi.getByText(/BULL_CALL_DEBIT/)).toBeDefined();
     // Hypothèses écho (serveur) + avertissements verbatim.
     expect(within(screen.getByTestId('sim-echo')).getByText('102.50')).toBeDefined();

@@ -63,10 +63,11 @@ class MutableClock:
         return self.now
 
 
-def _runner(session_factory: Any, clock: MutableClock) -> WorkerRunner:
+def _runner(session_factory: Any, clock: MutableClock, *, batch_limit: int = 25) -> WorkerRunner:
     return WorkerRunner(
         session_factory=session_factory,
         registry=build_registry(clock=clock, fusion_config=DEV_SYNTHETIC_CONFIG),
+        batch_limit=batch_limit,
         poll_interval_seconds=0.05,
         clock=clock,
     )
@@ -148,9 +149,7 @@ def test_un_envelope_livre_deux_fois_ne_produit_qu_une_observation(
     assert second == 0, "la seconde livraison a écrit des observations"
 
     with session_factory() as session:
-        observations = session.execute(
-            select(func.count()).select_from(Observation)
-        ).scalar_one()
+        observations = session.execute(select(func.count()).select_from(Observation)).scalar_one()
         jobs = session.execute(select(func.count()).select_from(OutboxMessage)).scalar_one()
     assert observations == premier
     # Le travail enfilé suit l'observation écrite, pas la livraison reçue.
@@ -433,8 +432,11 @@ def test_une_interruption_en_plein_drain_ne_perd_ni_ne_duplique_le_travail(
     _ingest(session_factory, envelopes)
     clock = MutableClock(NOW)
 
-    # Premier worker : un seul lot, puis on l'abandonne (processus tué).
-    _runner(session_factory, clock).drain(max_batches=1)
+    # Premier worker : un seul lot d'UN message, puis on l'abandonne (processus
+    # tué). Un lot d'un message : depuis la coalescence de l'outbox, une
+    # ingestion groupée ne laisse qu'un job en attente par sujet, et un lot
+    # de vingt-cinq aurait tout traité avant l'interruption.
+    _runner(session_factory, clock, batch_limit=1).drain(max_batches=1)
 
     with session_factory() as session:
         restants = session.execute(
@@ -556,8 +558,7 @@ def test_l_ensemble_affirmatif_reste_ancre_sur_l_autorite_canonique(
     from vertex_worker.opportunities import QUALIFIED_STATUSES
 
     assert STATUTS_AFFIRMATIFS == set(QUALIFIED_STATUSES), (
-        "la campagne et le producteur d'opportunités ne s'accordent plus sur "
-        "ce qui est affirmatif"
+        "la campagne et le producteur d'opportunités ne s'accordent plus sur ce qui est affirmatif"
     )
     assert "OBSERVE" in STATUTS_AFFIRMATIFS
     assert session_factory is not None

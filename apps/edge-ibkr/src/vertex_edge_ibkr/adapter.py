@@ -127,7 +127,9 @@ _SCHEMA_BY_PAYLOAD: dict[str, str] = {
     "NewsHeadlinesPayload": "ibkr.news-headlines/1",
     "NewsArticlePayload": "ibkr.news-article/1",
     "WshEventsPayload": "ibkr.corporate-events/1",
-    "OptionChainDefinition": "ibkr.option-chain/1",
+    # DÉFINITION (échéances, strikes) — jamais une tranche cotée : le worker
+    # ne lit que `ibkr.option-chain-slice/` (`vertex_edge_ibkr.options`).
+    "OptionChainDefinition": "ibkr.option-chain-definition/1",
 }
 
 

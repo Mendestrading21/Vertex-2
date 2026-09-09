@@ -97,9 +97,9 @@ describe('Ticker du shell — rendu', () => {
 
     // Chaînes serveur verbatim, point décimal francisé, signe conservé.
     const premier = within(bande).getByTestId('ticker-SYN-ENER-01');
-    expect(premier.textContent).toContain('45,00');
+    expect(premier.textContent).toContain('45.00');
     expect(premier.textContent).toContain('SYN');
-    expect(premier.textContent).toContain('-10,00 %');
+    expect(premier.textContent).toContain('−10.00%');
     expect(premier.getAttribute('data-group')).toBe('down');
     expect(
       within(bande).getByTestId('ticker-SYN-ENER-02').getAttribute('data-group'),

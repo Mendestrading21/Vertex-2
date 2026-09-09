@@ -77,7 +77,10 @@ vertex-ingress-tradingview = { workspace = true }
 # tolérées jusqu'à 100, jamais au-delà.
 line-length = 100
 target-version = "py311"  # plancher local ; la cible 3.13 est vérifiée en CI
-extend-exclude = ["apps/web", "node_modules", ".venv"]
+# `.claude/skills` : playbooks et scripts VENDUS de skills tiers (provenance et
+# licence dans leur PROVENANCE.md) — pas du code Vertex ; ils ne sont ni lintés
+# ni typés ici, et jamais importés par le runtime.
+extend-exclude = ["apps/web", "node_modules", ".venv", ".claude/skills"]
 
 [tool.ruff.lint]
 select = [

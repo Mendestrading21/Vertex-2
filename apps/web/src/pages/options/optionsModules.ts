@@ -43,8 +43,12 @@ export const OPTIONS_MODULES: readonly OptionsModule[] = [
     status: { kind: 'served', contract: 'GET /api/v1/markets/overview — ticker ; GET /api/v1/analysis/{instrument} — bars' },
   },
   {
+    // REFONTE UI 2026-09-05 — la synthèse du snapshot ouvre la planche en une
+    // bande (L = la moitié de la rangée), les trois valeurs compactes la
+    // complètent. `size` est désormais POSÉ sur la cellule (`data-size`) par la
+    // page, donc lu par le socle (`widgets.css`), plus seulement documenté.
     id: 'identity-strip',
-    size: 'M',
+    size: 'L',
     variant: 'support',
     title: 'Snapshot de chaîne',
     question: 'Quel snapshot, quelles références, quelle couverture et quel budget ?',
@@ -120,7 +124,9 @@ export const OPTIONS_MODULES: readonly OptionsModule[] = [
   },
   {
     id: 'underlying-series',
-    size: 'M',
+    // Bande pleine largeur sous les figures : soixante clôtures se lisent en
+    // long, pas dans une demi-cellule.
+    size: 'XL',
     variant: 'support',
     title: 'Série du sous-jacent',
     question: 'Comment le sous-jacent a-t-il clôturé sur les dernières séances ?',

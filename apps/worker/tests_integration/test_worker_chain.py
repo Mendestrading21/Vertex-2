@@ -94,16 +94,18 @@ def test_full_ingestion_chain(session_factory) -> None:
     assert observation_count == len(unique_event_ids)
     # Every inserted observation enqueues its fusion job AND one
     # review_queue.refresh job (page 09: new information may change urgency)
-    # in the same transaction.
-    assert pending == 2 * len(inserted)
+    # in the same transaction — COALESCED: both handlers recompute from the
+    # whole table, so a burst leaves exactly one PENDING job per topic
+    # (`enqueue_outbox_coalesced`, measured motive in vertex_persistence).
+    assert pending == 2
 
     # --- Bounded worker run (no infinite loop in tests) --------------------
     clock = MutableClock(NOW)
     runner = make_runner(session_factory, clock)
     processed = runner.drain(max_batches=10)
-    assert processed == 2 * len(inserted)
+    assert processed == 2  # the two coalesced jobs, not one per observation
     stats = runner.stats()
-    assert stats.acked == 2 * len(inserted)
+    assert stats.acked == 2
     assert stats.failed == 0 and stats.dead == 0 and stats.lease_lost == 0
 
     with session_factory() as session:
@@ -176,35 +178,25 @@ def test_full_ingestion_chain(session_factory) -> None:
     assert later_runner.drain(max_batches=5) == 1
 
     with session_factory() as session:
-        later = get_current_snapshot(
-            session, kind=SNAPSHOT_KIND_ATTENTION, key=SNAPSHOT_KEY_GLOBAL
-        )
+        later = get_current_snapshot(session, kind=SNAPSHOT_KIND_ATTENTION, key=SNAPSHOT_KEY_GLOBAL)
     assert later is not None
     assert later.version == first_version + 1
     assert later.content_hash != first_hash
     assert later.content["as_of"] == clock.now.isoformat()
     # Same ranked identities: only time-derived fields moved.
-    assert [i["item_id"] for i in later.content["items"]] == [
-        i["item_id"] for i in items
-    ]
+    assert [i["item_id"] for i in later.content["items"]] == [i["item_id"] for i in items]
 
 
 def test_reingesting_same_envelopes_enqueues_nothing(session_factory) -> None:
     envelopes = generate_envelopes(seed=SEED, count=10, base_time=BASE_TIME)
     ingest_all(session_factory, envelopes)
     with session_factory() as session:
-        before = session.execute(
-            select(func.count()).select_from(OutboxMessage)
-        ).scalar_one()
+        before = session.execute(select(func.count()).select_from(OutboxMessage)).scalar_one()
     # Full idempotent replay of the same batch.
     results = ingest_all(session_factory, envelopes)
     assert all(r.inserted is False for r in results)
     with session_factory() as session:
-        after = session.execute(
-            select(func.count()).select_from(OutboxMessage)
-        ).scalar_one()
-        observations = session.execute(
-            select(func.count()).select_from(Observation)
-        ).scalar_one()
+        after = session.execute(select(func.count()).select_from(OutboxMessage)).scalar_one()
+        observations = session.execute(select(func.count()).select_from(Observation)).scalar_one()
     assert after == before
     assert observations == len({e.event_id for e in envelopes})

@@ -14,6 +14,7 @@ PostgreSQL 18 est la vérité transactionnelle et porte l’outbox initiale.
 
 - Une mutation métier et son événement outbox sont écrits dans la même transaction.
 - Les workers réclament des lignes avec verrouillage et SKIP LOCKED, puis enregistrent tentative, lease et résultat.
+- Avant chaque réclamation, le worker récupère les baux expirés (`reap_expired_leases`) : un worker tué en plein lot laisse ses lignes `IN_PROGRESS`, et la tentative perdue est enregistrée (FAILED avec backoff, ou DEAD) pour que la ligne soit ré-offerte. Mesuré le 2026-09-06 sur la base réelle : 18 lignes bloquées depuis un redémarrage, parce que rien ne les récupérait.
 - Les handlers sont idempotents et protégés par clés uniques.
 - LISTEN et NOTIFY servent uniquement de signal de réveil ; les tables restent la source durable.
 - Les observations volumineuses sont append-only, partitionnées et soumises à rétention.

@@ -33,14 +33,11 @@ export function InstrumentInspector({
   const days = view.coverage.tradingDaysPerInstrument.find((entry) => entry.ticker === ticker)?.days ?? null;
   const discard = view.coverage.discarded.find((entry) => entry.instrument === ticker) ?? null;
   return (
-    <InspectorPanel subject={ticker}>
-      <div className="vx-sheet-head">
-        <p className="vx-inspector-note">{row?.label ?? ticker}</p>
-        <button type="button" className="vx-sheet-close" onClick={onClose}>
-          Fermer
-        </button>
-      </div>
-
+    <InspectorPanel
+      subject={ticker}
+      note={row?.label ?? ticker}
+      onClose={onClose}
+    >
       <SnapshotFacts
         testId="risk-instrument-facts"
         facts={[

@@ -318,7 +318,7 @@ describe('Page Portefeuille — état nominal', () => {
     await renderPortfolio();
     const row = await screen.findByTestId('pf-ledger-row-2');
     expect(within(row).getByText('BUY_RECORDED')).toBeDefined();
-    expect(within(row).getByText('-1000')).toBeDefined();
+    expect(within(row).getByText("−1'000")).toBeDefined();
     expect(within(row).getByRole('button', { name: 'Correction compensatoire' })).toBeDefined();
   });
 });

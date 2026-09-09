@@ -10,6 +10,7 @@
  * avait divergé, et une autorité correcte ne protège rien si la table cesse de
  * l'appeler.
  */
+import { formatServedNumber } from '../../components/number.ts';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
@@ -31,7 +32,8 @@ function lot(pnl: string, lotId = 'L-1'): ValuedLotRow {
 
 function signeDuPnl(pnl: string): string | null {
   render(<PortfolioTable lots={[lot(pnl)]} excluded={[]} />);
-  const cellule = screen.getByText(pnl);
+  // Le signe est lu sur la chaîne SERVIE ; l'écran montre le format produit.
+  const cellule = screen.getByText(formatServedNumber(pnl));
   return cellule.getAttribute('data-sign');
 }
 

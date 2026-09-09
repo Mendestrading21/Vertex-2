@@ -172,10 +172,22 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     return null;
   }
 
+  const destinationsFiltrees = resultats.filter((r) => r.group === 'Destinations');
+  const instrumentsFiltres = resultats.filter((r) => r.group === 'Instruments');
   const parGroupe: ReadonlyArray<[PaletteResult['group'], readonly PaletteResult[]]> = [
-    ['Destinations', resultats.filter((r) => r.group === 'Destinations')],
-    ['Instruments', resultats.filter((r) => r.group === 'Instruments')],
+    ['Destinations', destinationsFiltrees],
+    ['Instruments', instrumentsFiltres],
   ];
+
+  /*
+    LES FLÈCHES SUIVENT CE QUI EST AFFICHÉ, PAS L'ORDRE DE TRI.
+    `filtrer` classe les préfixes d'abord, tous groupes mêlés — c'est son
+    contrat, et il est testé. Le RENDU, lui, regroupe : Destinations puis
+    Instruments. Les flèches indexaient la première liste et le curseur sautait
+    donc d'un groupe à l'autre au lieu de descendre la liste que l'œil suit.
+    La partition étant exhaustive, cette liste a exactement la même longueur.
+  */
+  const ordonnes: readonly PaletteResult[] = [...destinationsFiltrees, ...instrumentsFiltres];
 
   return (
     <div className="vx-palette-scrim" role="presentation">
@@ -193,19 +205,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           }
           if (evenement.key === 'ArrowDown') {
             evenement.preventDefault();
-            setActif((index) => (resultats.length === 0 ? 0 : (index + 1) % resultats.length));
+            setActif((index) => (ordonnes.length === 0 ? 0 : (index + 1) % ordonnes.length));
             return;
           }
           if (evenement.key === 'ArrowUp') {
             evenement.preventDefault();
             setActif((index) =>
-              resultats.length === 0 ? 0 : (index - 1 + resultats.length) % resultats.length,
+              ordonnes.length === 0 ? 0 : (index - 1 + ordonnes.length) % ordonnes.length,
             );
             return;
           }
           if (evenement.key === 'Enter') {
             evenement.preventDefault();
-            ouvrir(resultats[actif]);
+            ouvrir(ordonnes[actif]);
           }
         }}
       >
@@ -217,7 +229,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             role="combobox"
             aria-expanded="true"
             aria-controls={listeId}
-            aria-activedescendant={resultats[actif] === undefined ? undefined : `${listeId}-${actif}`}
+            aria-activedescendant={ordonnes[actif] === undefined ? undefined : `${listeId}-${actif}`}
             aria-label="Rechercher une destination ou un instrument publié"
             placeholder="Rechercher une destination ou un instrument publié…"
             value={saisie}
@@ -244,7 +256,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
               <div key={groupe} className="vx-palette-group" role="group" aria-label={groupe}>
                 <p className="vx-palette-group-title">{groupe}</p>
                 {entrees.map((resultat) => {
-                  const index = resultats.indexOf(resultat);
+                  const index = ordonnes.indexOf(resultat);
                   return (
                     <div
                       key={resultat.id}

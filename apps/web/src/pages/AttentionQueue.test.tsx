@@ -138,6 +138,47 @@ describe('AttentionQueue', () => {
     expect(panel.contains(document.activeElement)).toBe(false);
   });
 
+  it('deux titres identiques restent deux lignes DISTINCTES : la référence servie les sépare', () => {
+    /*
+      MESURÉ LE 2026-09-07 SUR LA FILE LIVE : quinze entrées pour douze titres.
+      « Dow Jones Futures Loom After U.S.-Iran Attacks… » apparaissait trois
+      fois, « Inflation, Apple, Adobe, Oracle… » deux fois. Ce ne sont pas des
+      doublons — chaque ligne est un cluster distinct rattaché à un instrument
+      distinct — mais la liste n'affichait que le titre, et la répétition se
+      lisait comme un défaut du produit.
+      La référence est relayée VERBATIM. Elle n'est jamais traduite en ticker :
+      aucun instantané servi ne publie cette correspondance.
+    */
+    const meme = 'Dow Jones Futures Loom After U.S.-Iran Attacks';
+    render(
+      <AttentionQueue
+        items={[
+          makeAttentionItem(0, {
+            id: 'a',
+            title: meme,
+            provenance: { cluster_id: 'c-a', instrument_ref: '265598' },
+          }),
+          makeAttentionItem(1, {
+            id: 'b',
+            title: meme,
+            provenance: { cluster_id: 'c-b', instrument_ref: '4815747' },
+          }),
+          makeAttentionItem(2, {
+            id: 'c',
+            title: meme,
+            provenance: { cluster_id: 'c-c' },
+          }),
+        ]}
+        asOf={AS_OF}
+      />,
+    );
+    expect(screen.getAllByRole('button', { name: meme })).toHaveLength(3);
+    expect(screen.getByText('265598')).not.toBeNull();
+    expect(screen.getByText('4815747')).not.toBeNull();
+    // Référence non publiée : DITE, jamais remplacée par un identifiant voisin.
+    expect(screen.getByText(/instrument non publié/)).not.toBeNull();
+  });
+
   it('état vide : aucune ligne fabriquée', () => {
     render(<AttentionQueue items={[]} asOf={null} />);
     expect(screen.queryAllByRole('listitem')).toHaveLength(0);

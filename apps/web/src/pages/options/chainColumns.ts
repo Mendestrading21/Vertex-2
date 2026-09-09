@@ -212,6 +212,36 @@ export const CHAIN_COLUMNS_DEFAULT: readonly string[] = ['bid', 'ask', 'iv', 'de
 export const CHAIN_COLUMNS_MAX = 7;
 
 /**
+ * Sélection de colonnes lue dans l'URL (`?cols=bid,ask,iv`).
+ *
+ * REFONTE VAGUE 2 — la sélection SURVIT au rechargement et se partage par
+ * lien : elle vit dans l'URL, pas dans un état local perdu à la navigation.
+ * Deny by default : une clé inconnue est ignorée, une liste vide ou trop
+ * longue retombe sur la sélection par défaut, l'ordre reste celui du
+ * vocabulaire. Rien n'est deviné à partir d'une valeur illisible.
+ */
+export function chainColumnsFromParam(raw: string | null): readonly string[] {
+  if (raw === null || raw.trim() === '') {
+    return CHAIN_COLUMNS_DEFAULT;
+  }
+  const wanted = new Set(raw.split(',').map((key) => key.trim()));
+  const valid = CHAIN_COLUMNS.filter((colonne) => wanted.has(colonne.key)).map((c) => c.key);
+  if (valid.length === 0 || valid.length > CHAIN_COLUMNS_MAX) {
+    return CHAIN_COLUMNS_DEFAULT;
+  }
+  return valid;
+}
+
+/** Valeur d'URL d'une sélection ; `null` quand c'est la sélection par défaut. */
+export function chainColumnsToParam(selection: readonly string[]): string | null {
+  const ordered = CHAIN_COLUMNS.filter((c) => selection.includes(c.key)).map((c) => c.key);
+  const isDefault =
+    ordered.length === CHAIN_COLUMNS_DEFAULT.length &&
+    ordered.every((key, index) => key === CHAIN_COLUMNS_DEFAULT[index]);
+  return isDefault ? null : ordered.join(',');
+}
+
+/**
  * Ce que le contrat NE PUBLIE PAS, avec la raison.
  *
  * Rendu à l'écran sous le sélecteur : sans cela, un utilisateur qui cherche le

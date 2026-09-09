@@ -51,6 +51,13 @@ export interface BarsView {
   readonly lastClose: string | null;
   readonly quality: string | null;
   readonly fresh: boolean | null;
+  /**
+   * Âge de la SÉRIE, publié par le worker — à ne pas confondre avec l'âge du
+   * DOSSIER porté par l'enveloppe. Les deux diffèrent d'un ordre de grandeur
+   * (mesuré le 2026-09-06 : dossier 4 h, série 2 j 11 h), et l'écran citait le
+   * mauvais pour justifier une péremption.
+   */
+  readonly ageSeconds: number | null;
   readonly sourceEventId: string | null;
   readonly observedAsOf: string | null;
   readonly discardedCount: number;
@@ -102,6 +109,7 @@ export function barsViewOf(data: AnalysisResponse): BarsView | null {
     lastClose: blockString(block, 'last_close'),
     quality: blockString(block, 'quality'),
     fresh: blockBool(block, 'fresh'),
+    ageSeconds: blockInt(block, 'age_seconds'),
     sourceEventId: blockString(block, 'source_event_id'),
     observedAsOf: blockString(block, 'observed_as_of'),
     discardedCount: Array.isArray(discarded) ? discarded.length : 0,
@@ -424,10 +432,23 @@ export function scenariosViewOf(data: AnalysisResponse): ScenariosView | null {
   };
 }
 
-/** Raisons typées d'absence de scénarios → phrase française. */
+/**
+ * Raisons typées d'absence de scénarios → phrase française.
+ *
+ * LES DEUX CLÉS AVAIENT DIVERGÉ DU CODE SERVI. Le worker publie
+ * `no_option_chain_snapshot` et `no_healthy_option_contract`
+ * (`vertex_worker/analysis.py`), ce dictionnaire attendait
+ * `no_option_chain` et `no_healthy_contract` : aucune traduction ne
+ * sortait jamais, et le lecteur recevait le code brut à la place de la
+ * phrase. Vérifié le 2026-09-06 contre le code réellement exécuté.
+ *
+ * Le repli reste : une raison inconnue s'affiche telle quelle plutôt que
+ * d'être tue — un code non traduit vaut mieux qu'un silence.
+ */
 const SCENARIO_ABSENT_REASONS_FR: Readonly<Record<string, string>> = {
-  no_option_chain: 'aucune chaîne d’options publiée pour cet instrument',
-  no_healthy_contract: 'aucun contrat sain (quote saine ET IV résolue) dans la chaîne publiée',
+  no_option_chain_snapshot: 'aucune chaîne d’options publiée pour cet instrument',
+  no_healthy_option_contract:
+    'aucun contrat sain (quote saine ET IV résolue) dans la chaîne publiée',
 };
 
 export function scenarioAbsentLabel(reason: string | null): string {

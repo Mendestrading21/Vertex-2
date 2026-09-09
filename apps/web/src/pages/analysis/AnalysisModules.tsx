@@ -5,13 +5,14 @@ import { useCalendar } from '../../api/decisionApi.ts';
 import { AbsentCell } from '../../components/absence.tsx';
 import { pageStateOf, useMarketsOverview, useSecFundamentals } from '../../api/hooks.ts';
 import { Card } from '../../components/Card.tsx';
-import { FreshnessBadge } from '../../components/FreshnessBadge.tsx';
+import { FreshnessBadge, policyProps } from '../../components/FreshnessBadge.tsx';
 import { Metric } from '../../components/Metric.tsx';
 import { ModuleStatus } from '../../components/ModuleStatus.tsx';
+import { StatusChip } from '../../components/widgets/StatusChip.tsx';
 import { AgendaLine } from '../../components/calendar/AgendaLine.tsx';
 import { Sparkline } from '../../components/markets/Sparkline.tsx';
 import type { FlatTicker } from '../../components/markets/marketsView.ts';
-import { GROUP_LABELS_FR, flattenTickers, frDecimal, signSymbolOf } from '../../components/markets/marketsView.ts';
+import { GROUP_LABELS_FR, flattenTickers, displayNumber, displayPercent, signSymbolOf } from '../../components/markets/marketsView.ts';
 import { moduleShowsContent, moduleStateOf } from '../../components/moduleState.ts';
 import type { ModuleState } from '../../components/moduleState.ts';
 import { ArcGauge } from '../../components/widgets/ArcGauge.tsx';
@@ -27,6 +28,7 @@ import { analysisModule } from './analysisModules.ts';
 import type { AdviceView, BarsView } from './analysisView.ts';
 import { IDENTITY_STATE_FR, secFundamentalsViewOf } from './secView.ts';
 import { ServedNumber } from '../../components/widgets/ServedNumber.tsx';
+import { publishedOr } from '../../components/inspector/SnapshotFacts.tsx';
 
 /**
  * Les modules SERVIS de la planche §4, hors la dominante (le cadre des
@@ -43,9 +45,6 @@ const VOLUME_WINDOW = 14;
 const CATALYST_LINES = 6;
 const FACT_ROWS = 12;
 
-function publie(value: string | number | null | undefined): string {
-  return value === null || value === undefined || value === '' ? 'non publié' : String(value);
-}
 
 /** L'entrée Marchés de l'instrument, si le snapshot la couvre. */
 function useMarketsEntry(instrument: string): {
@@ -95,14 +94,26 @@ export function InstrumentHeaderModule({
           <p className="vx-ih-sector">{entry === null ? 'secteur non publié par Marchés' : entry.sectorLabel}</p>
         </div>
         <div className="vx-iw-fresh">
-          <FreshnessBadge ageSeconds={data.age_seconds} sourceLabel="dossier" />
+          {/*
+            L'ÉCHELLE EST SERVIE, ELLE DOIT ÊTRE DITE. « il y a 4 h » ne se
+            juge pas sans son budget : le même âge est frais pour une barre
+            quotidienne et périmé pour une cotation. `freshness_policy` est
+            publié par l'enveloppe et n'était pas transmis ; `policyProps`
+            rend `{}` si la politique manque, donc l'échelle est tue plutôt
+            qu'inventée.
+          */}
+          <FreshnessBadge
+            ageSeconds={data.age_seconds}
+            {...policyProps(data.freshness_policy)}
+            sourceLabel="dossier"
+          />
         </div>
       </header>
 
       <div className="vx-ih-price-row">
         {bars !== null && bars.lastClose !== null ? (
           <span className="vx-ih-price" data-testid="instrument-header-price">
-            {frDecimal(bars.lastClose)}
+            {displayNumber(bars.lastClose)}
             <span className="vx-iw-currency"> {bars.currency ?? 'devise non publiée'}</span>
           </span>
         ) : (
@@ -114,7 +125,7 @@ export function InstrumentHeaderModule({
           </span>
         ) : (
           <span className="vx-iw-delta" data-sign={entry.group} data-testid="instrument-header-delta">
-            <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {frDecimal(entry.ticker.return_1d_pct)} %
+            <span aria-hidden="true">{signSymbolOf(entry.group)}</span> {displayPercent(entry.ticker.return_1d_pct)}
             <span className="vx-visually-hidden"> ({GROUP_LABELS_FR[entry.group]}, rendement 1 j)</span>
           </span>
         )}
@@ -140,7 +151,7 @@ export function InstrumentHeaderModule({
       </div>
 
       <footer className="vx-iw-foot">
-        {bars === null ? 'aucune série publiée' : `clôture ${publie(bars.lastTradingDay)}`}
+        {bars === null ? 'aucune série publiée' : `clôture ${publishedOr(bars.lastTradingDay)}`}
         {lineBars.length > 0 ? ` · ${lineBars.length} séances tracées` : ''}
         {entry === null ? '' : ` · variation 1 j du snapshot Marchés (${entry.ticker.trading_day})`}
       </footer>
@@ -164,10 +175,10 @@ export function IdentityModule({
   return (
     <Card
       rank="quiet"
-      kicker="Faits publiés"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-identity-title"
-      footer={<>industrie, capitalisation et bêta : aucune source ne les publie — rien n’est déduit</>}
+      footer={<>industrie, capitalisation, bêta : non publiés</>}
     >
       <div className="vx-metrics-grid" data-testid="identity-facts">
         <Metric label="Secteur" value={entry === null ? null : entry.sectorLabel} size="compact" />
@@ -194,7 +205,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
   return (
     <Card
       rank="quiet"
-      kicker="Relais SEC EDGAR"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-financials-title"
       className="vx-sec"
@@ -202,8 +213,8 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
         ? {
             footer: (
               <>
-                source <code>{publie(data.source)}</code> · droits <code>{publie(data.rights)}</code> · snapshot v
-                {publie(data.snapshot_version)} · données au {publie(data.data_as_of)}
+                source <code>{publishedOr(data.source)}</code> · droits <code>{publishedOr(data.rights)}</code> · snapshot v
+                {publishedOr(data.snapshot_version)} · données au {publishedOr(data.data_as_of)}
               </>
             ),
           }
@@ -218,12 +229,12 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
       {moduleShowsContent(state) && data !== undefined && view !== null ? (
         <div data-testid="sec-facts">
           <p className="vx-module-sentence">
-            <code>{publie(data.identity_state)}</code> —{' '}
+            <code>{publishedOr(data.identity_state)}</code> —{' '}
             {data.identity_state === null ? 'état non publié' : (IDENTITY_STATE_FR[data.identity_state] ?? data.identity_state)}
             {data.entity_name === null ? null : (
               <>
                 {' '}
-                · {data.entity_name} (CIK <code>{publie(data.cik)}</code>)
+                · {data.entity_name} (CIK <code>{publishedOr(data.cik)}</code>)
               </>
             )}
           </p>
@@ -234,7 +245,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
             <ul className="vx-sec-filings">
               {view.filings.map((filing) => (
                 <li key={filing.accession}>
-                  <code>{filing.form ?? 'formulaire non publié'}</code> · disponible {publie(filing.availableAt)}
+                  <code>{filing.form ?? 'formulaire non publié'}</code> · disponible {publishedOr(filing.availableAt)}
                   {filing.primaryDocumentUrl === null ? (
                     <>
                       {' '}
@@ -300,7 +311,7 @@ export function FinancialsModule({ instrument }: { readonly instrument: string }
           <p className="vx-module-sentence">
             {view.facts.length > FACT_ROWS ? `${FACT_ROWS} premiers faits de ${view.facts.length} publiés · ` : ''}
             {view.conflictCount} conflit{view.conflictCount > 1 ? 's' : ''} publié{view.conflictCount > 1 ? 's' : ''} ·{' '}
-            {publie(view.coverage.observationsConsidered)} observations considérées
+            {publishedOr(view.coverage.observationsConsidered)} observations considérées
           </p>
         </div>
       ) : null}
@@ -325,14 +336,14 @@ export function CatalystsModule({ instrument }: { readonly instrument: string })
   return (
     <Card
       rank="quiet"
-      kicker="Agenda publié"
+      kicker="Publié"
       title={module.title}
       titleId="vx-analysis-catalysts-title"
       {...(moduleShowsContent(state) && data !== undefined
         ? {
             footer: (
               <>
-                {lines.length} sur {events.length} pour cet instrument · snapshot v{publie(data.snapshot_version)} ·{' '}
+                {lines.length} sur {events.length} pour cet instrument · snapshot v{publishedOr(data.snapshot_version)} ·{' '}
                 <Link to="/calendar">voir le calendrier</Link>
               </>
             ),
@@ -365,10 +376,10 @@ export function KeyRisksModule({ advice }: { readonly advice: AdviceView | null 
   return (
     <Card
       rank="quiet"
-      kicker="Déclaré par le moteur"
+      kicker="Déclaré"
       title={module.title}
       titleId="vx-analysis-risks-title"
-      footer={<>résumé, limites et gates non passées de l’AdviceResult — aucun risque estimé ici</>}
+      footer={<>résumé, gates et limites du verdict</>}
     >
       {advice === null ? (
         <p className="vx-module-sentence" role="status">
@@ -413,10 +424,20 @@ export function PeersModule({ instrument }: { readonly instrument: string }) {
   return (
     <Card
       rank="quiet"
-      kicker="Snapshot Marchés"
+      kicker="Observé"
       title={module.title}
       titleId="vx-analysis-peers-title"
-      footer={<>rendement 1 j par instrument, chaîne serveur · <Link to="/markets">voir Marchés</Link></>}
+      /*
+        LE REGROUPEMENT EST NOMMÉ, PAS SOUS-ENTENDU. La carte s'appelle
+        « Pairs du secteur » et listait 56 instruments alors qu'AUCUN secteur
+        n'est déclaré : le snapshot sert « Secteur non déclaré » pour tous, et
+        « pairs du même secteur » désignait donc l'univers entier. La branche
+        vide le disait déjà (« Seul instrument couvert dans … ») ; la branche
+        pleine le tait. Le libellé servi s'affiche donc à côté du titre, sans
+        rien masquer de la liste.
+      */
+      {...(entry === null ? {} : { aside: <StatusChip label={entry.sectorLabel} tone="neutral" /> })}
+      footer={<>rendement 1 j du snapshot Marchés · <Link to="/markets">voir Marchés</Link></>}
     >
       <ModuleStatus state={state} />
       {moduleShowsContent(state) ? (
@@ -435,7 +456,7 @@ export function PeersModule({ instrument }: { readonly instrument: string }) {
                 <Link className="vx-sector-chip" to={`/analysis/${encodeURIComponent(peer.ticker.ticker)}`}>
                   <code>{peer.ticker.ticker}</code>
                   <span className="vx-sector-return">
-                    <span aria-hidden="true">{signSymbolOf(peer.group)}</span> {frDecimal(peer.ticker.return_1d_pct)} %
+                    <span aria-hidden="true">{signSymbolOf(peer.group)}</span> {displayPercent(peer.ticker.return_1d_pct)}
                   </span>
                 </Link>
               </li>
@@ -523,15 +544,14 @@ export function OscillatorsModule({
   return (
     <Card
       rank="quiet"
-      kicker="Moteur serveur (S6)"
+      kicker="Calculé"
       title={module.title}
       titleId="vx-analysis-oscillators-title"
       className="vx-analysis-oscillators"
       footer={
         rsi?.kind === 'served' || macd?.kind === 'served' ? (
           <>
-            oscillateurs publiés par le worker · voir <Link to="/charts">Graphiques</Link> pour les
-            séries complètes
+            dernières valeurs publiées · <Link to="/charts">séries complètes sur Graphiques</Link>
           </>
         ) : (
           <>aucun oscillateur publié dans ce dossier</>
